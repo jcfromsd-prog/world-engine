@@ -1,0 +1,11 @@
+{
+  "users": [
+    {
+      "id": "admin-1",
+      "email": "founder@mybestpurpose.com",
+      "password": "196519682026",
+      "name": "Founder",
+      "role": "admin"
+    }
+  ]
+}

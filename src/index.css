@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-black: #050505;
+  --bg-card: rgba(20, 20, 20, 0.7);
+  --accent-neon: #00ffca;
+  --accent-blue: #007aff;
+  --text-main: #ffffff;
+  --text-muted: #a0a0a0;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --impact-gradient: linear-gradient(135deg, #00ffca 0%, #007aff 100%);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-black);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+/* Glass Effect */
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.glass:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(30, 30, 30, 0.8);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Typography Utilities */
+.text-gradient {
+  background: var(--impact-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-neon {
+  color: var(--accent-neon);
+}
+
+.text-blue {
+  color: var(--accent-blue);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-white {
+  color: white;
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-bold {
+  font-weight: 800;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+/* Layout Utilities - Removed (use Tailwind equivalents: flex, items-center, justify-center, etc.) */
+
+/* Hero Section */
+.hero-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.hero-bg-split {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  z-index: -1;
+}
+
+.hero-side-old {
+  flex: 1;
+  width: 50%;
+  background-color: #1a1a1a;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-side-new {
+  flex: 1;
+  width: 50%;
+  background: radial-gradient(circle at center, #001a1a 0%, #050505 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.bg-text {
+  opacity: 0.08;
+  /* Slightly lowered opacity */
+  font-size: 6rem;
+  font-weight: 800;
+  user-select: none;
+  white-space: nowrap;
+  transform: translateY(-25vh);
+  /* Adjusted per user feedback */
+}
+
+/* ... existing styles ... */
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 120px;
+  /* Moved up from 80px to give breathing room */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  animation: fadeIn 2s ease-out;
+}
+
+/* Ghost Button (Text Link) */
+/* Ghost Button (Text Link) -> Restored Oval Shape */
+.ghost-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Subtle border to define the oval */
+  border-radius: 30px;
+  /* The "Oval" user wants */
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ghost-btn:hover {
+  border-color: var(--accent-neon);
+  color: var(--accent-neon);
+  box-shadow: 0 0 10px rgba(0, 255, 202, 0.2);
+  transform: translateY(-1px);
+}
+
+.ghost-btn.pink:hover {
+  border-color: #FF0080;
+  color: #FF0080;
+  box-shadow: 0 0 10px rgba(255, 0, 128, 0.4);
+}
+
+/* Updated Wallet Button (Cyan Highlight) */
+.wallet-btn {
+  padding: 0 24px;
+  font-size: 0.9rem;
+  margin-top: 0;
+  border: 1px solid var(--accent-neon);
+  border-radius: 30px;
+  background: rgba(0, 255, 202, 0.1);
+  color: var(--accent-neon);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-shadow: 0 0 10px rgba(0, 255, 202, 0.2);
+}
+
+.wallet-btn:hover {
+  background: var(--accent-neon);
+  color: black;
+  box-shadow: 0 0 20px rgba(0, 255, 202, 0.6);
+}

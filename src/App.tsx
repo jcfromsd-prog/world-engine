@@ -1,0 +1,211 @@
+﻿import { useState, useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+
+import Home from './components/Home';
+import SolverWorkspace from './components/SolverWorkspace';
+import AuditorDashboard from './components/AuditorDashboard';
+import WalletModal from './components/WalletModal';
+import GuardianFAB from './components/GuardianFAB';
+import SageDiscoveryModal from './components/SageDiscoveryModal';
+import Header from './components/Header';
+import EnterpriseHero from './components/EnterpriseHero';
+import FounderDashboard from './components/FounderDashboard';
+import NeuralInterface from './components/NeuralInterface';
+import CapitalDeploymentModal from './components/CapitalDeploymentModal';
+import PostBountyModal from './components/PostBountyModal';
+import CommandCenter from './components/CommandCenter';
+
+
+import { useAuth } from './context/AuthContext';
+import Login from './components/Login';
+
+interface LedgerStats {
+  problemsSolved: number;
+  earnings: string;
+  impactVelocity: string;
+  newTimelineItem?: {
+    title: string;
+    reward: string;
+  };
+}
+
+interface UserProfile {
+  cause: string;
+  class: string;
+  squad: string;
+}
+
+function App() {
+  const location = useLocation();
+  const { isAuthenticated, isAdmin: isAuthAdmin, logout } = useAuth();
+  const [showWallet, setShowWallet] = useState(false);
+  const [showDiscovery, setShowDiscovery] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  // Profile state temporarily unused in new header design, keeping for data persistence
+  const [, setUserProfile] = useState<UserProfile | null>(null);
+  const [, setCompanyMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'solver' | 'client'>('solver');
+  const [guardianInitialized, setGuardianInitialized] = useState(true);
+  const [showFounderDashboard, setShowFounderDashboard] = useState(false);
+  const [ledgerStats] = useState<LedgerStats>({
+    problemsSolved: 42,
+    earnings: "$14,500",
+    impactVelocity: "9.8x"
+  });
+
+  // Neural Link State
+  const [isNeuralInterfaceOpen, setIsNeuralInterfaceOpen] = useState(false);
+
+  // Enterprise Financial State
+  const [clientCredits, setClientCredits] = useState(0);
+  const [showCapitalModal, setShowCapitalModal] = useState(false);
+
+  // New Credit Purchase Handler
+  const handlePurchaseCredits = (amount: number) => {
+    setClientCredits(prev => prev + amount);
+  };
+
+  // Command Center State
+  const [showCommandCenter, setShowCommandCenter] = useState(false);
+
+  // Post Bounty Logic
+  const [showPostBountyModal, setShowPostBountyModal] = useState(false);
+
+  const handlePostBounty = (cost: number) => {
+    setClientCredits(prev => Math.max(0, prev - cost));
+  };
+
+  const handleDiscoveryComplete = (profile: UserProfile) => {
+    setUserProfile(profile);
+    setShowDiscovery(false);
+    // Profile auto-show removed for new header design
+  };
+
+  const isEnterprise = location.pathname === '/enterprise';
+
+  // Secret keyboard shortcut: Ctrl+Shift+G for God Mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'G') {
+        setShowFounderDashboard(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  return (
+    <div className="app-container relative">
+      {/* Auth Layer */}
+      {showLogin && (
+        <Login onClose={() => setShowLogin(false)} />
+      )}
+
+      {showWallet && (
+        <WalletModal
+          balance={ledgerStats.earnings}
+          onClose={() => setShowWallet(false)}
+        />
+      )}
+
+      {/* Founder Dashboard (God Mode) - Ctrl+Shift+G to toggle */}
+      {showFounderDashboard && (
+        <FounderDashboard onClose={() => setShowFounderDashboard(false)} />
+      )}
+
+      {showDiscovery && (
+        <SageDiscoveryModal
+          onClose={() => setShowDiscovery(false)}
+          onComplete={handleDiscoveryComplete}
+          onConnectWallet={() => {
+            setShowDiscovery(false);
+            // Auto-login for discovery if needed, but keeping it manual for now
+            setShowLogin(true);
+          }}
+        />
+      )}
+
+      {!isEnterprise && (
+        <Header
+          onConnectWallet={() => setShowLogin(true)}
+          walletBalance={isAuthenticated ? ledgerStats.earnings : undefined}
+          onToggleCompanyMode={setCompanyMode}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onToggleNeural={() => {
+            // Neural Link toggles Founder Dashboard directly if already admin,
+            // or opens login if not
+            if (isAuthAdmin) {
+              logout();
+            } else {
+              setShowLogin(true);
+            }
+          }}
+          clientCredits={clientCredits}
+          onOpenCapitalModal={() => setShowCapitalModal(true)}
+          onOpenPostBounty={() => setShowPostBountyModal(true)}
+          onOpenCommandCenter={() => setShowCommandCenter(true)}
+          isAdmin={isAuthAdmin}
+        />
+      )}
+
+      {showPostBountyModal && (
+        <PostBountyModal
+          onClose={() => setShowPostBountyModal(false)}
+          currentBalance={clientCredits}
+          onPost={handlePostBounty}
+          onOpenCapital={() => {
+            setShowPostBountyModal(false);
+            setShowCapitalModal(true);
+          }}
+        />
+      )}
+
+      {showCapitalModal && (
+        <CapitalDeploymentModal
+          onClose={() => setShowCapitalModal(false)}
+          onPurchase={handlePurchaseCredits}
+        />
+      )}
+
+      <NeuralInterface
+        isOpen={isNeuralInterfaceOpen}
+        onClose={() => setIsNeuralInterfaceOpen(false)}
+      />
+
+      <CommandCenter
+        isOpen={showCommandCenter}
+        onClose={() => setShowCommandCenter(false)}
+      />
+
+      <main>
+        <Routes>
+          <Route path="/" element={
+            <Home
+              guardianInitialized={guardianInitialized}
+              setGuardianInitialized={setGuardianInitialized}
+              viewMode={viewMode}
+              onOpenPostBounty={() => setShowPostBountyModal(true)}
+              onOpenCapitalModal={() => setShowCapitalModal(true)}
+            />
+          } />
+          <Route path="/workspace/:id" element={<SolverWorkspace />} />
+          <Route path="/auditor" element={<AuditorDashboard />} />
+          <Route path="/workspace" element={<SolverWorkspace />} />
+          <Route path="/enterprise" element={<EnterpriseHero />} />
+        </Routes>
+      </main>
+
+      {/* Hide Sage on Enterprise or Client View - professional clients don't need the avatar */}
+      {!isEnterprise && viewMode === 'solver' && (
+        <GuardianFAB
+          onInitialize={() => setGuardianInitialized(true)}
+          isInitialized={guardianInitialized}
+        />
+      )}
+
+    </div>
+  );
+}
+
+export default App;
