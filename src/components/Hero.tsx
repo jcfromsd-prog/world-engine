@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import CalibrationFlow from './CalibrationFlow';
 import Ticker from './Ticker';
+import StatsModal from './StatsModal';
 
 interface HeroProps {
   viewMode?: 'solver' | 'client';
@@ -16,6 +17,7 @@ const Hero: React.FC<HeroProps> = ({
   onOpenCapitalModal
 }) => {
   const [showCalibration, setShowCalibration] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const navigate = useNavigate();
 
   const handleCalibrationComplete = (_archetypeId: string) => {
@@ -84,7 +86,11 @@ const Hero: React.FC<HeroProps> = ({
               </div>
             ) : (
               <button
-                onClick={() => setShowCalibration(true)}
+                onClick={() => {
+                  // Trigger proactive AI greeting
+                  window.dispatchEvent(new CustomEvent('onboardSage'));
+                  setShowCalibration(true);
+                }}
                 className="px-12 py-5 bg-white text-gray-900 rounded-full font-bold text-lg md:text-xl hover:bg-cyan-400 hover:text-white hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.15)]"
               >
                 Solve Your First Problem (5 Mins)
@@ -130,7 +136,10 @@ const Hero: React.FC<HeroProps> = ({
             <span className="text-cyan-300 font-mono text-xs tracking-widest flex items-center gap-2">
               ❤️ 102 LIVES IMPACTED
             </span>
-            <span className="text-purple-400 font-mono text-xs tracking-widest flex items-center gap-2">
+            <span
+              className="text-purple-400 font-mono text-xs tracking-widest flex items-center gap-2 cursor-pointer hover:text-purple-300 hover:scale-105 transition-all"
+              onClick={() => setShowStats(true)}
+            >
               💼 $45M BOUNTIES PAID
             </span>
             <span className="text-green-400 font-mono text-xs tracking-widest flex items-center gap-2">
@@ -163,6 +172,9 @@ const Hero: React.FC<HeroProps> = ({
           </div>
         </motion.div>
       </div>
+
+      {/* Stats Modal */}
+      <StatsModal isOpen={showStats} onClose={() => setShowStats(false)} />
 
       {/* Calibration Flow Modal */}
       {showCalibration && (

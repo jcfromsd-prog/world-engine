@@ -54,6 +54,32 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
         return () => clearTimeout(timer);
     }, []);
 
+    // Proactive AI Onboarding - Listen for trigger from Hero CTA
+    useEffect(() => {
+        const handleProactiveGreeting = () => {
+            if (isInitialized && isSageActive) {
+                // Auto-open chat with personalized greeting
+                setIsOpen(true);
+                setShowHint(false);
+
+                // Add proactive greeting if not already present
+                setChatHistory(prev => {
+                    const hasProactive = prev.some(m => m.text.includes('climate data bounty'));
+                    if (!hasProactive) {
+                        return [...prev, {
+                            sender: 'sage',
+                            text: "Greetings, Architect. I've prepared a climate data bounty that matches your current profile. It pays $250 and should take under 5 minutes. Shall we begin?"
+                        }];
+                    }
+                    return prev;
+                });
+            }
+        };
+
+        window.addEventListener('onboardSage', handleProactiveGreeting);
+        return () => window.removeEventListener('onboardSage', handleProactiveGreeting);
+    }, [isInitialized, isSageActive]);
+
     const handleSend = () => {
         if (!input.trim()) return;
 
@@ -146,8 +172,8 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
                             {chatHistory.map((msg, i) => (
                                 <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[80%] p-3 rounded-xl text-sm leading-relaxed ${msg.sender === 'user'
-                                            ? 'bg-cyan-600/20 border border-cyan-500/30 text-white rounded-tr-none'
-                                            : 'bg-slate-800 border border-slate-700 text-gray-300 rounded-tl-none'
+                                        ? 'bg-cyan-600/20 border border-cyan-500/30 text-white rounded-tr-none'
+                                        : 'bg-slate-800 border border-slate-700 text-gray-300 rounded-tl-none'
                                         }`}>
                                         {msg.text}
                                     </div>
