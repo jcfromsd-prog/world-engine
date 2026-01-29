@@ -10,6 +10,7 @@ interface HomeProps {
     viewMode: 'solver' | 'client';
     onOpenPostBounty?: () => void;
     onOpenCapitalModal?: () => void;
+    onOpenLogin?: () => void;
 }
 
 const Home: React.FC<HomeProps> = ({
@@ -17,7 +18,8 @@ const Home: React.FC<HomeProps> = ({
     setGuardianInitialized,
     viewMode,
     onOpenPostBounty,
-    onOpenCapitalModal
+    onOpenCapitalModal,
+    onOpenLogin
 }) => {
 
     return (
@@ -39,7 +41,7 @@ const Home: React.FC<HomeProps> = ({
                 {viewMode === 'solver' && (
                     <>
                         <div id="feed" className="min-h-screen bg-slate-950">
-                            <TabbedDashboard />
+                            <TabbedDashboard onOpenLogin={onOpenLogin} />
                         </div>
                         <div id="mentor" className="section-container" style={{ marginTop: '80px', marginBottom: '40px' }}>
                             <EngineGovernance

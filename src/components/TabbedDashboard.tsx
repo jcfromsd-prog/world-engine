@@ -39,7 +39,11 @@ const tabs: Tab[] = [
     }
 ];
 
-const TabbedDashboard = () => {
+interface TabbedDashboardProps {
+    onOpenLogin?: () => void;
+}
+
+const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ onOpenLogin }) => {
     const [activeTab, setActiveTab] = useState<TabId>('opportunities');
     const userRank = 4; // Mock rank for logic demonstration
 
@@ -104,13 +108,16 @@ const TabbedDashboard = () => {
                                             <p className="text-sm text-slate-400">Winner Takes All • $5,000 Prize</p>
                                         </div>
                                     </div>
-                                    <button className="px-4 py-2 bg-yellow-500 text-black font-bold rounded-lg hover:bg-yellow-400">
+                                    <button
+                                        onClick={onOpenLogin}
+                                        className="px-4 py-2 bg-yellow-500 text-black font-bold rounded-lg hover:bg-yellow-400"
+                                    >
                                         JOIN NOW
                                     </button>
                                 </div>
                             </div>
 
-                            <GlobalFeed />
+                            <GlobalFeed onOpenLogin={onOpenLogin} />
                         </motion.div>
                     )}
 

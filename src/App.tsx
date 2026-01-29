@@ -187,6 +187,7 @@ function App() {
               viewMode={viewMode}
               onOpenPostBounty={() => setShowPostBountyModal(true)}
               onOpenCapitalModal={() => setShowCapitalModal(true)}
+              onOpenLogin={() => setShowLogin(true)}
             />
           } />
           <Route path="/workspace/:id" element={<SolverWorkspace />} />

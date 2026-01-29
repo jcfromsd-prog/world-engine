@@ -46,13 +46,21 @@ const quests = [
     }))
 ];
 
-const GlobalFeed: React.FC = () => {
+interface GlobalFeedProps {
+    onOpenLogin?: () => void;
+}
+
+const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
     const navigate = useNavigate();
     const { participantCount, hasJoined, isLoading, error, user, byteIn, maxParticipants } = useGauntlet();
 
     const handleByteIn = async () => {
         if (!user) {
-            alert('Please log in to join the Gauntlet!');
+            if (onOpenLogin) {
+                onOpenLogin();
+            } else {
+                alert('Please log in to join the Gauntlet!');
+            }
             return;
         }
         const success = await byteIn();
