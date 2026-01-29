@@ -13,12 +13,18 @@ const NeuralInterface: React.FC<NeuralInterfaceProps> = ({ isOpen, onClose }) =>
     const { revenue, squadMembers } = useEngine();
     const [messages, setMessages] = useState<GuardianMessage[]>([]);
     const [input, setInput] = useState('');
+    const [isThinking, setIsThinking] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Subscribe to Guardian Messages
     useEffect(() => {
         const unsubscribe = guardian.subscribe((msgs) => {
             setMessages(msgs);
+            // If the last message is from Guardian (and recent), stop thinking
+            const lastMsg = msgs[msgs.length - 1];
+            if (lastMsg && lastMsg.sender === 'GUARDIAN') {
+                setIsThinking(false);
+            }
         });
 
         // Initial fetch
@@ -45,6 +51,7 @@ const NeuralInterface: React.FC<NeuralInterfaceProps> = ({ isOpen, onClose }) =>
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim()) return;
+        setIsThinking(true);
         guardian.sendMessage(input);
         setInput('');
     };
@@ -111,6 +118,22 @@ const NeuralInterface: React.FC<NeuralInterfaceProps> = ({ isOpen, onClose }) =>
                                     </div>
                                 </motion.div>
                             ))}
+                            {isThinking && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex items-start gap-2"
+                                >
+                                    <span className="text-[10px] uppercase tracking-wider text-cyan-600">SYSTEM_AI</span>
+                                    <div className="bg-cyan-950/30 border border-cyan-900/50 rounded-lg p-2">
+                                        <div className="flex gap-1">
+                                            <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                            <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                            <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
                             <div ref={messagesEndRef} />
                         </div>
 

@@ -1,4 +1,7 @@
 import type { RevenueState, SquadMember } from './engine';
+import { chat } from './ai';
+import { getWallet, getBounties, type Bounty } from './supabase';
+import { supabase } from './supabase';
 
 export interface GuardianMessage {
     id: string;
@@ -20,8 +23,14 @@ export class Guardian {
     private static instance: Guardian;
     private messages: GuardianMessage[] = [];
     private subscribers: ((messages: GuardianMessage[]) => void)[] = [];
+    private userId: string | null = null; // Store userId for context
 
     private constructor() {
+        // Listen for auth state to know who we are serving
+        supabase.auth.onAuthStateChange((_event, session) => {
+            this.userId = session?.user?.id || null;
+        });
+
         this.addMessage({
             id: 'init',
             text: "NEURAL LINK ESTABLISHED. WAITING FOR INPUT...",
@@ -82,24 +91,73 @@ export class Guardian {
         }, 800 + Math.random() * 1000); // Simulate "thinking"
     }
 
-    private processInput(input: string) {
-        const lower = input.toLowerCase();
-        let response = "I am focusing on system optimization. Please clarify.";
+    private async processInput(input: string) {
+        // 1. Show thinking state (optional, but good UX)
+        // this.addMessage({ id: 'thinking', text: '...', sender: 'GUARDIAN', timestamp: Date.now() });
 
-        if (lower.includes('status') || lower.includes('report')) {
-            response = "All systems operational. Velocity is stable. No critical alerts.";
-        } else if (lower.includes('hello') || lower.includes('hi')) {
-            response = "Awaiting your command, Founder.";
-        } else if (lower.includes('money') || lower.includes('revenue')) {
-            response = "Financial metrics are available in the Founder Dashboard (Ctrl+Shift+G).";
+        try {
+            // 2. Build Context
+            const context = await this.buildContext();
+
+            // 3. Get AI Response
+            const responseText = await chat(
+                "You are the Engine Guardian, a highly advanced AI governing the 'World Engine' platform. Your tone is professional, slightly cryptic, but extremely helpful. You speak in concise, efficient sentences.",
+                input,
+                context,
+                this.messages.map(m => ({
+                    role: m.sender === 'USER' ? 'user' : 'assistant',
+                    content: m.text
+                }))
+            );
+
+            // 4. Send Response
+            this.addMessage({
+                id: Math.random().toString(36).substr(2, 9),
+                text: responseText,
+                sender: 'GUARDIAN',
+                timestamp: Date.now()
+            });
+
+        } catch (err) {
+            console.error(err);
+            this.addMessage({
+                id: Math.random().toString(36).substr(2, 9),
+                text: "Error: Neural Link stability compromised. Unable to process.",
+                sender: 'GUARDIAN',
+                timestamp: Date.now(),
+                type: 'alert'
+            });
+        }
+    }
+
+    private async buildContext() {
+        let balance = 0;
+        let bounties: Bounty[] = [];
+        let username = 'Founder';
+
+        if (this.userId) {
+            try {
+                // Parallel fetch
+                const [walletData, bountiesData] = await Promise.all([
+                    getWallet(this.userId),
+                    getBounties()
+                ]);
+
+                if (walletData) balance = walletData.balance;
+                if (bountiesData) bounties = bountiesData as Bounty[];
+
+                // Get username from session/profile if needed, for now 'Founder' is fine or we fetch profile
+                // but let's keep it fast.
+            } catch (e) {
+                console.error("Context fetch failed", e);
+            }
         }
 
-        this.addMessage({
-            id: Math.random().toString(36).substr(2, 9),
-            text: response,
-            sender: 'GUARDIAN',
-            timestamp: Date.now()
-        });
+        return {
+            balance,
+            bounties,
+            username
+        };
     }
 
     // --- PROACTIVE LOGIC ---
