@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import TerminalFeedback from './TerminalFeedback';
 
 interface SubmissionModalProps {
     isOpen: boolean;
@@ -18,6 +19,20 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, onSu
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [quickSubmitConfirmed, setQuickSubmitConfirmed] = useState(false);
 
+    // AI Agent States
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+
+    // Mock "Smart-Fill" - In a real app, this comes from user context
+    useEffect(() => {
+        if (isOpen && !isOnboarding) {
+            // Simulate detecting a connected repo
+            setTimeout(() => {
+                if (!repoUrl) setRepoUrl("https://github.com/johndoe/climate-data-fix");
+            }, 500);
+        }
+    }, [isOpen, isOnboarding]);
+
     const isValid = isOnboarding
         ? quickSubmitConfirmed  // Onboarding only needs confirmation
         : (videoUrl.length > 10 && repoUrl.length > 10 && instructions.length > 20 && watchedVideo && testedDocs);
@@ -30,6 +45,26 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, onSu
         await new Promise(resolve => setTimeout(resolve, 1500));
         setIsSubmitting(false);
         onSubmit();
+    };
+
+    const handleGenerateVideo = () => {
+        setIsGeneratingVideo(true);
+        setTimeout(() => {
+            setVideoUrl("https://loom.com/share/generated-proof-8a7b9c");
+            setWatchedVideo(true); // Auto-confirm for AI generated content
+            setIsGeneratingVideo(false);
+        }, 2000);
+    };
+
+    const handleVerifyInstructions = () => {
+        setIsVerifying(true);
+    };
+
+    const onVerificationComplete = (success: boolean) => {
+        if (success) {
+            setTestedDocs(true);
+            setIsVerifying(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -123,10 +158,19 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, onSu
                             <>
                                 {/* 1. The Loom Video */}
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-slate-300 uppercase tracking-wider">
-                                        1. Proof of Work (Loom/Video URL) <span className="text-red-500">*</span>
-                                    </label>
-                                    <p className="text-xs text-slate-500 mb-2">Show us it works. If you can't satisfy the requirements in a 2-minute video, it will be rejected.</p>
+                                    <div className="flex justify-between items-center">
+                                        <label className="block text-sm font-bold text-slate-300 uppercase tracking-wider">
+                                            1. Proof of Work (Video) <span className="text-red-500">*</span>
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={handleGenerateVideo}
+                                            disabled={isGeneratingVideo || videoUrl.length > 0}
+                                            className="text-xs bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full hover:bg-purple-500/30 transition flex items-center gap-1 disabled:opacity-50"
+                                        >
+                                            {isGeneratingVideo ? '✨ Generating...' : '✨ Auto-Generate Proof'}
+                                        </button>
+                                    </div>
                                     <input
                                         type="url"
                                         value={videoUrl}
@@ -138,10 +182,16 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, onSu
 
                                 {/* 2. The Code */}
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-slate-300 uppercase tracking-wider">
-                                        2. Repository Link (GitHub/GitLab) <span className="text-red-500">*</span>
-                                    </label>
-                                    <p className="text-xs text-slate-500 mb-2">Where is the code? Ensure it is public or accessible to the Engine Auditor.</p>
+                                    <div className="flex justify-between items-center">
+                                        <label className="block text-sm font-bold text-slate-300 uppercase tracking-wider">
+                                            2. Repository Link <span className="text-red-500">*</span>
+                                        </label>
+                                        {repoUrl && (
+                                            <span className="text-xs text-emerald-400 flex items-center gap-1">
+                                                ✓ Smart-Filled via GitHub
+                                            </span>
+                                        )}
+                                    </div>
                                     <input
                                         type="url"
                                         value={repoUrl}
@@ -155,11 +205,11 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, onSu
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center">
                                         <label className="block text-sm font-bold text-slate-300 uppercase tracking-wider">
-                                            3. Deployment Instructions (The "Grandma Test") <span className="text-red-500">*</span>
+                                            3. Instructions (Grandma Test) <span className="text-red-500">*</span>
                                         </label>
                                         <button
                                             type="button"
-                                            onClick={() => setInstructions(`Step 1: Clone the repository using "git clone [repo-url]"
+                                            onClick={() => setInstructions(`Step 1: Clone the repository using "git clone ${repoUrl || '[repo-url]'}"
 
 Step 2: Open Terminal and navigate to the project folder
 
@@ -169,26 +219,34 @@ Step 4: Run "npm run dev" to start the application
 
 Step 5: Open your browser to http://localhost:5173
 
-Step 6: Verify the batched state updates are reducing render cycles by 40%`)}
+Step 6: Verify the solution by...`)}
                                             className="text-xs bg-cyan-500/20 text-cyan-400 px-3 py-1 rounded-full hover:bg-cyan-500/30 transition flex items-center gap-1"
                                         >
-                                            🤖 Sage Auto-Fill
+                                            🤖 Template
                                         </button>
                                     </div>
-                                    <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-lg mb-2">
-                                        <p className="text-xs text-yellow-300">
-                                            <strong>⚠️ Requirement:</strong> Write this so a non-technical founder can run it.
-                                            <br />Bad: <em>"Run npm install then build binary."</em>
-                                            <br />Good: <em>"Step 1: Download file. Step 2: Open Terminal. Step 3: Type 'start'."</em>
-                                        </p>
-                                    </div>
-                                    <textarea
-                                        value={instructions}
-                                        onChange={(e) => setInstructions(e.target.value)}
-                                        placeholder="Step 1: ..."
-                                        rows={6}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 outline-none transition-colors placeholder:text-slate-600 resize-none font-mono text-sm"
-                                    />
+
+                                    {isVerifying ? (
+                                        <TerminalFeedback onComplete={onVerificationComplete} />
+                                    ) : (
+                                        <>
+                                            <textarea
+                                                value={instructions}
+                                                onChange={(e) => setInstructions(e.target.value)}
+                                                placeholder="Step 1: ..."
+                                                rows={5}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:border-cyan-500 outline-none transition-colors placeholder:text-slate-600 resize-none font-mono text-sm"
+                                            />
+                                            {instructions.length > 20 && !testedDocs && (
+                                                <button
+                                                    onClick={handleVerifyInstructions}
+                                                    className="w-full py-2 bg-slate-800 border border-slate-700 hover:border-cyan-500 text-cyan-400 rounded-lg text-sm font-mono flex items-center justify-center gap-2 transition-all"
+                                                >
+                                                    🤖 Run AI Agent Verification
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* Checkboxes */}
@@ -201,7 +259,7 @@ Step 6: Verify the batched state updates are reducing render cycles by 40%`)}
                                             className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900"
                                         />
                                         <span className={`text-sm transition-colors ${watchedVideo ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}>
-                                            I have watched my own video and confirmed it demonstrates the requirements.
+                                            I have confirmed the evidence demonstrates the requirements.
                                         </span>
                                     </label>
                                     <label className="flex items-center gap-3 cursor-pointer group">
@@ -212,7 +270,7 @@ Step 6: Verify the batched state updates are reducing render cycles by 40%`)}
                                             className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900"
                                         />
                                         <span className={`text-sm transition-colors ${testedDocs ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}>
-                                            I have tested these instructions myself on a clean environment.
+                                            I have verified these instructions (or the AI Agent has passed them).
                                         </span>
                                     </label>
                                 </div>
