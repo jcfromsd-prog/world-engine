@@ -17,9 +17,20 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
     });
 
     // Chat State
+    interface ChatMessage {
+        sender: 'user' | 'sage';
+        text: string;
+        type?: 'text' | 'code-fix';
+        code?: {
+            title: string;
+            lines: { content: string; isError?: boolean; isFixed?: boolean }[];
+        };
+        isFixed?: boolean;
+    }
+
     const [input, setInput] = useState('');
-    const [chatHistory, setChatHistory] = useState<{ sender: 'user' | 'sage', text: string }[]>([
-        { sender: 'sage', text: "Greetings. I am Engine Sage. I solve problems. How can I assist you today?" }
+    const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
+        { sender: 'sage', text: "Greetings. I am Engine Sage. I solve problems. How can I help you today?", type: 'text' }
     ]);
 
     // Triage Modal State
@@ -58,17 +69,28 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
     useEffect(() => {
         const handleProactiveGreeting = () => {
             if (isInitialized && isSageActive) {
-                // Auto-open chat with personalized greeting
+                // Auto-open chat
                 setIsOpen(true);
                 setShowHint(false);
 
-                // Add proactive greeting if not already present
+                // Add proactive code challenge if not present
                 setChatHistory(prev => {
-                    const hasProactive = prev.some(m => m.text.includes('climate data bounty'));
-                    if (!hasProactive) {
+                    const hasChallenge = prev.some(m => m.type === 'code-fix');
+                    if (!hasChallenge) {
                         return [...prev, {
                             sender: 'sage',
-                            text: "Greetings, Architect. I've prepared a climate data bounty that matches your current profile. It pays $250 and should take under 5 minutes. Shall we begin?"
+                            text: "⚠️ CORRUPTION DETECTED",
+                            type: 'code-fix',
+                            code: {
+                                title: "MODULE: SUPPLY_CHAIN_V2",
+                                lines: [
+                                    { content: "1 def optimize_route(nodes):" },
+                                    { content: "2   path = []" },
+                                    { content: "3   current = nodes[0]" },
+                                    { content: "4   while current.next =!= Null: << SYNTAX ERROR", isError: true },
+                                    { content: "5   path.append(current)" }
+                                ]
+                            }
                         }];
                     }
                     return prev;
@@ -85,7 +107,7 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
 
         // 1. Add User Message
         const userMsg = input;
-        setChatHistory(prev => [...prev, { sender: 'user', text: userMsg }]);
+        setChatHistory(prev => [...prev, { sender: 'user', text: userMsg, type: 'text' }]);
         setInput('');
 
         // 2. Analyze Intent (The Iron Dome)
@@ -95,10 +117,10 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
 
             if (autoResponse) {
                 // Sage Solves It
-                setChatHistory(prev => [...prev, { sender: 'sage', text: autoResponse }]);
+                setChatHistory(prev => [...prev, { sender: 'sage', text: autoResponse, type: 'text' }]);
             } else {
                 // Sage Escalate
-                setChatHistory(prev => [...prev, { sender: 'sage', text: "I detect a request that requires human authorization. Opening secure channel..." }]);
+                setChatHistory(prev => [...prev, { sender: 'sage', text: "I detect a request that requires human authorization. Opening secure channel...", type: 'text' }]);
 
                 let category: 'MONEY' | 'BUG' | 'GENERAL' = 'GENERAL';
                 if (intent === 'ESCALATE_MONEY') category = 'MONEY';
@@ -108,6 +130,36 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
                 setTimeout(() => setShowTriage(true), 1000);
             }
         }, 600);
+    };
+
+    const handleCodeFix = (index: number) => {
+        setChatHistory(prev => prev.map((msg, i) => {
+            if (i === index && msg.type === 'code-fix' && !msg.isFixed && msg.code) {
+                // Return fixed version
+                return {
+                    ...msg,
+                    isFixed: true,
+                    code: {
+                        ...msg.code,
+                        lines: msg.code.lines.map(line =>
+                            line.isError
+                                ? { content: "4   while current.next != None:  // PATCHED", isFixed: true }
+                                : line
+                        )
+                    }
+                };
+            }
+            return msg;
+        }));
+
+        // Add success follow-up
+        setTimeout(() => {
+            setChatHistory(prev => [...prev, {
+                sender: 'sage',
+                text: "Patch verified. Syntax error resolved. Optimization module online.",
+                type: 'text'
+            }]);
+        }, 800);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -125,17 +177,16 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
 
     return (
         <>
-            {/* Triage Modal (The Gate) */}
+            {/* ... (Triage Modal) */}
             <SupportTriageModal
                 isOpen={showTriage}
                 onClose={() => setShowTriage(false)}
                 category={triageCategory}
             />
 
-            {/* AI CORE WIDGET - Bottom Right Corner */}
+            {/* AI CORE WIDGET */}
             <div className="fixed bottom-6 right-6 z-[2000] flex flex-col items-end gap-3">
-
-                {/* Hint Bubble (Idle State) */}
+                {/* ... (Hint Bubble) */}
                 {showHint && !isOpen && isInitialized && isSageActive && (
                     <div className="bg-black/90 border border-cyan-400/30 rounded-2xl px-4 py-3 max-w-[200px] text-right backdrop-blur-xl animate-fade-in">
                         <p className="text-xs text-gray-300 leading-relaxed">
@@ -146,10 +197,10 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
                     </div>
                 )}
 
-                {/* Chat Interface (Active State) */}
+                {/* Chat Interface */}
                 {isOpen && isInitialized && (
                     <div className="bg-slate-950 border border-cyan-500/30 rounded-2xl w-80 md:w-96 overflow-hidden backdrop-blur-xl shadow-2xl shadow-cyan-500/10 animate-slide-up flex flex-col h-[500px]">
-                        {/* Header with Avatar */}
+                        {/* Header */}
                         <div className="bg-slate-900/80 p-4 border-b border-cyan-500/20 flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full border-2 border-cyan-400 overflow-hidden bg-cyan-900/50 relative">
                                 <img src="/guardian_avatar.png" alt="Sage" className="w-full h-full object-cover" />
@@ -171,12 +222,44 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" ref={scrollRef}>
                             {chatHistory.map((msg, i) => (
                                 <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[80%] p-3 rounded-xl text-sm leading-relaxed ${msg.sender === 'user'
-                                        ? 'bg-cyan-600/20 border border-cyan-500/30 text-white rounded-tr-none'
-                                        : 'bg-slate-800 border border-slate-700 text-gray-300 rounded-tl-none'
-                                        }`}>
-                                        {msg.text}
-                                    </div>
+                                    {msg.type === 'code-fix' && msg.code ? (
+                                        <div className="w-full max-w-[95%] bg-slate-900 border border-red-500/30 rounded-xl overflow-hidden">
+                                            <div className="bg-red-950/30 p-2 border-b border-red-500/20 flex items-center gap-2">
+                                                <span className="text-red-500 text-xs font-bold">⚠️ CORRUPTION DETECTED</span>
+                                            </div>
+                                            <div className="p-3 font-mono text-[10px] bg-black/50 text-slate-300">
+                                                <div className="mb-2 text-slate-500 uppercase tracking-wider text-[9px]">{msg.code.title}</div>
+                                                <div className="space-y-1">
+                                                    {msg.code.lines.map((line, lIdx) => (
+                                                        <div
+                                                            key={lIdx}
+                                                            onClick={() => line.isError && !msg.isFixed ? handleCodeFix(i) : undefined}
+                                                            className={`p-1 rounded transition-colors ${line.isError
+                                                                ? 'bg-red-500/10 text-red-400 border border-red-500/20 cursor-pointer hover:bg-red-500/20'
+                                                                : line.isFixed
+                                                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                                                    : ''
+                                                                }`}
+                                                        >
+                                                            {line.content}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {!msg.isFixed && (
+                                                <div className="p-2 bg-red-900/10 text-center text-[10px] text-red-400 font-bold animate-pulse">
+                                                    CLICK THE ERROR TO PATCH THE LINE
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className={`max-w-[80%] p-3 rounded-xl text-sm leading-relaxed ${msg.sender === 'user'
+                                            ? 'bg-cyan-600/20 border border-cyan-500/30 text-white rounded-tr-none'
+                                            : 'bg-slate-800 border border-slate-700 text-gray-300 rounded-tl-none'
+                                            }`}>
+                                            {msg.text}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
