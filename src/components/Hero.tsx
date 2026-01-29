@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import CalibrationFlow from './CalibrationFlow';
+import Ticker from './Ticker';
 
 interface HeroProps {
   viewMode?: 'solver' | 'client';
@@ -100,31 +101,11 @@ const Hero: React.FC<HeroProps> = ({
           </div>
 
           {/* Partner Ticker (Powering Innovation) */}
-          <div className="w-full overflow-hidden opacity-100 border-t-2 border-slate-700 bg-black/60 pt-8 pb-4">
-            <p className="text-center text-xs text-cyan-400 uppercase tracking-[0.4em] mb-6 font-black drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+          <div className="w-full">
+            <p className="text-center text-xs text-cyan-400 uppercase tracking-[0.4em] mb-4 font-black drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
               Powered by Industry Leaders
             </p>
-
-            <div className="w-full overflow-hidden">
-              <div className="flex animate-marquee items-center gap-16 whitespace-nowrap text-base font-black uppercase tracking-[0.2em] text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.5)]">
-                <span>Secured by Stripe</span>
-                <span className="text-cyan-600">•</span>
-                <span>Real-time via Supabase</span>
-                <span className="text-cyan-600">•</span>
-                <span>Intelligence by OpenAI</span>
-                <span className="text-cyan-600">•</span>
-                <span>Animated by Framer Motion</span>
-                <span className="text-cyan-600">•</span>
-                <span>Deployed on Vercel</span>
-                {/* Duplicate for loop */}
-                <span className="text-cyan-600">•</span>
-                <span>Secured by Stripe</span>
-                <span className="text-cyan-600">•</span>
-                <span>Real-time via Supabase</span>
-                <span className="text-cyan-600">•</span>
-                <span>Intelligence by OpenAI</span>
-              </div>
-            </div>
+            <Ticker />
           </div>
 
         </motion.div>
