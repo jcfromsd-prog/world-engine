@@ -15,6 +15,8 @@ import CapitalDeploymentModal from './components/CapitalDeploymentModal';
 import PostBountyModal from './components/PostBountyModal';
 import CommandCenter from './components/CommandCenter';
 import IPProtectionPolicy from './components/IPProtectionPolicy';
+import Manifesto from './components/Manifesto';
+import { TermsOfService, PrivacyPolicy } from './components/LegalPages';
 
 
 import { useWallet } from './hooks/useWallet';
@@ -175,6 +177,9 @@ function App() {
           <Route path="/workspace" element={<SolverWorkspace />} />
           <Route path="/enterprise" element={<EnterpriseHero />} />
           <Route path="/ip-policy" element={<IPProtectionPolicy />} />
+          <Route path="/about" element={<Manifesto />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
         </Routes>
       </main>
 
