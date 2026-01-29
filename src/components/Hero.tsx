@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import CalibrationFlow from './CalibrationFlow';
 import Ticker from './Ticker';
 import StatsModal from './StatsModal';
@@ -100,9 +100,9 @@ const Hero: React.FC<HeroProps> = ({
             <div className="flex items-center gap-4 text-xs text-slate-500 font-mono">
               <span className="flex items-center gap-1">🛡️ SECURE SANDBOX ENV</span>
               <span className="hidden md:inline text-slate-700">|</span>
-              <span className="flex items-center gap-1 cursor-help">
-                🔒 IP PROTECTION POLICY*
-              </span>
+              <Link to="/ip-policy" className="flex items-center gap-1 cursor-pointer hover:text-cyan-400 transition-colors">
+                🔒 IP PROTECTION POLICY
+              </Link>
             </div>
           </div>
 

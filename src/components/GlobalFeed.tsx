@@ -5,6 +5,7 @@ import { useGauntlet } from '../hooks/useGauntlet';
 import { getBounties } from '../lib/supabase';
 import LiveInsights from './LiveInsights';
 import GitHubBounties from './GitHubBounties';
+import OneClickNDA from './OneClickNDA';
 
 const defaultQuests = [
     {
@@ -70,8 +71,34 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
         }
     };
 
+    const [showNDA, setShowNDA] = useState(false);
+    const [selectedBounty, setSelectedBounty] = useState<any>(null);
+
+    const handleSolve = (quest: any) => {
+        // Mock logic: Bounties with 'Hard' difficulty or > $1000 reward (simulated) require NDA
+        // In a real app, check quest.security_level
+        const isProtected = quest.difficulty === 'Hard' || quest.reward.includes('$5,000') || quest.reward.includes('$1,000');
+
+        if (isProtected) {
+            setSelectedBounty(quest);
+            setShowNDA(true);
+        } else {
+            navigate(`/workspace/${quest.id}`);
+        }
+    };
+
     return (
         <section className="section-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <OneClickNDA
+                isOpen={showNDA}
+                onClose={() => setShowNDA(false)}
+                onAccept={() => {
+                    setShowNDA(false);
+                    if (selectedBounty) navigate(`/workspace/${selectedBounty.id}`);
+                }}
+                bountyTitle={selectedBounty?.title || 'Protected Bounty'}
+                securityLevel="critical"
+            />
             <div style={{ width: '100%', maxWidth: '1200px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
                     <div>
@@ -175,10 +202,10 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                                         <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--accent-neon)' }}>{quest.reward}</div>
                                         <button
-                                            onClick={() => navigate(`/workspace/${quest.id}`)}
+                                            onClick={() => handleSolve(quest)}
                                             className="glass" style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 600 }}
                                         >
-                                            Solve
+                                            {(quest.difficulty === 'Hard' || quest.reward.includes('$5,000')) ? '🛡️ Solve' : 'Solve'}
                                         </button>
                                     </div>
                                 </div>

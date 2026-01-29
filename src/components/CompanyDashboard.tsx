@@ -21,6 +21,11 @@ const CompanyDashboard: React.FC = () => {
                 <div className="badge-demand">DEMAND SIDE</div>
                 <h2 className="dashboard-title">Liquidity for Your Backlog</h2>
                 <p className="dashboard-subtitle">Upload the messy data. Set your price. Watch it disappear.</p>
+                <div className="mt-4 text-xs">
+                    <a href="/ip-policy" target="_blank" className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+                        🔒 Zero-Trust IP Protection Active
+                    </a>
+                </div>
             </div>
 
             <div className="dashboard-content">

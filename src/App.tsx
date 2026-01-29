@@ -14,6 +14,7 @@ import NeuralInterface from './components/NeuralInterface';
 import CapitalDeploymentModal from './components/CapitalDeploymentModal';
 import PostBountyModal from './components/PostBountyModal';
 import CommandCenter from './components/CommandCenter';
+import IPProtectionPolicy from './components/IPProtectionPolicy';
 
 
 import { useWallet } from './hooks/useWallet';
@@ -173,6 +174,7 @@ function App() {
           <Route path="/auditor" element={<AuditorDashboard />} />
           <Route path="/workspace" element={<SolverWorkspace />} />
           <Route path="/enterprise" element={<EnterpriseHero />} />
+          <Route path="/ip-policy" element={<IPProtectionPolicy />} />
         </Routes>
       </main>
 
