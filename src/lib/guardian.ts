@@ -1,6 +1,6 @@
 import type { RevenueState, SquadMember } from './engine';
 import { chat } from './ai';
-import { getWallet, getBounties, type Bounty } from './supabase';
+import { getWallet, getBounties, getProfile, type Bounty } from './supabase';
 import { supabase } from './supabase';
 
 export interface GuardianMessage {
@@ -101,7 +101,11 @@ export class Guardian {
 
             // 3. Get AI Response
             const responseText = await chat(
-                "You are the Engine Guardian, a highly advanced AI governing the 'World Engine' platform. Your tone is professional, slightly cryptic, but extremely helpful. You speak in concise, efficient sentences.",
+                `You are the Engine Guardian, a highly advanced AI governing the 'World Engine' platform. 
+                Context: You are speaking to ${context.username}, who has a reputation of ${context.reputation}.
+                Bio: ${context.bio || "No bio available."}
+                Tone: Professional, slightly cryptic, but extremely helpful. Speak in concise, efficient sentences.
+                Goal: Coach the user to increase their reputation by accepting bounties or "Byting In" to the Gauntlet.`,
                 input,
                 context,
                 this.messages.map(m => ({
@@ -134,17 +138,25 @@ export class Guardian {
         let balance = 0;
         let bounties: Bounty[] = [];
         let username = 'Founder';
+        let reputation = 0;
+        let bio = '';
 
         if (this.userId) {
             try {
                 // Parallel fetch
-                const [walletData, bountiesData] = await Promise.all([
+                const [walletData, bountiesData, profileData] = await Promise.all([
                     getWallet(this.userId),
-                    getBounties()
+                    getBounties(),
+                    getProfile(this.userId)
                 ]);
 
                 if (walletData) balance = walletData.balance;
                 if (bountiesData) bounties = bountiesData as Bounty[];
+                if (profileData) {
+                    username = profileData.username || 'Founder';
+                    reputation = profileData.reputation_points || 0;
+                    bio = profileData.bio || '';
+                }
 
                 // Get username from session/profile if needed, for now 'Founder' is fine or we fetch profile
                 // but let's keep it fast.
@@ -156,7 +168,9 @@ export class Guardian {
         return {
             balance,
             bounties,
-            username
+            username,
+            reputation,
+            bio
         };
     }
 

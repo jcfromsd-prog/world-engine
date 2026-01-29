@@ -4,6 +4,8 @@ interface AIContext {
     balance: number;
     bounties: Bounty[];
     username: string;
+    reputation: number;
+    bio: string;
 }
 
 export async function chat(systemPrompt: string, userMessage: string, context: AIContext, history: { role: 'user' | 'assistant', content: string }[] = []) {
@@ -66,11 +68,14 @@ async function mockAI(input: string, context: AIContext) {
     }
 
     if (lower.includes('status') || lower.includes('report')) {
-        return `Systems Nominal.\n- Identity: ${context.username}\n- Ledger: Active\n- Context: Local Simulation Mode`;
+        return `Systems Nominal.\n- Identity: ${context.username} (Rep: ${context.reputation})\n- Ledger: Active\n- Context: Local Simulation Mode`;
     }
 
     if (lower.includes('who are you')) {
-        return "I am the Engine Guardian. An autonomous construct designed to optimize your operational velocity.";
+        if (context.reputation < 50) {
+            return `I am the Engine Guardian. I see you are new here, ${context.username}. I exist to guide you to your first victory.`;
+        }
+        return "I am the Engine Guardian. We have accomplished much together, Founder. I am at your disposal.";
     }
 
     // Default cryptic response
