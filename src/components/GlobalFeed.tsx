@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EVERGREEN_BOUNTIES } from '../data/gameData';
+import { useGauntlet } from '../hooks/useGauntlet';
 
 const quests = [
     {
@@ -47,6 +48,20 @@ const quests = [
 
 const GlobalFeed: React.FC = () => {
     const navigate = useNavigate();
+    const { participantCount, hasJoined, isLoading, error, user, byteIn, maxParticipants } = useGauntlet();
+
+    const handleByteIn = async () => {
+        if (!user) {
+            alert('Please log in to join the Gauntlet!');
+            return;
+        }
+        const success = await byteIn();
+        if (success) {
+            alert('🎉 You have joined the Gauntlet! Good luck, Solver.');
+        } else if (error) {
+            alert(error);
+        }
+    };
 
     return (
         <section className="section-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -84,7 +99,7 @@ const GlobalFeed: React.FC = () => {
                                 </div>
                                 <h2 style={{ fontSize: '2rem', marginBottom: '8px' }}>The Gauntlet: Zero-Day Defense</h2>
                                 <div style={{ display: 'flex', gap: '24px', color: 'var(--text-muted)' }}>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>👥 <strong>98/100</strong> Joined</span>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>👥 <strong>{participantCount}/{maxParticipants}</strong> Joined</span>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-neon)' }}>💰 <strong>$5,000</strong> Winner Takes All</span>
                                 </div>
                             </div>
@@ -92,7 +107,19 @@ const GlobalFeed: React.FC = () => {
                                 <div style={{ fontSize: '0.8rem', color: '#ff0055', fontWeight: 800, marginBottom: '4px' }}>STARTS IN</div>
                                 <div style={{ fontSize: '2.5rem', fontWeight: 800, fontFamily: 'monospace' }}>04:59</div>
                                 <div style={{ position: 'relative', marginTop: '12px' }} className="thunderdome-btn-container">
-                                    <button className="btn-primary" style={{ background: '#ff0055', width: '100%' }}>Byte In</button>
+                                    <button
+                                        className="btn-primary"
+                                        style={{
+                                            background: hasJoined ? '#22c55e' : '#ff0055',
+                                            width: '100%',
+                                            opacity: isLoading ? 0.7 : 1,
+                                            cursor: isLoading ? 'wait' : 'pointer'
+                                        }}
+                                        onClick={handleByteIn}
+                                        disabled={hasJoined || isLoading || participantCount >= maxParticipants}
+                                    >
+                                        {isLoading ? 'Joining...' : hasJoined ? '✓ Joined' : participantCount >= maxParticipants ? 'FULL' : 'Byte In'}
+                                    </button>
                                     <div className="tooltip" style={{
                                         position: 'absolute',
                                         bottom: '100%',
