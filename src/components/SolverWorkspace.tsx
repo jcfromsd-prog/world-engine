@@ -7,6 +7,11 @@ const SolverWorkspace: React.FC = () => {
     const [isComplete, setIsComplete] = useState(false);
     const [showSubmission, setShowSubmission] = useState(false);
 
+    // Detect if this is the first/onboarding bounty (calibration)
+    const isCalibrationComplete = localStorage.getItem('calibration_complete') === 'true';
+    const isFirstBounty = localStorage.getItem('first_bounty_completed') !== 'true';
+    const isOnboarding = isCalibrationComplete && isFirstBounty;
+
     // Mock Quest Data lookup based on ID
     const questTitle = id === "1" ? "Clean Climate Data Set" : "Unknown Quest";
 
@@ -130,8 +135,13 @@ const SolverWorkspace: React.FC = () => {
                 onSubmit={() => {
                     setShowSubmission(false);
                     setIsComplete(true);
+                    // Mark first bounty as completed so future submissions use full form
+                    if (isOnboarding) {
+                        localStorage.setItem('first_bounty_completed', 'true');
+                    }
                 }}
                 questTitle={questTitle}
+                isOnboarding={isOnboarding}
             />
         </div>
     );
