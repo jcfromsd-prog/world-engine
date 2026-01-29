@@ -4,6 +4,7 @@ import { EVERGREEN_BOUNTIES } from '../data/gameData';
 import { useGauntlet } from '../hooks/useGauntlet';
 import { getBounties } from '../lib/supabase';
 import LiveInsights from './LiveInsights';
+import GitHubBounties from './GitHubBounties';
 
 const defaultQuests = [
     {
@@ -185,9 +186,10 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
                         </div>
                     </div>
 
-                    {/* Right: Live Insights Panel */}
-                    <div style={{ flex: 1, minWidth: '350px', position: 'sticky', top: '100px' }}>
-                        <LiveInsights maxReadings={8} />
+                    {/* Right: Live Insights + GitHub Bounties Panel */}
+                    <div style={{ flex: 1, minWidth: '380px', position: 'sticky', top: '100px' }} className="space-y-6">
+                        <LiveInsights maxReadings={5} />
+                        <GitHubBounties limit={8} />
                     </div>
                 </div>
             </div>
