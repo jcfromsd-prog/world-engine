@@ -128,16 +128,10 @@ const EngineGovernance: React.FC<EngineGovernanceProps> = ({ isGuardianActive, o
                             <div style={{ marginBottom: '16px' }}>
                                 {isGuardianActive ? (
                                     <div className="flex flex-col space-y-2">
-                                        <p className="font-medium text-gray-300 text-lg">
-                                            Greetings, I'm Engine Sage.
-                                        </p>
                                         <p className="text-gray-400 text-base leading-relaxed">
                                             We don't just Work, we <span className="italic font-bold text-white">SOLVE</span>.
                                             <br />
                                             We don't just Build, we <span className="italic font-bold text-white">EARN</span>.
-                                        </p>
-                                        <p className="font-medium text-blue-400 text-base mt-2">
-                                            How can I help you today?
                                         </p>
                                     </div>
                                 ) : (
