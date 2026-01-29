@@ -17,15 +17,36 @@ interface CommandCenterProps {
     onClose: () => void;
 }
 
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { getProfile, type Profile } from '../lib/supabase';
+
 const CommandCenter: React.FC<CommandCenterProps> = ({
-    userRank = 14,
-    userEarnings = "$14,500",
-    userVelocity = "9.8x",
+    userRank: defaultRank = 14,
+    userEarnings: defaultEarnings = "$0", // Changing default for new users
+    userVelocity: defaultVelocity = "1.0x",
     isOpen,
     onClose
 }) => {
     // REAL-TIME ENGINE HOOK
     const { thunderdomeTime, squadMembers, isMock, isConnected } = useEngine();
+    const { user } = useAuth();
+    const [profile, setProfile] = useState<Profile | null>(null);
+
+    // Fetch real profile data
+    useEffect(() => {
+        if (user && isOpen) {
+            getProfile(user.id).then(data => {
+                if (data) setProfile(data);
+            });
+        }
+    }, [user, isOpen]);
+
+    // Derived Display Values
+    const displayRank = profile ? `#${9999 - (profile.reputation_points || 0)}` : `#${defaultRank}`;
+    const displayEarnings = profile ? `$${(profile.reputation_points * 10).toLocaleString()}` : defaultEarnings;
+    const displayVelocity = profile ? `${(1 + (profile.reputation_points / 100)).toFixed(1)}x` : defaultVelocity;
+    const displayArchetype = profile?.archetype || "Recruit";
 
 
 
@@ -169,7 +190,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                                         <div className="flex justify-between items-start mb-2">
                                             <div>
                                                 <div className="text-sm text-white font-medium">Python Data Scraper v4</div>
-                                                <div className="text-xs text-slate-500">by Architect_X • 2.4k subs</div>
+                                                <div className="text-xs text-slate-500">by {displayArchetype} • 2.4k subs</div>
                                             </div>
                                             <span className="text-xs text-emerald-400">★ 4.8</span>
                                         </div>
@@ -186,12 +207,12 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
 
                                     <div className="mt-3 flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
                                         <div>
-                                            <div className="text-2xl font-bold text-white">#{userRank}</div>
+                                            <div className="text-2xl font-bold text-white">{displayRank}</div>
                                             <div className="text-xs text-slate-500">Your Rank</div>
                                         </div>
                                         <div className="text-center">
-                                            <div className="text-lg font-mono text-emerald-400">{userEarnings}</div>
-                                            <div className="text-xs text-slate-500">{userVelocity} velocity</div>
+                                            <div className="text-lg font-mono text-emerald-400">{displayEarnings}</div>
+                                            <div className="text-xs text-slate-500">{displayVelocity} velocity</div>
                                         </div>
                                     </div>
 
