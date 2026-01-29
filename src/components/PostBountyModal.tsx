@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { createBounty } from '../lib/supabase';
 
 interface PostBountyModalProps {
     onClose: () => void;
@@ -14,23 +16,48 @@ const PostBountyModal: React.FC<PostBountyModalProps> = ({
     onPost,
     onOpenCapital
 }) => {
+    const { user } = useAuth();
     const [step, setStep] = useState(1);
     const [legalAccepted, setLegalAccepted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [title, setTitle] = useState('');
+    const reward = '$500.00'; // Fixed value, no need for useState if not controlled
 
     // Bounty Cost
     const BOUNTY_COST = 500;
 
-    const handleDeploy = () => {
-        if (currentBalance < BOUNTY_COST) {
-            // Shake effect or error state?
-            // For now, just do nothing or show error
+    const handleDeploy = async () => {
+        if (!user) {
+            alert('Please login to post a bounty.');
             return;
         }
-        onPost(BOUNTY_COST);
-        setStep(2); // Success state
-        setTimeout(() => {
-            onClose();
-        }, 2000);
+        if (currentBalance < BOUNTY_COST) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await createBounty({
+                client_id: user.id,
+                title: title || "Untitled Bounty", // Fallback
+                reward: reward,
+                difficulty: 'Medium',
+                category: 'Development',
+                time_estimate: '4 hours',
+                status: 'open'
+            });
+
+            onPost(BOUNTY_COST);
+            setStep(2); // Success state
+            setTimeout(() => {
+                onClose();
+            }, 2000);
+        } catch (err) {
+            console.error('Bounty creation failed:', err);
+            alert('Failed to create bounty. Check console.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const hasFunds = currentBalance >= BOUNTY_COST;
@@ -54,6 +81,8 @@ const PostBountyModal: React.FC<PostBountyModalProps> = ({
                                 <label className="block text-xs uppercase text-slate-500 font-bold mb-1">Objective</label>
                                 <input
                                     type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
                                     placeholder="e.g. Optimize React rendering perfs..."
                                     className="w-full bg-slate-800 border border-slate-700 rounded p-3 text-white focus:border-cyan-500 outline-none"
                                 />
@@ -105,13 +134,13 @@ const PostBountyModal: React.FC<PostBountyModalProps> = ({
 
                         <button
                             onClick={handleDeploy}
-                            disabled={!hasFunds || !legalAccepted}
+                            disabled={!hasFunds || !legalAccepted || isSubmitting}
                             className={`w-full py-4 rounded-lg font-bold text-lg tracking-widest transition-all ${hasFunds && legalAccepted
                                 ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/25'
                                 : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                                 }`}
                         >
-                            {hasFunds ? "DEPLOY BOUNTY (-500)" : "RECHARGE REQUIRED"}
+                            {isSubmitting ? "DEPLOYING..." : hasFunds ? "DEPLOY BOUNTY (-500)" : "RECHARGE REQUIRED"}
                         </button>
                     </div>
                 )}

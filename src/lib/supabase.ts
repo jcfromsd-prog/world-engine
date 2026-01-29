@@ -100,3 +100,46 @@ export async function updateProfile(userId: string, updates: Partial<Profile>) {
     if (error) throw error;
     return data;
 }
+
+export interface Bounty {
+    id: string;
+    client_id: string;
+    title: string;
+    description: string | null;
+    reward: string;
+    difficulty: 'Easy' | 'Medium' | 'Hard';
+    category: string | null;
+    time_estimate: string | null;
+    status: 'open' | 'closed';
+    created_at: string;
+    profiles?: Profile; // For joining client details
+}
+
+// Bounty operations
+export async function createBounty(bounty: Partial<Bounty>) {
+    const { data, error } = await supabase
+        .from('bounties')
+        .insert([bounty])
+        .select();
+
+    if (error) throw error;
+    return data;
+}
+
+export async function getBounties() {
+    const { data, error } = await supabase
+        .from('bounties')
+        .select(`
+            *,
+            profiles:client_id (
+                username,
+                avatar_url,
+                reputation_points
+            )
+        `)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+}

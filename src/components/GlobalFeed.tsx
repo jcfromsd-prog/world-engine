@@ -1,43 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EVERGREEN_BOUNTIES } from '../data/gameData';
 import { useGauntlet } from '../hooks/useGauntlet';
+import { getBounties } from '../lib/supabase';
 
-const quests = [
+const defaultQuests = [
     {
-        id: 1,
+        id: 'mock-1',
         title: "Clean this Climate Data Set",
         reward: "$15 + 10 Rep",
         cause: "Clean Energy",
         time: "10 mins",
         difficulty: "Easy"
     },
-    {
-        id: 2,
-        title: "Design a Logo for this Non-Profit",
-        reward: "$200 Bounty",
-        cause: "Education",
-        time: "2 hours",
-        difficulty: "Medium"
-    },
-    {
-        id: 3,
-        title: "Asset Opportunity: Python Script to Tool",
-        reward: "Royalties (5%)",
-        cause: "Open Source",
-        time: "4 hours",
-        difficulty: "Hard"
-    },
-    {
-        id: 4,
-        title: "Annotate Whale Migration Images",
-        reward: "$45 Bounty",
-        cause: "Ocean Life",
-        time: "30 mins",
-        difficulty: "Easy"
-    },
     ...EVERGREEN_BOUNTIES.map(b => ({
-        id: b.id,
+        id: `mock-${b.id}`,
         title: b.title,
         reward: b.reward + " Bounty",
         cause: b.tags[0],
@@ -53,6 +30,26 @@ interface GlobalFeedProps {
 const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
     const navigate = useNavigate();
     const { participantCount, hasJoined, isLoading, error, user, byteIn, maxParticipants } = useGauntlet();
+    const [bounties, setBounties] = useState<any[]>(defaultQuests); // Using any to mix types for now
+
+    // Fetch real bounties
+    useEffect(() => {
+        getBounties().then(data => {
+            if (data && data.length > 0) {
+                // Map DB bounties to UI format
+                const realBounties = data.map(b => ({
+                    id: b.id,
+                    title: b.title,
+                    reward: b.reward + " Bounty",
+                    cause: b.category || "General",
+                    time: b.time_estimate || "Unknown",
+                    difficulty: b.difficulty
+                }));
+                // Real bounties first, then fallback
+                setBounties([...realBounties, ...defaultQuests]);
+            }
+        });
+    }, []);
 
     const handleByteIn = async () => {
         if (!user) {
@@ -159,7 +156,7 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
                 </div>
 
                 <div className="feed-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-                    {quests.map(quest => (
+                    {bounties.map(quest => (
                         <div key={quest.id} className="glass" style={{ padding: '24px', transition: 'transform 0.3s', cursor: 'pointer' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                                 <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', background: 'rgba(0, 255, 202, 0.1)', color: 'var(--accent-neon)' }}>
