@@ -111,10 +111,22 @@ const Hero: React.FC<HeroProps> = ({
         </motion.div>
       </div>
 
-      {/* Footer Ticker (Absolute Bottom) */}
-      <div className="absolute bottom-0 w-full bg-black border-t border-gray-900 py-3 z-30 flex overflow-hidden">
-        <div className="whitespace-nowrap animate-marquee flex items-center gap-12 min-w-full">
-          <div className="flex items-center gap-12 opacity-90">
+      {/* Footer Ticker (Absolute Bottom) - Seamless Infinite Scroll */}
+      <div className="absolute bottom-0 w-full bg-black border-t border-gray-900 py-3 z-30 overflow-hidden">
+        <motion.div
+          className="flex whitespace-nowrap"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{
+            x: {
+              repeat: Infinity,
+              repeatType: "loop",
+              duration: 25,
+              ease: "linear",
+            },
+          }}
+        >
+          {/* First set */}
+          <div className="flex items-center gap-12 px-6 opacity-90">
             <span className="text-cyan-300 font-mono text-xs tracking-widest flex items-center gap-2">
               ❤️ 102 LIVES IMPACTED
             </span>
@@ -124,8 +136,32 @@ const Hero: React.FC<HeroProps> = ({
             <span className="text-green-400 font-mono text-xs tracking-widest flex items-center gap-2">
               🌳 400 TREES PLANTED
             </span>
+            <span className="text-cyan-300 font-mono text-xs tracking-widest flex items-center gap-2">
+              🧠 14,500 SOLVERS ACTIVE
+            </span>
+            <span className="text-purple-400 font-mono text-xs tracking-widest flex items-center gap-2">
+              ⚡ 9.8x VELOCITY
+            </span>
           </div>
-        </div>
+          {/* Duplicate set for seamless loop */}
+          <div className="flex items-center gap-12 px-6 opacity-90">
+            <span className="text-cyan-300 font-mono text-xs tracking-widest flex items-center gap-2">
+              ❤️ 102 LIVES IMPACTED
+            </span>
+            <span className="text-purple-400 font-mono text-xs tracking-widest flex items-center gap-2">
+              💼 $45M BOUNTIES PAID
+            </span>
+            <span className="text-green-400 font-mono text-xs tracking-widest flex items-center gap-2">
+              🌳 400 TREES PLANTED
+            </span>
+            <span className="text-cyan-300 font-mono text-xs tracking-widest flex items-center gap-2">
+              🧠 14,500 SOLVERS ACTIVE
+            </span>
+            <span className="text-purple-400 font-mono text-xs tracking-widest flex items-center gap-2">
+              ⚡ 9.8x VELOCITY
+            </span>
+          </div>
+        </motion.div>
       </div>
 
       {/* Calibration Flow Modal */}
