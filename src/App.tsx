@@ -16,6 +16,7 @@ import PostBountyModal from './components/PostBountyModal';
 import CommandCenter from './components/CommandCenter';
 
 
+import { useWallet } from './hooks/useWallet';
 import { useAuth } from './context/AuthContext';
 import Login from './components/Login';
 
@@ -37,7 +38,8 @@ interface UserProfile {
 
 function App() {
   const location = useLocation();
-  const { isAuthenticated, isAdmin: isAuthAdmin, logout } = useAuth();
+  const { isAuthenticated, isAdmin: isAuthAdmin, logout, supabaseUser } = useAuth();
+  const { balance: walletBalance } = useWallet(supabaseUser);
   const [showWallet, setShowWallet] = useState(false);
   const [showDiscovery, setShowDiscovery] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -57,13 +59,9 @@ function App() {
   const [isNeuralInterfaceOpen, setIsNeuralInterfaceOpen] = useState(false);
 
   // Enterprise Financial State
-  const [clientCredits, setClientCredits] = useState(0);
   const [showCapitalModal, setShowCapitalModal] = useState(false);
 
-  // New Credit Purchase Handler
-  const handlePurchaseCredits = (amount: number) => {
-    setClientCredits(prev => prev + amount);
-  };
+  // Command Center State
 
   // Command Center State
   const [showCommandCenter, setShowCommandCenter] = useState(false);
@@ -71,8 +69,9 @@ function App() {
   // Post Bounty Logic
   const [showPostBountyModal, setShowPostBountyModal] = useState(false);
 
-  const handlePostBounty = (cost: number) => {
-    setClientCredits(prev => Math.max(0, prev - cost));
+  const handlePostBounty = (_cost: number) => {
+    // Balance deduction is handled by the Modal/Hook now
+    // console.log('Bounty posted, cost:', cost);
   };
 
   const handleDiscoveryComplete = (profile: UserProfile) => {
@@ -128,7 +127,7 @@ function App() {
       {!isEnterprise && (
         <Header
           onConnectWallet={() => setShowLogin(true)}
-          walletBalance={isAuthenticated ? ledgerStats.earnings : undefined}
+          walletBalance={isAuthenticated ? `$${walletBalance.toLocaleString()}` : undefined}
           onToggleCompanyMode={setCompanyMode}
           viewMode={viewMode}
           setViewMode={setViewMode}
@@ -141,7 +140,7 @@ function App() {
               setShowLogin(true);
             }
           }}
-          clientCredits={clientCredits}
+          clientCredits={walletBalance}
           onOpenCapitalModal={() => setShowCapitalModal(true)}
           onOpenPostBounty={() => setShowPostBountyModal(true)}
           onOpenCommandCenter={() => setShowCommandCenter(true)}
@@ -152,7 +151,7 @@ function App() {
       {showPostBountyModal && (
         <PostBountyModal
           onClose={() => setShowPostBountyModal(false)}
-          currentBalance={clientCredits}
+          currentBalance={walletBalance}
           onPost={handlePostBounty}
           onOpenCapital={() => {
             setShowPostBountyModal(false);
@@ -164,7 +163,7 @@ function App() {
       {showCapitalModal && (
         <CapitalDeploymentModal
           onClose={() => setShowCapitalModal(false)}
-          onPurchase={handlePurchaseCredits}
+          onPurchase={() => { }} // Deprecated but prop might be required
         />
       )}
 

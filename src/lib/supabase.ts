@@ -143,3 +143,69 @@ export async function getBounties() {
     if (error) throw error;
     return data;
 }
+
+export interface Wallet {
+    user_id: string;
+    balance: number;
+    updated_at: string;
+}
+
+export interface Transaction {
+    id: string;
+    user_id: string;
+    type: 'deposit' | 'withdrawal' | 'bounty_fee' | 'bounty_payout';
+    amount: number;
+    description: string | null;
+    created_at: string;
+}
+
+// Wallet Operations
+export async function getWallet(userId: string) {
+    const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // Ignore not found
+    return data;
+}
+
+export async function createTransaction(transaction: Partial<Transaction>) {
+    const { data, error } = await supabase
+        .from('transactions')
+        .insert([transaction])
+        .select();
+
+    if (error) throw error;
+    return data;
+}
+
+// Helper to simulate deposit (since we don't have Stripe webhooks yet)
+export async function depositFunds(userId: string, amount: number) {
+    // 1. Create Transaction
+    await createTransaction({
+        user_id: userId,
+        type: 'deposit',
+        amount: amount,
+        description: 'Capital Injection (Stripe Simulation)'
+    });
+
+    // 2. Update Wallet (Upsert)
+    // Fetch current first
+    const current = await getWallet(userId);
+    const newBalance = (current?.balance || 0) + amount;
+
+    const { data, error } = await supabase
+        .from('wallets')
+        .upsert({
+            user_id: userId,
+            balance: newBalance,
+            updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+}
