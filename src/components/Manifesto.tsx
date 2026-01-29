@@ -88,15 +88,31 @@ const Manifesto: React.FC = () => {
 
                     <div className="grid md:grid-cols-2 gap-12">
                         {/* Founder 1 */}
-                        <div className="flex gap-6 items-start">
-                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 shrink-0" />
+                        <div className="flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
+                            <div className="relative group">
+                                <img
+                                    src="/mybestpurpose.com%20Founder%20James%20Morris.JPG"
+                                    alt="James Morris - Founder"
+                                    className="w-32 h-32 md:w-36 md:h-36 rounded-full object-cover border-4 border-white shadow-[0_4px_15px_rgba(0,0,0,0.1)] shrink-0 bg-slate-800"
+                                    onError={(e) => {
+                                        // Fallback to gradient if image missing
+                                        e.currentTarget.style.display = 'none';
+                                        const fallback = document.getElementById('founder-fallback');
+                                        if (fallback) fallback.classList.remove('hidden');
+                                    }}
+                                />
+                                <div id="founder-fallback" className="hidden absolute inset-0 w-32 h-32 md:w-36 md:h-36 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-2xl font-bold text-white border-4 border-slate-800">
+                                    JM
+                                </div>
+                            </div>
+
                             <div>
-                                <h3 className="text-xl font-bold text-white">J. C. (The Architect)</h3>
-                                <p className="text-cyan-400 text-sm mb-2">Founder & Lead Engineer</p>
+                                <h3 className="text-2xl font-bold text-white mb-1">James Morris</h3>
+                                <p className="text-cyan-400 font-bold text-sm mb-3">Founder & Visionary</p>
                                 <p className="text-slate-400 text-sm leading-relaxed">
-                                    Obsessed with efficiency and "flow states." Built the Guardian Protocol to ensure
-                                    that code quality scales linearly with the number of contributors. Believes the future
-                                    of work looks more like an MMORPG than a corporation.
+                                    Building the future of purpose-driven problem solving at MyBestPurpose.com.
+                                    Obsessed with efficiency and "flow states," James built the Guardian Protocol to ensure
+                                    that code quality scales linearly with the number of contributors.
                                 </p>
                             </div>
                         </div>
