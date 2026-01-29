@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { EVERGREEN_BOUNTIES } from '../data/gameData';
 import { useGauntlet } from '../hooks/useGauntlet';
 import { getBounties } from '../lib/supabase';
+import LiveInsights from './LiveInsights';
 
 const defaultQuests = [
     {
@@ -155,27 +156,39 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
                     </div>
                 </div>
 
-                <div className="feed-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-                    {bounties.map(quest => (
-                        <div key={quest.id} className="glass" style={{ padding: '24px', transition: 'transform 0.3s', cursor: 'pointer' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                                <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', background: 'rgba(0, 255, 202, 0.1)', color: 'var(--accent-neon)' }}>
-                                    {quest.cause}
-                                </span>
-                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{quest.time}</span>
-                            </div>
-                            <h3 style={{ fontSize: '1.25rem', marginBottom: '16px', minHeight: '3rem' }}>{quest.title}</h3>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--accent-neon)' }}>{quest.reward}</div>
-                                <button
-                                    onClick={() => navigate(`/workspace/${quest.id}`)}
-                                    className="glass" style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 600 }}
-                                >
-                                    Solve
-                                </button>
-                            </div>
+                {/* Main Content Area: Feed + Live Insights */}
+                <div style={{ display: 'flex', gap: '32px', flexDirection: 'row', alignItems: 'flex-start' }}>
+
+                    {/* Left: Bounty Feed */}
+                    <div style={{ flex: 2 }}>
+                        <div className="feed-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+                            {bounties.map(quest => (
+                                <div key={quest.id} className="glass" style={{ padding: '24px', transition: 'transform 0.3s', cursor: 'pointer' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                        <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', background: 'rgba(0, 255, 202, 0.1)', color: 'var(--accent-neon)' }}>
+                                            {quest.cause}
+                                        </span>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{quest.time}</span>
+                                    </div>
+                                    <h3 style={{ fontSize: '1.25rem', marginBottom: '16px', minHeight: '3rem' }}>{quest.title}</h3>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--accent-neon)' }}>{quest.reward}</div>
+                                        <button
+                                            onClick={() => navigate(`/workspace/${quest.id}`)}
+                                            className="glass" style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 600 }}
+                                        >
+                                            Solve
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
+                    </div>
+
+                    {/* Right: Live Insights Panel */}
+                    <div style={{ flex: 1, minWidth: '350px', position: 'sticky', top: '100px' }}>
+                        <LiveInsights maxReadings={8} />
+                    </div>
                 </div>
             </div>
         </section>
