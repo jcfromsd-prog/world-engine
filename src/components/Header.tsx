@@ -1,4 +1,5 @@
 import './Header.css';
+import { Link } from 'react-router-dom';
 
 
 import CreditBalance from './CreditBalance';
@@ -39,10 +40,6 @@ const Header: React.FC<HeaderProps> = ({
         }
     };
 
-    const handleStripeDashboard = () => {
-        window.open('https://dashboard.stripe.com', '_blank');
-    };
-
     return (
         <nav className="header-nav">
 
@@ -52,14 +49,14 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="flex items-center gap-3">
 
                     {/* The Logo Text Group */}
-                    <div className="flex flex-col leading-none">
+                    <Link to="/" className="flex flex-col leading-none hover:opacity-80 transition-opacity cursor-pointer">
                         <span className="text-[10px] font-bold tracking-widest text-gray-400">
                             MYBESTPURPOSE
                         </span>
                         <span className="text-lg font-black tracking-tighter text-cyan-400">
                             WORLD ENGINE
                         </span>
-                    </div>
+                    </Link>
 
                     {/* The Pulsating Dot (Moved here) */}
                     <div
@@ -172,7 +169,7 @@ const Header: React.FC<HeaderProps> = ({
 
                     {/* Common Action Trigger (Renamed for Client View) */}
                     <button
-                        onClick={isAdmin ? handleStripeDashboard : onOpenCommandCenter}
+                        onClick={onOpenCommandCenter}
                         className={`relative px-4 h-10 flex items-center gap-2 rounded-lg border-2 transition-all group overflow-hidden ${isAdmin
                             ? 'bg-red-950/50 border-red-500 text-red-500 hover:bg-red-900 hover:text-white'
                             : viewMode === 'client'

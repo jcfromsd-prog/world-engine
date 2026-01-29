@@ -15,6 +15,7 @@ interface CommandCenterProps {
     userVelocity?: string;
     isOpen: boolean;
     onClose: () => void;
+    onOpenFounderDashboard?: () => void;
 }
 
 import { useState, useEffect } from 'react';
@@ -26,11 +27,12 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
     userEarnings: defaultEarnings = "$0", // Changing default for new users
     userVelocity: defaultVelocity = "1.0x",
     isOpen,
-    onClose
+    onClose,
+    onOpenFounderDashboard
 }) => {
     // REAL-TIME ENGINE HOOK
     const { thunderdomeTime, squadMembers, isMock, isConnected } = useEngine();
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const [profile, setProfile] = useState<Profile | null>(null);
 
     // Fetch real profile data
@@ -107,6 +109,44 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                             </div>
 
                             <div className="p-4 space-y-4">
+
+                                {/* ⚡ FOUNDER CONTROLS (Admin Only) */}
+                                {isAdmin && onOpenFounderDashboard && (
+                                    <div className="rounded-xl p-4 bg-red-950/20 border border-red-500/30 mb-2">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <span className="text-xs font-bold text-red-500 tracking-widest">⚡ FOUNDER PROTOCOLS</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <button
+                                                onClick={onOpenFounderDashboard}
+                                                className="w-full flex items-center justify-between p-3 bg-red-900/20 hover:bg-red-900/40 border border-red-500/30 rounded-lg transition-all group"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xl">👁️</span>
+                                                    <div className="text-left">
+                                                        <div className="text-sm font-bold text-white group-hover:text-red-400">God Mode Dashboard</div>
+                                                        <div className="text-xs text-red-400/70">MRR, Analytics, & Users</div>
+                                                    </div>
+                                                </div>
+                                                <span className="text-red-500">→</span>
+                                            </button>
+
+                                            <button
+                                                onClick={() => window.open('https://dashboard.stripe.com', '_blank')}
+                                                className="w-full flex items-center justify-between p-3 bg-indigo-900/20 hover:bg-indigo-900/40 border border-indigo-500/30 rounded-lg transition-all group"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xl">🏦</span>
+                                                    <div className="text-left">
+                                                        <div className="text-sm font-bold text-white group-hover:text-indigo-400">Stripe Treasury</div>
+                                                        <div className="text-xs text-indigo-400/70">Payouts & Balances</div>
+                                                    </div>
+                                                </div>
+                                                <span className="text-indigo-500">↗</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* 🚨 PRIORITY ALERT: Gauntlet */}
                                 <motion.div

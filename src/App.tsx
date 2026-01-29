@@ -158,6 +158,10 @@ function App() {
       <CommandCenter
         isOpen={showCommandCenter}
         onClose={() => setShowCommandCenter(false)}
+        onOpenFounderDashboard={() => {
+          setShowCommandCenter(false);
+          setShowFounderDashboard(true);
+        }}
       />
 
       <main>
