@@ -134,40 +134,40 @@ const Hero: React.FC<HeroProps> = ({
           {/* First set */}
           <div className="flex items-center gap-12 px-6 opacity-90">
             <span className="text-cyan-300 font-mono text-xs tracking-widest flex items-center gap-2">
-              ❤️ 102 LIVES IMPACTED
+              ❤️ SOCIAL IMPACT
             </span>
             <span
               className="text-purple-400 font-mono text-xs tracking-widest flex items-center gap-2 cursor-pointer hover:text-purple-300 hover:scale-105 transition-all"
               onClick={() => setShowStats(true)}
             >
-              💼 $45M BOUNTIES PAID
+              💼 PAID OPPORTUNITIES LIVE
             </span>
             <span className="text-green-400 font-mono text-xs tracking-widest flex items-center gap-2">
-              🌳 400 TREES PLANTED
+              🌳 CLIMATE ACTION
             </span>
             <span className="text-cyan-300 font-mono text-xs tracking-widest flex items-center gap-2">
-              🧠 14,500 SOLVERS ACTIVE
+              🚀 EARLY ACCESS
             </span>
             <span className="text-purple-400 font-mono text-xs tracking-widest flex items-center gap-2">
-              ⚡ 9.8x VELOCITY
+              ⚡ HIGH VELOCITY
             </span>
           </div>
           {/* Duplicate set for seamless loop */}
           <div className="flex items-center gap-12 px-6 opacity-90">
             <span className="text-cyan-300 font-mono text-xs tracking-widest flex items-center gap-2">
-              ❤️ 102 LIVES IMPACTED
+              ❤️ SOCIAL IMPACT
             </span>
             <span className="text-purple-400 font-mono text-xs tracking-widest flex items-center gap-2">
-              💼 $45M BOUNTIES PAID
+              💼 PAID OPPORTUNITIES LIVE
             </span>
             <span className="text-green-400 font-mono text-xs tracking-widest flex items-center gap-2">
-              🌳 400 TREES PLANTED
+              🌳 CLIMATE ACTION
             </span>
             <span className="text-cyan-300 font-mono text-xs tracking-widest flex items-center gap-2">
-              🧠 14,500 SOLVERS ACTIVE
+              🚀 EARLY ACCESS
             </span>
             <span className="text-purple-400 font-mono text-xs tracking-widest flex items-center gap-2">
-              ⚡ 9.8x VELOCITY
+              ⚡ HIGH VELOCITY
             </span>
           </div>
         </motion.div>

@@ -48,6 +48,7 @@ const Header: React.FC<HeaderProps> = ({
                 {/* 1. Main Logo Container: Add 'flex items-center gap-3' to align text and dot horizontally */}
                 <div className="flex items-center gap-3">
 
+
                     {/* The Logo Text Group - Hidden on super small screens, visible on sm+ */}
                     <Link to="/" className="hidden sm:flex flex-col leading-none hover:opacity-80 transition-opacity cursor-pointer">
                         <span className="text-[10px] font-bold tracking-widest text-gray-400">
@@ -98,6 +99,14 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* RIGHT - Actions Cluster */}
             <div className="flex items-center gap-4">
+                {/* User Profile Link - Inserted Here */}
+                <Link to="/profile" className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 hover:border-cyan-500/50 transition-all cursor-pointer group mr-2">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-500 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white">
+                        CC
+                    </div>
+                    <span className="text-xs font-bold text-slate-300 group-hover:text-white">Level 4</span>
+                </Link>
+
                 {/* Stats Group - CONDITIONAL SWAP */}
                 <div className="hidden md:flex items-center gap-4 mr-2">
                     {isAdmin ? (

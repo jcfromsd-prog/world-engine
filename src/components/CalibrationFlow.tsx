@@ -68,7 +68,7 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
             }
         }
 
-        setTimeout(() => setStep('analyzing'), 800);
+        // setTimeout(() => setStep('analyzing'), 800);  <-- REMOVED per user request for "Success State"
     };
 
     const handleAcceptBounty = () => {
@@ -130,57 +130,87 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
                                 className="w-full"
                             >
                                 <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-xl font-bold text-white">
-                                        <span className="text-red-500 mr-2">⚠</span> CORRUPTION DETECTED
+                                    <h2 className={`text-xl font-bold ${glitchFixed ? "text-emerald-400" : "text-white"}`}>
+                                        {glitchFixed ? (
+                                            <>
+                                                <span className="text-emerald-500 mr-2">✅</span> INTEGRITY RESTORED
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="text-red-500 mr-2">⚠</span> CORRUPTION DETECTED
+                                            </>
+                                        )}
                                     </h2>
                                     <span className="text-xs text-slate-400 font-mono">MODULE: SUPPLY_CHAIN_V2</span>
                                 </div>
 
+                                {/* CODE EDITOR */}
                                 <div className="font-mono text-sm md:text-base space-y-2 mb-6 bg-black/50 p-6 rounded-lg border border-slate-800 text-left">
                                     <div className="text-slate-500">1  def optimize_route(nodes):</div>
                                     <div className="text-slate-500">2      path = []</div>
                                     <div className="text-slate-500">3      current = nodes[0]</div>
 
-                                    {/* THE GLITCH LINE */}
-                                    <div
-                                        onClick={handleGlitchFix}
-                                        className={`cursor-pointer transition-all duration-300 p-2 rounded ${glitchFixed
-                                            ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                                            : "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse hover:bg-red-500/30"
-                                            }`}
-                                    >
-                                        4      {glitchFixed ? "while current.next != None:" : "while current.next =!= Null:  << SYNTAX ERROR"}
-                                    </div>
+                                    {!glitchFixed ? (
+                                        <div
+                                            onClick={handleGlitchFix}
+                                            className="cursor-pointer transition-all duration-300 p-2 rounded bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse hover:bg-red-500/30"
+                                        >
+                                            4      while current.next =!= Null:  &lt;&lt; SYNTAX ERROR
+                                        </div>
+                                    ) : (
+                                        <div className="p-2 rounded bg-green-500/20 text-green-400 border border-green-500/50">
+                                            4      while current.next != None:
+                                        </div>
+                                    )}
 
                                     <div className="text-slate-500">5          path.append(current)</div>
                                 </div>
 
-                                {/* EDUCATIONAL EXPLAINER - Shows after fix */}
+                                {/* SUCCESS STATE & PAYOUT BREAKDOWN */}
                                 <AnimatePresence>
                                     {glitchFixed && (
                                         <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0 }}
-                                            className="mb-6 p-4 bg-gradient-to-r from-green-900/30 to-cyan-900/30 border border-green-500/30 rounded-xl"
+                                            className="mb-6"
                                         >
-                                            <div className="flex items-start gap-3">
-                                                <span className="text-2xl">🎓</span>
-                                                <div className="text-left">
-                                                    <h4 className="text-green-400 font-bold text-sm mb-1">What You Fixed:</h4>
-                                                    <p className="text-slate-300 text-sm leading-relaxed">
-                                                        The bug was <code className="bg-red-900/30 text-red-400 px-1 rounded">=!=</code> —
-                                                        an invalid comparison operator in Python. The correct syntax is
-                                                        <code className="bg-green-900/30 text-green-400 px-1 rounded ml-1">!=</code> (not equal).
+                                            {/* SAGE MESSAGE */}
+                                            <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-6 flex gap-4 items-start">
+                                                <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-xl shrink-0">
+                                                    🧙
+                                                </div>
+                                                <div>
+                                                    <p className="text-slate-300 text-sm italic mb-2">
+                                                        "Excellent work, Architect. I've authorized your <strong className="text-emerald-400">$5.00 Founding Credit</strong>. Here is how the Neural Economy distributes value:"
                                                     </p>
-                                                    <p className="text-slate-400 text-xs mt-2">
-                                                        Also: Python uses <code className="text-cyan-400">None</code> instead of <code className="text-slate-500">Null</code>.
-                                                        This is a common mistake when switching from JavaScript or Java.
-                                                    </p>
-                                                    <div className="mt-3 flex items-center gap-2">
-                                                        <span className="text-xs text-emerald-400 font-bold">+10 XP</span>
-                                                        <span className="text-xs text-slate-500">•</span>
-                                                        <span className="text-xs text-cyan-400">Skill Unlocked: Python Syntax</span>
+                                                </div>
+                                            </div>
+
+                                            {/* PAYOUT CARD */}
+                                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 p-12 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
+
+                                                <h4 className="text-emerald-400 font-bold mb-4 font-mono text-center text-lg">
+                                                    BOUNTY TOTAL: $5.00
+                                                </h4>
+
+                                                <div className="space-y-3 text-sm">
+                                                    <div className="flex justify-between items-center text-white font-bold p-2 bg-slate-800/50 rounded">
+                                                        <span>Lead Solver (You)</span>
+                                                        <span className="text-emerald-400">$2.75 (55%)</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-slate-400 px-2">
+                                                        <span>Squad Fund</span>
+                                                        <span>$1.00 (20%)</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-slate-400 px-2">
+                                                        <span>Platform Governance</span>
+                                                        <span>$0.75 (15%)</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-slate-500 px-2 text-xs">
+                                                        <span>AI Compute / Growth</span>
+                                                        <span>$0.50 (10%)</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -188,9 +218,22 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
                                     )}
                                 </AnimatePresence>
 
-                                <p className="text-slate-400 text-sm">
-                                    {glitchFixed ? "✓ CORRECTION APPLIED — Analyzing your response time..." : "CLICK THE ERROR TO PATCH THE LINE"}
-                                </p>
+                                <div className="mt-8 flex justify-center">
+                                    {glitchFixed ? (
+                                        <motion.button
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            onClick={() => setStep('analyzing')}
+                                            className="px-8 py-4 bg-emerald-500 text-black font-black text-lg rounded-xl hover:bg-emerald-400 hover:scale-105 transition-all shadow-[0_0_30px_rgba(16,185,129,0.4)] animate-pulse"
+                                        >
+                                            CLAIM $2.75 & CONTINUE
+                                        </motion.button>
+                                    ) : (
+                                        <p className="text-slate-400 text-sm">
+                                            CLICK THE ERROR TO PATCH THE LINE
+                                        </p>
+                                    )}
+                                </div>
                             </motion.div>
                         )}
 

@@ -6,40 +6,50 @@ import { getBounties } from '../lib/supabase';
 import LiveInsights from './LiveInsights';
 import GitHubBounties from './GitHubBounties';
 import OneClickNDA from './OneClickNDA';
+import BountyCard from './BountyCard';
 
 const defaultQuests = [
     {
         id: 'mock-1',
         title: "Clean this Climate Data Set",
         reward: "$15 + 10 Rep",
+        rewardValue: 15,
         cause: "Clean Energy",
         time: "10 mins",
-        difficulty: "Easy"
+        difficulty: "Easy",
+        createdAt: new Date(Date.now() - 1000000).toISOString()
     },
-    ...EVERGREEN_BOUNTIES.map(b => ({
+    ...EVERGREEN_BOUNTIES.map((b, i) => ({
         id: `mock-${b.id}`,
         title: b.title,
         reward: b.reward + " Bounty",
+        rewardValue: parseInt(b.reward.replace(/[^0-9]/g, '')) || 0,
         cause: b.tags[0],
         time: b.time,
-        difficulty: b.difficulty
+        difficulty: b.difficulty,
+        createdAt: new Date(Date.now() - (i * 10000000)).toISOString()
     }))
 ];
 
 interface GlobalFeedProps {
     onOpenLogin?: () => void;
+    searchQuery?: string;
+    category?: string;
+    difficulty?: 'all' | 'easy' | 'medium' | 'hard';
+    sortBy?: 'newest' | 'highest-reward';
 }
 
-const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
+const GlobalFeed: React.FC<GlobalFeedProps> = ({
+    onOpenLogin,
+    searchQuery = '',
+    category = 'All Causes',
+    difficulty = 'all',
+    sortBy = 'newest'
+}) => {
     const navigate = useNavigate();
     const { participantCount, hasJoined, isLoading, error, user, byteIn, maxParticipants } = useGauntlet();
     const [allBounties, setAllBounties] = useState<any[]>(defaultQuests);
     const [filteredBounties, setFilteredBounties] = useState<any[]>(defaultQuests);
-
-    // Filter States
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string>('All Causes');
-    const [easyStartMode, setEasyStartMode] = useState(false);
 
     // Fetch real bounties
     useEffect(() => {
@@ -49,9 +59,11 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
                     id: b.id,
                     title: b.title,
                     reward: b.reward + " Bounty",
+                    rewardValue: parseInt(b.reward.replace(/[^0-9]/g, '')) || 0,
                     cause: b.category || "General",
                     time: b.time_estimate || "Unknown",
-                    difficulty: b.difficulty
+                    difficulty: b.difficulty,
+                    createdAt: b.created_at
                 }));
                 const merged = [...realBounties, ...defaultQuests];
                 setAllBounties(merged);
@@ -59,9 +71,9 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
         });
     }, []);
 
-    // Filter Logic
+    // Filter & Sort Logic
     useEffect(() => {
-        let result = allBounties;
+        let result = [...allBounties];
 
         // 1. Search Query
         if (searchQuery) {
@@ -73,19 +85,25 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
         }
 
         // 2. Category Filter
-        if (selectedCategory !== 'All Causes') {
-            result = result.filter(b => b.cause === selectedCategory);
+        if (category !== 'All Causes') {
+            result = result.filter(b => b.cause === category);
         }
 
-        // 3. Easy Start Mode
-        if (easyStartMode) {
-            result = result.filter(b =>
-                b.difficulty === 'Easy' // || b.tags.includes('Beginner')
-            );
+        // 3. Difficulty Filter
+        if (difficulty !== 'all') {
+            result = result.filter(b => b.difficulty.toLowerCase() === difficulty.toLowerCase());
+        }
+
+        // 4. Sorting
+        if (sortBy === 'highest-reward') {
+            result.sort((a, b) => b.rewardValue - a.rewardValue);
+        } else {
+            // Newest (Default)
+            result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         }
 
         setFilteredBounties(result);
-    }, [searchQuery, selectedCategory, easyStartMode, allBounties]);
+    }, [searchQuery, category, difficulty, sortBy, allBounties]);
 
 
     const handleByteIn = async () => {
@@ -133,50 +151,6 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
             />
 
             <div style={{ width: '100%', maxWidth: '1200px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
-                    <div>
-                        <h2 style={{ fontSize: '2.5rem', marginBottom: '8px' }}>Global Feed</h2>
-                        <p style={{ color: 'var(--text-muted)' }}>Opportunities being solved in real-time.</p>
-                    </div>
-
-                    {/* Controls */}
-                    <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-                        <div className="relative group min-w-[300px]">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>
-                            <input
-                                type="text"
-                                aria-label="Search bounties"
-                                placeholder="Search bounties (e.g., Python, Climate)..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-full py-2 pl-12 pr-4 text-white focus:border-cyan-500 outline-none transition-all"
-                            />
-                        </div>
-
-                        <select
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none focus:border-cyan-500"
-                        >
-                            <option>All Causes</option>
-                            <option>Clean Energy</option>
-                            <option>Education</option>
-                            <option>Tech</option>
-                            <option>AI/ML</option>
-                            <option>DeFi</option>
-                        </select>
-
-                        <button
-                            onClick={() => setEasyStartMode(!easyStartMode)}
-                            className={`px-4 py-2 rounded-lg font-bold transition-all border ${easyStartMode
-                                    ? 'bg-green-500/20 border-green-500 text-green-400'
-                                    : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-green-500/50'
-                                }`}
-                        >
-                            🌱 Easy Start
-                        </button>
-                    </div>
-                </div>
 
                 <div className="thunderdome-banner" style={{ marginBottom: '40px' }}>
                     <div className="glass" style={{ border: '2px solid #ff0055', background: 'linear-gradient(90deg, rgba(255,0,85,0.1) 0%, rgba(0,0,0,0) 100%)', padding: '32px', position: 'relative', overflow: 'hidden' }}>
@@ -226,38 +200,21 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({ onOpenLogin }) => {
                             <div className="text-center py-20 bg-slate-900/50 rounded-xl border border-dashed border-slate-700">
                                 <span className="text-4xl text-slate-600 block mb-4">🔍</span>
                                 <p className="text-slate-400">No bounties found for filters.</p>
-                                <button
-                                    onClick={() => {
-                                        setSearchQuery('');
-                                        setSelectedCategory('All Causes');
-                                        setEasyStartMode(false);
-                                    }}
-                                    className="text-cyan-400 mt-2 hover:underline"
-                                >
-                                    Clear Filters
-                                </button>
                             </div>
                         ) : (
                             <div className="feed-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
                                 {filteredBounties.map(quest => (
-                                    <div key={quest.id} className="glass" style={{ padding: '24px', transition: 'transform 0.3s', cursor: 'pointer' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                                            <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', background: 'rgba(0, 255, 202, 0.1)', color: 'var(--accent-neon)' }}>
-                                                {quest.cause}
-                                            </span>
-                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{quest.time}</span>
-                                        </div>
-                                        <h3 style={{ fontSize: '1.25rem', marginBottom: '16px', minHeight: '3rem' }}>{quest.title}</h3>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--accent-neon)' }}>{quest.reward}</div>
-                                            <button
-                                                onClick={() => handleSolve(quest)}
-                                                className="glass" style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 600 }}
-                                            >
-                                                {(quest.difficulty === 'Hard' || quest.reward.includes('$5,000')) ? '🛡️ Solve' : 'Solve'}
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <BountyCard
+                                        key={quest.id}
+                                        id={quest.id}
+                                        title={quest.title}
+                                        reward={quest.reward}
+                                        cause={quest.cause}
+                                        time={quest.time}
+                                        difficulty={quest.difficulty}
+                                        squadRoles={quest.squadRoles} // Pass squad roles if they exist
+                                        onSolve={() => handleSolve(quest)}
+                                    />
                                 ))}
                             </div>
                         )}

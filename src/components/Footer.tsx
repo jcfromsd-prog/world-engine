@@ -15,9 +15,32 @@ const Footer: React.FC = () => {
                     Contact
                 </a>
 
+
+                <Link to="/trust" className="text-slate-400 hover:text-white transition font-medium p-3 md:p-0">
+                    Trust Center
+                </Link>
+
+                <Link to="/economics" className="text-slate-400 hover:text-white transition font-medium p-3 md:p-0">
+                    Economics
+                </Link>
+
+                <Link to="/charter" className="text-slate-400 hover:text-white transition font-medium p-3 md:p-0">
+                    Founding Charter
+                </Link>
+
                 <Link to="/ip-policy" className="text-slate-400 hover:text-white transition font-medium p-3 md:p-0">
                     IP & Privacy
                 </Link>
+
+                {/* HIDDEN FOUNDER LINK - Only visible if authenticated */}
+                {localStorage.getItem('SOVEREIGN_ACCESS_TOKEN') && (
+                    <button
+                        onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'G', code: 'KeyG', ctrlKey: true, shiftKey: true }))}
+                        className="text-emerald-900 hover:text-emerald-500 transition font-mono p-3 md:p-0 uppercase tracking-widest text-[10px]"
+                    >
+                        [COMMAND_CENTER]
+                    </button>
+                )}
             </div>
         </footer>
     );

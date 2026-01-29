@@ -1,5 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import Hero from './Hero';
+import ExplainerVideo from './ExplainerVideo';
+import TrustTestimonials from './TrustTestimonials';
 import TabbedDashboard from './TabbedDashboard';
 import EngineGovernance from './EngineGovernance';
 import SolverSpotlight from './SolverSpotlight';
@@ -37,6 +39,10 @@ const Home: React.FC<HomeProps> = ({
                     onOpenPostBounty={onOpenPostBounty}
                     onOpenCapitalModal={onOpenCapitalModal}
                 />
+
+                {/* Growth & Trust Modules */}
+                <ExplainerVideo />
+                <TrustTestimonials />
 
                 <SolverSpotlight />
 

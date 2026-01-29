@@ -43,6 +43,40 @@ export const ARCHETYPES = {
         bgColor: 'bg-cyan-400',
         borderColor: 'border-cyan-400',
         gradient: 'from-cyan-400 to-blue-500'
+    },
+    // NON-TECHNICAL ARCHETYPES
+    DESIGN_VISIONARY: {
+        id: 'visionary',
+        title: 'Design Visionary',
+        icon: '🎨',
+        description: 'You shape reality. UX, branding, and visual storytelling are your craft.',
+        skills: ['UI/UX', 'Figma', 'Brand Strategy'],
+        color: 'text-pink-400',
+        bgColor: 'bg-pink-400',
+        borderColor: 'border-pink-400',
+        gradient: 'from-pink-400 to-rose-500'
+    },
+    WORD_SCRIBE: {
+        id: 'scribe',
+        title: 'Word Scribe',
+        icon: '✍️',
+        description: 'You weave narratives. Impact stories and clear communication are your spells.',
+        skills: ['Copywriting', 'Content Strategy', 'SEO'],
+        color: 'text-emerald-400',
+        bgColor: 'bg-emerald-400',
+        borderColor: 'border-emerald-400',
+        gradient: 'from-emerald-400 to-teal-500'
+    },
+    GROWTH_HACKER: {
+        id: 'hacker',
+        title: 'Growth Hacker',
+        icon: '🚀',
+        description: 'You accelerate impact. Marketing, reach, and user acquisition are your goals.',
+        skills: ['Social Media', 'Analytics', 'Campaigns'],
+        color: 'text-orange-400',
+        bgColor: 'bg-orange-400',
+        borderColor: 'border-orange-400',
+        gradient: 'from-orange-400 to-amber-500'
     }
 };
 
@@ -96,6 +130,36 @@ export const ONBOARDING_BOUNTIES: Record<string, {
         description: "Review this Solidity contract for reentrancy vulnerabilities. Protect $50K in community funds.",
         tags: ["Web3", "Security"],
         livesImpacted: 85
+    },
+    visionary: {
+        id: 105,
+        title: "Redesign Donation Flow",
+        reward: "$65.00",
+        difficulty: "Medium",
+        time: "50 mins",
+        description: "The current checkout drop-off rate is 60%. Propose a 3-step UI improvement in Figma.",
+        tags: ["Design", "UX"],
+        livesImpacted: 500
+    },
+    scribe: {
+        id: 106,
+        title: "Write Impact Story: Clean Water",
+        reward: "$40.00",
+        difficulty: "Easy",
+        time: "45 mins",
+        description: "Turn raw data from a Kenya well project into a compelling 300-word blog post for donors.",
+        tags: ["Content", "Storytelling"],
+        livesImpacted: 200
+    },
+    hacker: {
+        id: 107,
+        title: "Launch Twitter Campaign",
+        reward: "$50.00",
+        difficulty: "Easy",
+        time: "40 mins",
+        description: "Draft 5 tweets and 2 LinkedIn posts for the 'Ocean Cleanup' initiative launch next week.",
+        tags: ["Marketing", "Social"],
+        livesImpacted: 1000
     }
 };
 
@@ -194,5 +258,60 @@ export const EVERGREEN_BOUNTIES = [
         description: "Refactor a slow JOIN operation in PostgreSQL. Current execution: 3.5s. Target: <500ms.",
         tags: ["SQL", "DB"],
         livesImpacted: 200
+    },
+    {
+        id: 206,
+        title: "Translate Medical Aid Pamphlet",
+        reward: "$45.00",
+        difficulty: "Easy",
+        time: "35 mins",
+        description: "Translate a 1-page health guide from English to Spanish for a clinic in Peru.",
+        tags: ["Content", "Translation"],
+        livesImpacted: 150
+    },
+    {
+        id: 207,
+        title: "Create 'Donate Now' Button Variants",
+        reward: "$30.00",
+        difficulty: "Easy",
+        time: "20 mins",
+        description: "Design 3 variations of a CTA button (Hover/Active states) matching our brand guide.",
+        tags: ["Design", "UI"],
+        livesImpacted: 0
+    },
+    // FLAGSHIP SQUAD CONTRACT
+    {
+        id: 301,
+        title: "Launch 'Ocean Cleanup' Landing Page",
+        reward: "$750.00 Total",
+        difficulty: "Hard",
+        time: "3 Days",
+        description: "Full stack launch for a major non-profit. Requires a coordinated squad.",
+        tags: ["Squad", "Web3"],
+        livesImpacted: 5000,
+        squadRoles: [
+            {
+                id: 'role_1',
+                title: 'Logic Weaver (Dev)',
+                icon: '🕸️',
+                rewardShare: '$350.00',
+                status: 'filled',
+                filledBy: { name: 'Alex', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex' }
+            },
+            {
+                id: 'role_2',
+                title: 'Detail Visionary (Design)',
+                icon: '🎨',
+                rewardShare: '$250.00',
+                status: 'open'
+            },
+            {
+                id: 'role_3',
+                title: 'Word Scribe (Copy)',
+                icon: '✍️',
+                rewardShare: '$150.00',
+                status: 'open'
+            }
+        ]
     }
 ];

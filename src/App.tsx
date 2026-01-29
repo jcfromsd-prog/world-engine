@@ -16,7 +16,14 @@ import PostBountyModal from './components/PostBountyModal';
 import CommandCenter from './components/CommandCenter';
 import IPProtectionPolicy from './components/IPProtectionPolicy';
 import Manifesto from './components/Manifesto';
-import { TermsOfService, PrivacyPolicy } from './components/LegalPages';
+import { TermsOfService, PrivacyPolicy, FoundingCharter } from './components/LegalPages';
+import Economics from './components/Economics';
+import TrustCenter from './components/TrustCenter';
+import Profile from './components/Profile';
+import EarningsDashboard from './components/EarningsDashboard';
+import PublicPortfolio from './components/PublicPortfolio';
+import SovereignGate from './components/SovereignGate';
+import Footer from './components/Footer';
 
 
 import { useWallet } from './hooks/useWallet';
@@ -67,11 +74,19 @@ function App() {
 
   const isEnterprise = location.pathname === '/enterprise';
 
-  // Secret keyboard shortcut: Ctrl+Shift+G for God Mode
+  // Sovereign Gate State
+  const [showSovereignGate, setShowSovereignGate] = useState(false);
+
+  // Secret keyboard shortcut: Ctrl+Shift+G for God Mode (Check Auth First)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'G') {
-        setShowFounderDashboard(prev => !prev);
+        const hasToken = localStorage.getItem('SOVEREIGN_ACCESS_TOKEN');
+        if (hasToken) {
+          setShowFounderDashboard(prev => !prev);
+        } else {
+          setShowSovereignGate(true);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -84,6 +99,16 @@ function App() {
       {showLogin && (
         <Login onClose={() => setShowLogin(false)} />
       )}
+
+      {/* Sovereign Gate - Security Check */}
+      <SovereignGate
+        isOpen={showSovereignGate}
+        onClose={() => setShowSovereignGate(false)}
+        onSuccess={() => {
+          setShowSovereignGate(false);
+          setShowFounderDashboard(true);
+        }}
+      />
 
       {showWallet && (
         <WalletModal
@@ -115,10 +140,16 @@ function App() {
           viewMode={viewMode}
           setViewMode={setViewMode}
           onToggleNeural={() => {
-            // Neural Link toggles Founder Dashboard directly if already admin,
+            // Neural Link toggles Founder Dashboard directly if authenticated,
             // or opens login if not
-            if (isAuthAdmin) {
-              logout();
+            const hasToken = localStorage.getItem('SOVEREIGN_ACCESS_TOKEN');
+
+            if (isAuthAdmin || hasToken) {
+              if (hasToken) {
+                setShowFounderDashboard(true);
+              } else {
+                logout();
+              }
             } else {
               setShowLogin(true);
             }
@@ -160,7 +191,13 @@ function App() {
         onClose={() => setShowCommandCenter(false)}
         onOpenFounderDashboard={() => {
           setShowCommandCenter(false);
-          setShowFounderDashboard(true);
+          // Check Auth
+          const hasToken = localStorage.getItem('SOVEREIGN_ACCESS_TOKEN');
+          if (hasToken) {
+            setShowFounderDashboard(true);
+          } else {
+            setShowSovereignGate(true);
+          }
         }}
       />
 
@@ -182,8 +219,14 @@ function App() {
           <Route path="/enterprise" element={<EnterpriseHero />} />
           <Route path="/ip-policy" element={<IPProtectionPolicy />} />
           <Route path="/about" element={<Manifesto />} />
+          <Route path="/trust" element={<TrustCenter />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/u/:username" element={<PublicPortfolio />} />
+          <Route path="/earnings" element={<EarningsDashboard />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/charter" element={<FoundingCharter />} />
+          <Route path="/economics" element={<Economics />} />
         </Routes>
       </main>
 
@@ -194,6 +237,8 @@ function App() {
           isInitialized={guardianInitialized}
         />
       )}
+
+      <Footer />
 
     </div>
   );

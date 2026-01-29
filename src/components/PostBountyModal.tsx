@@ -21,7 +21,8 @@ const PostBountyModal: React.FC<PostBountyModalProps> = ({
     const [legalAccepted, setLegalAccepted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [title, setTitle] = useState('');
-    const reward = '$500.00'; // Fixed value, no need for useState if not controlled
+    const [category, setCategory] = useState('Development');
+    const reward = '$500.00'; // Fixed value, no need for usualState if not controlled
 
     // Bounty Cost
     const BOUNTY_COST = 500;
@@ -42,7 +43,7 @@ const PostBountyModal: React.FC<PostBountyModalProps> = ({
                 title: title || "Untitled Bounty", // Fallback
                 reward: reward,
                 difficulty: 'Medium',
-                category: 'Development',
+                category: category,
                 time_estimate: '4 hours',
                 status: 'open'
             });
@@ -87,6 +88,30 @@ const PostBountyModal: React.FC<PostBountyModalProps> = ({
                                     className="w-full bg-slate-800 border border-slate-700 rounded p-3 text-white focus:border-cyan-500 outline-none"
                                 />
                             </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs uppercase text-slate-500 font-bold mb-1">Category</label>
+                                    <select
+                                        value={category}
+                                        onChange={(e) => setCategory(e.target.value)}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded p-3 text-white focus:border-cyan-500 outline-none appearance-none"
+                                    >
+                                        <option value="Development">Development</option>
+                                        <option value="Design">Design & Creative</option>
+                                        <option value="Content">Writing & Content</option>
+                                        <option value="Marketing">Marketing & Growth</option>
+                                        <option value="Research">Research & Admin</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs uppercase text-slate-500 font-bold mb-1">Difficulty</label>
+                                    <div className="w-full bg-slate-800 border border-slate-700 rounded p-3 text-white">
+                                        Medium
+                                    </div>
+                                </div>
+                            </div>
+
                             <div>
                                 <label className="block text-xs uppercase text-slate-500 font-bold mb-1">Bounty Reward</label>
                                 <div className="flex items-center gap-4 p-4 bg-slate-800 rounded border border-slate-700">
