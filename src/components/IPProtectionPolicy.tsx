@@ -7,7 +7,7 @@ const IPProtectionPolicy: React.FC = () => {
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="mb-12">
-                    <Link to="/" className="text-cyan-400 hover:text-cyan-300 text-sm mb-4 inline-block">← Back to Home</Link>
+                    <Link to="/" className="text-cyan-400 hover:text-cyan-300 text-sm mb-4 inline-block px-2 py-3 md:px-0 md:py-0">← Back to Home</Link>
                     <div className="flex items-center gap-4 mb-4">
                         <span className="text-4xl">🛡️</span>
                         <h1 className="text-4xl font-black">IP Protection Policy</h1>

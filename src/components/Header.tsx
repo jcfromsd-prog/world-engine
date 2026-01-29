@@ -48,8 +48,8 @@ const Header: React.FC<HeaderProps> = ({
                 {/* 1. Main Logo Container: Add 'flex items-center gap-3' to align text and dot horizontally */}
                 <div className="flex items-center gap-3">
 
-                    {/* The Logo Text Group */}
-                    <Link to="/" className="flex flex-col leading-none hover:opacity-80 transition-opacity cursor-pointer">
+                    {/* The Logo Text Group - Hidden on super small screens, visible on sm+ */}
+                    <Link to="/" className="hidden sm:flex flex-col leading-none hover:opacity-80 transition-opacity cursor-pointer">
                         <span className="text-[10px] font-bold tracking-widest text-gray-400">
                             MYBESTPURPOSE
                         </span>
@@ -72,11 +72,12 @@ const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* --- CENTER: VIEW MODE TOGGLE --- */}
-            <div className="header-center absolute left-1/2 transform -translate-x-1/2">
+            {/* Mobile: Static position (between left/right). Desktop: Absolute Center */}
+            <div className="header-center md:absolute md:left-1/2 md:transform md:-translate-x-1/2 order-2 md:order-none mx-auto md:mx-0">
                 <div className="bg-slate-900 p-1 rounded-full border border-slate-700 flex items-center">
                     <button
                         onClick={() => handleModeSwitch('solver')}
-                        className={`px-4 py-1 rounded-full text-xs font-bold transition-all ${viewMode === 'solver'
+                        className={`px-3 md:px-4 py-1 rounded-full text-[10px] md:text-xs font-bold transition-all ${viewMode === 'solver'
                             ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
                             : 'text-slate-400 hover:text-white'
                             }`}
@@ -85,7 +86,7 @@ const Header: React.FC<HeaderProps> = ({
                     </button>
                     <button
                         onClick={() => handleModeSwitch('client')}
-                        className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'client'
+                        className={`px-3 md:px-4 py-1 rounded-md text-[10px] md:text-xs font-bold transition-all ${viewMode === 'client'
                             ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20'
                             : 'text-slate-400 hover:text-white'
                             }`}

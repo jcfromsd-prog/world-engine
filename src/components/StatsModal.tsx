@@ -43,11 +43,11 @@ const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-purple-900/50 to-cyan-900/50 p-6 border-b border-slate-700">
+                        <div className="bg-gradient-to-r from-purple-900/50 to-cyan-900/50 p-4 md:p-6 border-b border-slate-700">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-purple-400 uppercase tracking-widest font-bold">Total Distributed</p>
-                                    <h2 className="text-4xl font-black text-white mt-1">$45,000,000</h2>
+                                    <h2 className="text-3xl md:text-4xl font-black text-white mt-1">$45,000,000</h2>
                                 </div>
                                 <button
                                     onClick={onClose}
@@ -64,8 +64,8 @@ const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
                         <div className="flex border-b border-slate-700">
                             <button
                                 className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition ${activeTab === 'categories'
-                                        ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-400/5'
-                                        : 'text-slate-500 hover:text-white'
+                                    ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-400/5'
+                                    : 'text-slate-500 hover:text-white'
                                     }`}
                                 onClick={() => setActiveTab('categories')}
                             >
@@ -73,8 +73,8 @@ const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
                             </button>
                             <button
                                 className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition ${activeTab === 'recent'
-                                        ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-400/5'
-                                        : 'text-slate-500 hover:text-white'
+                                    ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-400/5'
+                                    : 'text-slate-500 hover:text-white'
                                     }`}
                                 onClick={() => setActiveTab('recent')}
                             >
@@ -95,9 +95,9 @@ const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose }) => {
                                             <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                                                 <motion.div
                                                     className={`h-full rounded-full ${cat.color === 'cyan' ? 'bg-cyan-500' :
-                                                            cat.color === 'green' ? 'bg-green-500' :
-                                                                cat.color === 'purple' ? 'bg-purple-500' :
-                                                                    cat.color === 'yellow' ? 'bg-yellow-500' : 'bg-gray-500'
+                                                        cat.color === 'green' ? 'bg-green-500' :
+                                                            cat.color === 'purple' ? 'bg-purple-500' :
+                                                                cat.color === 'yellow' ? 'bg-yellow-500' : 'bg-gray-500'
                                                         }`}
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${cat.percent}%` }}

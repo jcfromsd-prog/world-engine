@@ -98,7 +98,7 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
                     ✕
                 </button>
 
-                <div className="p-8 min-h-[450px] flex flex-col items-center justify-center text-center">
+                <div className="p-4 md:p-8 min-h-[450px] flex flex-col items-center justify-center text-center">
 
                     <AnimatePresence mode="wait">
 

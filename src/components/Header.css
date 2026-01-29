@@ -52,20 +52,9 @@
 }
 
 
-/* --- CENTER: GUARDIAN AVATAR --- */
+/* --- CENTER: GUARDIAN AVATAR / TOGGLE --- */
 .header-center {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    display: none;
-}
-
-@media (min-width: 768px) {
-    .header-center {
-        display: block;
-        /* md:block */
-    }
+    /* Layout handled by Tailwind in JSX */
 }
 
 .guardian-ring {
