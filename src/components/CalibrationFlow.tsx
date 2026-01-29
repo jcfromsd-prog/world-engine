@@ -308,12 +308,67 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
                                         <span className="text-xs text-emerald-400">+{SUGGESTED_TEAMMATES.length} compatible</span>
                                     </div>
 
+                                    {/* PAYOUT BREAKDOWN TOOLTIP */}
+                                    <div className="mb-4 flex items-center gap-2 text-[10px] text-slate-500 justify-end group relative">
+                                        <span className="underline decoration-dotted cursor-help">Payout Breakdown (?)</span>
+                                        <div className="absolute bottom-full right-0 mb-2 w-48 bg-slate-800 border border-slate-700 p-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                                            <div className="flex justify-between text-slate-300 mb-1">
+                                                <span>Lead Solver (You)</span>
+                                                <span className="text-emerald-400">$40.00</span>
+                                            </div>
+                                            <div className="flex justify-between text-slate-400 mb-1">
+                                                <span>Squad Split</span>
+                                                <span>$10.00</span>
+                                            </div>
+                                            <div className="flex justify-between text-slate-500 border-t border-slate-700 pt-1 mt-1">
+                                                <span>Platform Fee</span>
+                                                <span>$10.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* CONTRACT TRIGGER NOTIFICATION */}
+                                    <AnimatePresence>
+                                        {glitchFixed && step === 'result' && (
+                                            <div className="relative">
+                                                {/* Success Overlay */}
+                                                {/* We reuse the button logic below for state, but if we need a toast, we place it here */}
+                                            </div>
+                                        )}
+                                    </AnimatePresence>
+
                                     <button
-                                        onClick={handleAcceptBounty}
-                                        className={`w-full py-3 ${result.bgColor} text-black font-bold rounded-lg hover:opacity-90 transition`}
+                                        onClick={() => {
+                                            const btn = document.getElementById('accept-btn');
+                                            if (btn) {
+                                                btn.innerText = "INITIALIZING SMART CONTRACT...";
+                                                btn.classList.add('animate-pulse', 'bg-emerald-600', 'text-white');
+                                                btn.classList.remove('bg-cyan-400'); // Assuming default was different
+                                            }
+
+                                            // Show Notification
+                                            const notif = document.createElement('div');
+                                            notif.className = 'fixed top-10 left-1/2 -translate-x-1/2 bg-emerald-500 text-black px-6 py-3 rounded-full font-bold shadow-2xl z-[100] flex items-center gap-3 animate-fade-in-down';
+                                            notif.innerHTML = '<span>🚀</span> <span>Contract initialized. $5.00 Founding Credit pending completion.</span>';
+                                            document.body.appendChild(notif);
+
+                                            setTimeout(() => {
+                                                if (document.body.contains(notif)) document.body.removeChild(notif);
+                                                handleAcceptBounty();
+                                            }, 2000);
+                                        }}
+                                        id="accept-btn"
+                                        className={`w-full py-3 ${result.bgColor} text-black font-bold rounded-lg hover:opacity-90 transition relative overflow-hidden`}
                                     >
                                         ACCEPT FIRST CONTRACT
                                     </button>
+
+                                    {/* TRUST & SECURITY TEXT */}
+                                    <div className="mt-3 text-center">
+                                        <p className="text-[10px] text-slate-500 flex items-center justify-center gap-1">
+                                            <span>🔒</span> Payments secured by Stripe. Funds released upon successful audit.
+                                        </p>
+                                    </div>
                                 </div>
                             </motion.div>
                         )}
@@ -321,6 +376,16 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
                     </AnimatePresence>
                 </div>
             </motion.div>
+
+            <style>{`
+                @keyframes fadeInDown {
+                    from { opacity: 0; transform: translate(-50%, -20px); }
+                    to { opacity: 1; transform: translate(-50%, 0); }
+                }
+                .animate-fade-in-down {
+                    animation: fadeInDown 0.5s ease-out forwards;
+                }
+            `}</style>
         </div>
     );
 };
