@@ -94,6 +94,7 @@ export function useGauntlet(eventName: string = 'Zero-Day Defense') {
         try {
             await joinGauntlet(user.id, eventName);
             setHasJoined(true);
+            setParticipantCount(prev => prev + 1); // Optimistic update
             await fetchCount();
             return true;
         } catch (err: unknown) {
