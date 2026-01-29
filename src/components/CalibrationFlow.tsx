@@ -155,8 +155,41 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
                                     <div className="text-slate-500">5          path.append(current)</div>
                                 </div>
 
+                                {/* EDUCATIONAL EXPLAINER - Shows after fix */}
+                                <AnimatePresence>
+                                    {glitchFixed && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="mb-6 p-4 bg-gradient-to-r from-green-900/30 to-cyan-900/30 border border-green-500/30 rounded-xl"
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                <span className="text-2xl">🎓</span>
+                                                <div className="text-left">
+                                                    <h4 className="text-green-400 font-bold text-sm mb-1">What You Fixed:</h4>
+                                                    <p className="text-slate-300 text-sm leading-relaxed">
+                                                        The bug was <code className="bg-red-900/30 text-red-400 px-1 rounded">=!=</code> —
+                                                        an invalid comparison operator in Python. The correct syntax is
+                                                        <code className="bg-green-900/30 text-green-400 px-1 rounded ml-1">!=</code> (not equal).
+                                                    </p>
+                                                    <p className="text-slate-400 text-xs mt-2">
+                                                        Also: Python uses <code className="text-cyan-400">None</code> instead of <code className="text-slate-500">Null</code>.
+                                                        This is a common mistake when switching from JavaScript or Java.
+                                                    </p>
+                                                    <div className="mt-3 flex items-center gap-2">
+                                                        <span className="text-xs text-emerald-400 font-bold">+10 XP</span>
+                                                        <span className="text-xs text-slate-500">•</span>
+                                                        <span className="text-xs text-cyan-400">Skill Unlocked: Python Syntax</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
                                 <p className="text-slate-400 text-sm">
-                                    {glitchFixed ? "✓ CORRECTION APPLIED" : "CLICK THE ERROR TO PATCH THE LINE"}
+                                    {glitchFixed ? "✓ CORRECTION APPLIED — Analyzing your response time..." : "CLICK THE ERROR TO PATCH THE LINE"}
                                 </p>
                             </motion.div>
                         )}
