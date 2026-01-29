@@ -15,6 +15,7 @@ export interface Profile {
     username: string | null;
     reputation_points: number;
     avatar_url: string | null;
+    archetype: string | null;
     updated_at: string | null;
 }
 

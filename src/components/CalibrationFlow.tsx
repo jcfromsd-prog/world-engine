@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ARCHETYPES, ONBOARDING_BOUNTIES, SUGGESTED_TEAMMATES, determineArchetype } from '../data/gameData';
+import { useAuth } from '../context/AuthContext';
+import { updateProfile } from '../lib/supabase';
 
 interface CalibrationFlowProps {
     onClose: () => void;
@@ -10,6 +12,7 @@ interface CalibrationFlowProps {
 type Step = 'intro' | 'puzzle' | 'analyzing' | 'result';
 
 const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }) => {
+    const { user } = useAuth();
     const [step, setStep] = useState<Step>('intro');
     const [glitchFixed, setGlitchFixed] = useState(false);
     const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -44,7 +47,7 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
         }
     }, [step]);
 
-    const handleGlitchFix = () => {
+    const handleGlitchFix = async () => {
         const timeToSolve = Date.now() - startTimeRef.current;
         setGlitchFixed(true);
 
@@ -55,6 +58,15 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
         // Store in localStorage for persistence
         localStorage.setItem('user_archetype', archetypeKey);
         localStorage.setItem('calibration_complete', 'true');
+
+        // Store in Supabase if logged in
+        if (user) {
+            try {
+                await updateProfile(user.id, { archetype: ARCHETYPES[archetypeKey].title });
+            } catch (err) {
+                console.error('Failed to save archetype to profile:', err);
+            }
+        }
 
         setTimeout(() => setStep('analyzing'), 800);
     };
@@ -133,8 +145,8 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
                                     <div
                                         onClick={handleGlitchFix}
                                         className={`cursor-pointer transition-all duration-300 p-2 rounded ${glitchFixed
-                                                ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                                                : "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse hover:bg-red-500/30"
+                                            ? "bg-green-500/20 text-green-400 border border-green-500/50"
+                                            : "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse hover:bg-red-500/30"
                                             }`}
                                     >
                                         4      {glitchFixed ? "while current.next != None:" : "while current.next =!= Null:  << SYNTAX ERROR"}
