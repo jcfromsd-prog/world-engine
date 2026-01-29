@@ -30,12 +30,6 @@ interface LedgerStats {
   };
 }
 
-interface UserProfile {
-  cause: string;
-  class: string;
-  squad: string;
-}
-
 function App() {
   const location = useLocation();
   const { isAuthenticated, isAdmin: isAuthAdmin, logout, supabaseUser } = useAuth();
@@ -43,9 +37,6 @@ function App() {
   const [showWallet, setShowWallet] = useState(false);
   const [showDiscovery, setShowDiscovery] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  // Profile state temporarily unused in new header design, keeping for data persistence
-  const [, setUserProfile] = useState<UserProfile | null>(null);
-  const [, setCompanyMode] = useState(false);
   const [viewMode, setViewMode] = useState<'solver' | 'client'>('solver');
   const [guardianInitialized, setGuardianInitialized] = useState(true);
   const [showFounderDashboard, setShowFounderDashboard] = useState(false);
@@ -62,8 +53,6 @@ function App() {
   const [showCapitalModal, setShowCapitalModal] = useState(false);
 
   // Command Center State
-
-  // Command Center State
   const [showCommandCenter, setShowCommandCenter] = useState(false);
 
   // Post Bounty Logic
@@ -71,13 +60,6 @@ function App() {
 
   const handlePostBounty = (_cost: number) => {
     // Balance deduction is handled by the Modal/Hook now
-    // console.log('Bounty posted, cost:', cost);
-  };
-
-  const handleDiscoveryComplete = (profile: UserProfile) => {
-    setUserProfile(profile);
-    setShowDiscovery(false);
-    // Profile auto-show removed for new header design
   };
 
   const isEnterprise = location.pathname === '/enterprise';
@@ -115,10 +97,9 @@ function App() {
       {showDiscovery && (
         <SageDiscoveryModal
           onClose={() => setShowDiscovery(false)}
-          onComplete={handleDiscoveryComplete}
+          onComplete={() => setShowDiscovery(false)}
           onConnectWallet={() => {
             setShowDiscovery(false);
-            // Auto-login for discovery if needed, but keeping it manual for now
             setShowLogin(true);
           }}
         />
@@ -128,7 +109,6 @@ function App() {
         <Header
           onConnectWallet={() => setShowLogin(true)}
           walletBalance={isAuthenticated ? `$${walletBalance.toLocaleString()}` : undefined}
-          onToggleCompanyMode={setCompanyMode}
           viewMode={viewMode}
           setViewMode={setViewMode}
           onToggleNeural={() => {

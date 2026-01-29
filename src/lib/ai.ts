@@ -1,4 +1,5 @@
 import type { Bounty } from './supabase';
+import { supabase } from './supabase';
 
 interface AIContext {
     balance: number;
@@ -9,39 +10,20 @@ interface AIContext {
 }
 
 export async function chat(systemPrompt: string, userMessage: string, context: AIContext, history: { role: 'user' | 'assistant', content: string }[] = []) {
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-
-    if (apiKey) {
-        return await callOpenAI(apiKey, systemPrompt, userMessage, history);
-    } else {
-        return await mockAI(userMessage, context);
-    }
-}
-
-async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: string, history: any[]) {
+    // Try Edge Function first (production), fall back to mock (local dev)
     try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o', // or gpt-3.5-turbo
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    ...history,
-                    { role: 'user', content: userMessage }
-                ],
-                temperature: 0.7
-            })
+        const { data, error } = await supabase.functions.invoke('chat', {
+            body: { systemPrompt, userMessage, history }
         });
 
-        const data = await response.json();
-        return data.choices[0].message.content;
-    } catch (error) {
-        console.error('OpenAI API Error:', error);
-        return "Critical Failure. Neural Link severed. Check API configuration.";
+        if (error) throw error;
+        if (data?.content) return data.content;
+
+        // If edge function didn't return content, use mock
+        return await mockAI(userMessage, context);
+    } catch {
+        // Edge function not available (local dev or not deployed), use mock
+        return await mockAI(userMessage, context);
     }
 }
 

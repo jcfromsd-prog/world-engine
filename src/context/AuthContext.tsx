@@ -22,41 +22,52 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Map Supabase user to our User type
-function mapSupabaseUser(supabaseUser: SupabaseUser | null): User | null {
-    if (!supabaseUser) return null;
-
-    // Check for founder email to grant admin
-    const isAdmin = supabaseUser.email === 'founder@mybestpurpose.com' ||
-        supabaseUser.email === 'jcfromsd@gmail.com';
-
-    return {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'Solver',
-        role: isAdmin ? 'admin' : 'solver'
-    };
-}
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Fetch role from profile and build User object
+    const buildUser = async (sbUser: SupabaseUser | null): Promise<User | null> => {
+        if (!sbUser) return null;
+
+        // Fetch role from profiles table (defaults to 'solver' if not found)
+        let role: 'admin' | 'solver' | 'client' = 'solver';
+        try {
+            const { data } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', sbUser.id)
+                .single();
+            if (data?.role) {
+                role = data.role as 'admin' | 'solver' | 'client';
+            }
+        } catch {
+            // Profile doesn't exist yet or no role column - default to solver
+        }
+
+        return {
+            id: sbUser.id,
+            email: sbUser.email || '',
+            name: sbUser.user_metadata?.name || sbUser.email?.split('@')[0] || 'Solver',
+            role
+        };
+    };
+
     // Initialize auth state from Supabase session
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
             setSupabaseUser(session?.user ?? null);
-            setUser(mapSupabaseUser(session?.user ?? null));
+            setUser(await buildUser(session?.user ?? null));
             setIsLoading(false);
         });
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (_event: string, session: Session | null) => {
+            async (_event: string, session: Session | null) => {
                 setSupabaseUser(session?.user ?? null);
-                setUser(mapSupabaseUser(session?.user ?? null));
+                setUser(await buildUser(session?.user ?? null));
                 setIsLoading(false);
             }
         );
@@ -77,7 +88,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             if (data.user) {
                 setSupabaseUser(data.user);
-                setUser(mapSupabaseUser(data.user));
+                setUser(await buildUser(data.user));
                 return { success: true };
             }
 
@@ -113,7 +124,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 });
 
                 setSupabaseUser(data.user);
-                setUser(mapSupabaseUser(data.user));
+                setUser(await buildUser(data.user));
                 return { success: true };
             }
 

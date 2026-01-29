@@ -66,8 +66,8 @@ export function useWallet(user: User | null) {
             // Balance update handled by subscription usually, but we can force it
             setBalance(prev => prev + amount);
             return true;
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Deposit failed');
             return false;
         } finally {
             setLoading(false);
