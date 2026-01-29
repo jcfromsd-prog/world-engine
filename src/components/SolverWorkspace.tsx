@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import SubmissionModal from './SubmissionModal';
+import SquadInviteModal from './SquadInviteModal';
 
 const SolverWorkspace: React.FC = () => {
     const { id } = useParams();
     const [isComplete, setIsComplete] = useState(false);
     const [showSubmission, setShowSubmission] = useState(false);
+    const [showSquadInvite, setShowSquadInvite] = useState(false);
 
     // Detect if this is the first/onboarding bounty (calibration)
     const isCalibrationComplete = localStorage.getItem('calibration_complete') === 'true';
@@ -138,10 +140,19 @@ const SolverWorkspace: React.FC = () => {
                     // Mark first bounty as completed so future submissions use full form
                     if (isOnboarding) {
                         localStorage.setItem('first_bounty_completed', 'true');
+                        // Show Squad Invite after first bounty!
+                        setTimeout(() => setShowSquadInvite(true), 1000);
                     }
                 }}
                 questTitle={questTitle}
                 isOnboarding={isOnboarding}
+            />
+
+            {/* Squad Invite Modal - appears after first bounty */}
+            <SquadInviteModal
+                isOpen={showSquadInvite}
+                onClose={() => setShowSquadInvite(false)}
+                userRank={5}
             />
         </div>
     );

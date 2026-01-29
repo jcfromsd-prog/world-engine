@@ -153,9 +153,28 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, onSu
 
                                 {/* 3. The Grandma Test */}
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-slate-300 uppercase tracking-wider">
-                                        3. Deployment Instructions (The "Grandma Test") <span className="text-red-500">*</span>
-                                    </label>
+                                    <div className="flex justify-between items-center">
+                                        <label className="block text-sm font-bold text-slate-300 uppercase tracking-wider">
+                                            3. Deployment Instructions (The "Grandma Test") <span className="text-red-500">*</span>
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setInstructions(`Step 1: Clone the repository using "git clone [repo-url]"
+
+Step 2: Open Terminal and navigate to the project folder
+
+Step 3: Run "npm install" to install dependencies
+
+Step 4: Run "npm run dev" to start the application
+
+Step 5: Open your browser to http://localhost:5173
+
+Step 6: Verify the batched state updates are reducing render cycles by 40%`)}
+                                            className="text-xs bg-cyan-500/20 text-cyan-400 px-3 py-1 rounded-full hover:bg-cyan-500/30 transition flex items-center gap-1"
+                                        >
+                                            🤖 Sage Auto-Fill
+                                        </button>
+                                    </div>
                                     <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-lg mb-2">
                                         <p className="text-xs text-yellow-300">
                                             <strong>⚠️ Requirement:</strong> Write this so a non-technical founder can run it.
