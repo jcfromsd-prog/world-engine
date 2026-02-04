@@ -56,7 +56,6 @@ const simulatePath = (archetype: string, sector: string): { role1: string; role2
     if (mode === 'systems') return { role1: "Operations Analyst", role2: "Data Storyteller", mode };
     if (mode === 'creative') return { role1: "Pixel Weaver", role2: "Story Smith", mode };
     return { role1: "Squad Captain", role2: "Growth Hacker", mode }; // Commander
-    return { role1: "UNKNOWN", role2: "UNKNOWN", mode: "UNKNOWN" }; // Fallback
 };
 
 // ----------------- COMPONENT -----------------

@@ -239,7 +239,6 @@ function HeroSection({ onStart }: { onStart: () => void }) {
 function SolverDashboard({ profile, onMissionStart }: { profile: SoulboundProfile, onMissionStart: (m: any) => void }) {
 
   // ----------------- MISSION GENERATOR (ADAPTED) -----------------
-  // ----------------- MISSION GENERATOR (ADAPTED) -----------------
   const getRecommendedMissions = () => {
     const { sector, archetype } = profile;
     let missions: UIMission[] = [];
