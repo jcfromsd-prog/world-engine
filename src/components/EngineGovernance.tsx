@@ -23,11 +23,12 @@ const EngineGovernance: React.FC<EngineGovernanceProps> = ({ isGuardianActive, o
                     <div className="glass" style={{ padding: '16px', borderRadius: '8px', border: '1px solid #333', fontFamily: 'monospace', fontSize: '0.8rem' }}>
                         <h4 style={{ color: 'white', marginBottom: '8px', textDecoration: 'underline' }}>Economic Manifesto (Per $1.00)</h4>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', color: '#ccc' }}>
-                            <span>The Solver:</span> <span style={{ color: '#00ffca', textAlign: 'right' }}>$0.60</span>
-                            <span>Team Leader:</span> <span style={{ color: 'white', textAlign: 'right' }}>$0.10</span>
-                            <span>Squad Treasury:</span> <span style={{ color: 'white', textAlign: 'right' }}>$0.05</span>
-                            <span>MyBestPurpose R&D:</span> <span style={{ color: 'white', textAlign: 'right' }}>$0.15</span>
-                            <span>Founder Profit:</span> <span style={{ color: 'white', textAlign: 'right' }}>$0.10</span>
+                            <span>Lead Solver:</span> <span style={{ color: '#00ffca', textAlign: 'right' }}>$0.45</span>
+                            <span>Support Squad:</span> <span style={{ color: 'white', textAlign: 'right' }}>$0.15</span>
+                            <span>Sovereign Ops:</span> <span style={{ color: 'white', textAlign: 'right' }}>$0.10</span>
+                            <span>Legal Defense:</span> <span style={{ color: 'white', textAlign: 'right' }}>$0.10</span>
+                            <span>AI Compute:</span> <span style={{ color: 'white', textAlign: 'right' }}>$0.10</span>
+                            <span>Growth Fund:</span> <span style={{ color: 'white', textAlign: 'right' }}>$0.10</span>
                         </div>
                     </div>
                     <p style={{ fontSize: '0.7rem', color: '#666', fontStyle: 'italic' }}>

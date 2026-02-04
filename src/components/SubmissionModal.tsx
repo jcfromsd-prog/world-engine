@@ -14,7 +14,6 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, onSu
     const [videoUrl, setVideoUrl] = useState('');
     const [repoUrl, setRepoUrl] = useState('');
     const [instructions, setInstructions] = useState('');
-    const [watchedVideo, setWatchedVideo] = useState(false);
     const [testedDocs, setTestedDocs] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [quickSubmitConfirmed, setQuickSubmitConfirmed] = useState(false);
@@ -31,13 +30,14 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, onSu
                 if (!repoUrl) setRepoUrl("https://github.com/johndoe/climate-data-fix");
             }, 500);
         }
-    }, [isOpen, isOnboarding]);
+    }, [isOpen, isOnboarding, repoUrl]);
 
     const isValid = isOnboarding
-        ? quickSubmitConfirmed  // Onboarding only needs confirmation
-        : (videoUrl.length > 10 && repoUrl.length > 10 && instructions.length > 20 && watchedVideo && testedDocs);
+        ? quickSubmitConfirmed
+        : (videoUrl.length > 0 && repoUrl.length > 0 && instructions.length > 0 && testedDocs);
 
     const handleSubmit = async () => {
+        // console.log("Submitting...", { isValid, videoUrl, repoUrl, instructions, testedDocs });
         if (!isValid) return;
 
         setIsSubmitting(true);
@@ -51,7 +51,6 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, onSu
         setIsGeneratingVideo(true);
         setTimeout(() => {
             setVideoUrl("https://loom.com/share/generated-proof-8a7b9c");
-            setWatchedVideo(true); // Auto-confirm for AI generated content
             setIsGeneratingVideo(false);
         }, 2000);
     };
@@ -136,8 +135,7 @@ const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, onSu
 
                                 <div className="bg-gradient-to-r from-cyan-900/30 to-purple-900/30 border border-cyan-500/20 rounded-xl p-4">
                                     <p className="text-sm text-slate-300">
-                                        <span className="text-cyan-400 font-bold">What's Next?</span> Browse the Global Feed for more bounties,
-                                        or join a Squad for bigger challenges with higher rewards!
+                                        <span className="text-cyan-400 font-bold">The $5.00 is in your Vault.</span> But more importantly, you just proved you can handle this calibration protocol. That is a permanent asset in your inventory. Well done.
                                     </p>
                                 </div>
 
@@ -250,28 +248,16 @@ Step 6: Verify the solution by...`)}
                                 </div>
 
                                 {/* Checkboxes */}
+                                {/* Checkboxes */}
                                 <div className="space-y-3 pt-4 border-t border-white/5">
-                                    <label className="flex items-center gap-3 cursor-pointer group">
-                                        <input
-                                            type="checkbox"
-                                            checked={watchedVideo}
-                                            onChange={(e) => setWatchedVideo(e.target.checked)}
-                                            className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900"
-                                        />
-                                        <span className={`text-sm transition-colors ${watchedVideo ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}>
-                                            I have confirmed the evidence demonstrates the requirements.
-                                        </span>
-                                    </label>
-                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                    <label className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-800/50 cursor-pointer transition-colors">
                                         <input
                                             type="checkbox"
                                             checked={testedDocs}
                                             onChange={(e) => setTestedDocs(e.target.checked)}
-                                            className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900"
+                                            className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900"
                                         />
-                                        <span className={`text-sm transition-colors ${testedDocs ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}>
-                                            I have verified these instructions (or the AI Agent has passed them).
-                                        </span>
+                                        <span className="text-sm text-slate-300">I have verified these instructions (or the AI Agent has passed them).</span>
                                     </label>
                                 </div>
                             </>

@@ -5,16 +5,20 @@
 @tailwind utilities;
 
 :root {
-  --bg-black: #050505;
-  --bg-card: rgba(20, 20, 20, 0.7);
+  --bg-black: #020205;
+  /* Deeper midnight */
+  --bg-card: rgba(10, 10, 15, 0.7);
+  /* Hint of blue */
   --accent-neon: #00ffca;
   --accent-blue: #007aff;
+  --accent-purple: #7000ff;
   --text-main: #ffffff;
   --text-muted: #a0a0a0;
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'Inter', sans-serif;
-  --impact-gradient: linear-gradient(135deg, #00ffca 0%, #007aff 100%);
+  --impact-gradient: linear-gradient(135deg, #00ffca 0%, #007aff 50%, #7000ff 100%);
+  --nebula-glow: radial-gradient(circle at 50% 50%, rgba(112, 0, 255, 0.15) 0%, transparent 80%);
 }
 
 * {
@@ -25,6 +29,8 @@
 
 body {
   background-color: var(--bg-black);
+  background-image: var(--nebula-glow);
+  background-attachment: fixed;
   color: var(--text-main);
   font-family: var(--font-body);
   line-height: 1.5;
@@ -224,4 +230,186 @@ h4 {
   background: var(--accent-neon);
   color: black;
   box-shadow: 0 0 20px rgba(0, 255, 202, 0.6);
+}
+
+/* --- CALIBRATION OVERLAY (GATE) --- */
+#maintenance-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  color: #00ff00;
+  /* Neon Green */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  /* Always on top */
+  font-family: 'Courier New', Courier, monospace;
+  text-align: center;
+  border: 2px solid #00ff00;
+}
+
+.pulsing-text {
+  animation: pulse 2s infinite;
+  font-size: 1.5rem;
+  letter-spacing: 3px;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+/* --- NEURAL GREEN PULSE BUTTON --- */
+.main-start-btn {
+  background: #00FF41;
+  /* Neural Green */
+  color: #000;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 20px 40px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  /* THE GLOW EFFECT */
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(0, 255, 65, 0.8);
+    transform: scale(1.05);
+  }
+
+  100% {
+    box-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+    transform: scale(1);
+  }
+}
+
+.main-start-btn:hover {
+  background: #fff;
+  color: #000;
+  box-shadow: 0 0 40px #00FF41;
+}
+
+@keyframes neural-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+    transform: scale(1.1);
+  }
+
+  50% {
+    opacity: 0.98;
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
+    transform: scale(1.105);
+  }
+}
+
+.animate-neural-pulse {
+  animation: neural-pulse 3.5s ease-in-out infinite;
+}
+
+@keyframes subtle-pulse {
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: subtle-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Shimmer Effect for Progress Bars */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* Sovereign Dark Mode Design Tokens */
+.sovereign-card {
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.8) 0%, rgba(9, 9, 11, 0.9) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.sovereign-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* Genesis Glow Effect */
+.genesis-glow {
+  box-shadow:
+    0 0 20px rgba(34, 197, 94, 0.15),
+    0 0 40px rgba(34, 197, 94, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Neon Text Variants */
+.neon-cyan {
+  color: #22d3ee;
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+}
+
+.neon-purple {
+  color: #a855f7;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+.neon-gold {
+  color: #fbbf24;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+/* Scrollbar Styling */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Focus States */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.5);
 }

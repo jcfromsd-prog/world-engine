@@ -1,0 +1,5 @@
+﻿
+> the-world-engine@0.0.0 build
+> tsc -b && vite build
+
+src/components/GlobalFeed.tsx(9,27): error TS6133: 'SquadRole' is declared but its value is never read.

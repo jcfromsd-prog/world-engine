@@ -246,7 +246,7 @@ export async function fetchGitHubBounties(options: {
                     repoStars = repoData.stargazers_count || 0;
                     language = repoData.language || 'Unknown';
                 }
-            } catch (e) {
+            } catch {
                 // Silently fail for repo details
             }
 

@@ -68,7 +68,7 @@ export const FoundingCharter: React.FC = () => (
         </div>
 
         <h3 className="text-xl font-bold text-white mt-8">I. Mission Statement</h3>
-        <p>We believe that talent is equally distributed, but opportunity is not. This Platform is a "World Engine" designed to route capital directly to problem-solvers without friction, bureaucracy, or bias.</p>
+        <p>MyBestPurpose is not a gig platform; it is the <strong>MyBestPurpose WORLD HUMAN POTENTIAL ENGINE</strong>. We exist to transform "Labor" into "Legend." Our purpose is to decouple 'Work' from 'Employment' and reconnect it to personal and collective Purpose.</p>
 
         <h3 className="text-xl font-bold text-white mt-8">II. Definition of Assets</h3>
         <p>The "World Engine" recognizes multiple forms of contribution. A "Solve" is defined as any verified digital asset—including but not limited to:</p>
@@ -101,6 +101,31 @@ export const FoundingCharter: React.FC = () => (
             <p className="mt-2 text-slate-400">
                 MyBestPurpose is a founder-led mission. We commit to a "Solvers First" policy. Unclaimed bounty funds shall never be absorbed as platform profit; they will be recycled into "Founding Solver" credits to encourage new talent and community growth.
             </p>
+        </div>
+
+        <h3 className="text-xl font-bold text-white mt-8">V. THE WORLD HUMAN POTENTIAL ENGINE PROTOCOL</h3>
+        <div className="bg-purple-900/10 border border-purple-500/20 p-6 rounded-xl mt-4 space-y-4">
+            <p className="text-slate-300 font-bold uppercase tracking-wider text-xs">Architectural Mandate</p>
+            <p className="text-slate-400 text-sm">
+                As of January 2026, the Engine follows the Supreme Vision modification plan:
+            </p>
+            <ul className="space-y-4 text-sm">
+                <li>
+                    <strong className="text-white">The Neural Identity Gate:</strong> Standard registration is abolished. Users enter via a Socratic dialogue with Sage to determine their love, talent, and problem-solving focus.
+                </li>
+                <li>
+                    <strong className="text-white">The Sovereign Vault:</strong> Earnings are displayed as "Locked Gold" and "Unlocked Assets," using psychology to motivate the actualization of potential.
+                </li>
+                <li>
+                    <strong className="text-white">Skill Spark Feed:</strong> Labor is rebranded as "Opportunity." Every task is a spark toward a larger legend.
+                </li>
+                <li>
+                    <strong className="text-white">Synaptic Squads:</strong> High-value solves require collaboration in defined roles: Scribe, Visionary, or Analyst.
+                </li>
+                <li>
+                    <strong className="text-white">Sovereign 2.0 Split:</strong> Capital is distributed 45% to Solver, 15% to Squad, 10% to Ops, 10% to Legal, 10% to AI, and 10% to the Growth Fund.
+                </li>
+            </ul>
         </div>
     </LegalLayout>
 );

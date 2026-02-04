@@ -1,0 +1,19 @@
+{
+    "platformName": "World Engine",
+    "founderSovereignty": true,
+    "economicModel": {
+        "founderLevy": 0.15,
+        "leadSolver": 0.55,
+        "supportSquad": 0.20,
+        "aiCompute": 0.05,
+        "growthFund": 0.05
+    },
+    "guilds": [
+        "Scribe",
+        "Visionary",
+        "Strategist",
+        "Analyst",
+        "Guardian"
+    ],
+    "verificationStandard": "Grandma Test v1.0"
+}

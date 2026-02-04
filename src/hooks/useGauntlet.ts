@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase, getGauntletCount, hasUserJoinedGauntlet, joinGauntlet } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
@@ -12,6 +12,24 @@ export function useGauntlet(eventName: string = 'Zero-Day Defense') {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
+
+    const fetchCount = useCallback(async () => {
+        try {
+            const count = await getGauntletCount(eventName);
+            setParticipantCount(count);
+        } catch (err) {
+            console.error('Error fetching gauntlet count:', err);
+        }
+    }, [eventName]);
+
+    const checkJoinStatus = useCallback(async (userId: string) => {
+        try {
+            const joined = await hasUserJoinedGauntlet(userId, eventName);
+            setHasJoined(joined);
+        } catch (err) {
+            console.error('Error checking join status:', err);
+        }
+    }, [eventName]);
 
     // Check auth state and count on mount
     useEffect(() => {
@@ -57,25 +75,7 @@ export function useGauntlet(eventName: string = 'Zero-Day Defense') {
             subscription.unsubscribe();
             supabase.removeChannel(channel);
         };
-    }, [eventName]);
-
-    async function fetchCount() {
-        try {
-            const count = await getGauntletCount(eventName);
-            setParticipantCount(count);
-        } catch (err) {
-            console.error('Error fetching gauntlet count:', err);
-        }
-    }
-
-    async function checkJoinStatus(userId: string) {
-        try {
-            const joined = await hasUserJoinedGauntlet(userId, eventName);
-            setHasJoined(joined);
-        } catch (err) {
-            console.error('Error checking join status:', err);
-        }
-    }
+    }, [eventName, fetchCount, checkJoinStatus]);
 
     async function byteIn() {
         if (!user) {

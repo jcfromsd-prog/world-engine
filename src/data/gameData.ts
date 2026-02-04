@@ -89,6 +89,7 @@ export const ONBOARDING_BOUNTIES: Record<string, {
     time: string;
     description: string;
     tags: string[];
+    academicSkills?: string[];
     livesImpacted: number;
 }> = {
     striker: {
@@ -99,7 +100,8 @@ export const ONBOARDING_BOUNTIES: Record<string, {
         time: "30 mins",
         description: "We have a 50MB log file with 3 error patterns. Find them and save a Fortune 500 retailer from downtime.",
         tags: ["Data", "Python"],
-        livesImpacted: 12
+        livesImpacted: 12,
+        academicSkills: ["Statistics: Outliers", "Comp Sci: Pattern Logic"]
     },
     weaver: {
         id: 102,
@@ -109,7 +111,8 @@ export const ONBOARDING_BOUNTIES: Record<string, {
         time: "45 mins",
         description: "The authentication token isn't persisting on refresh. Debug the React hook for a healthcare startup.",
         tags: ["React", "Debug"],
-        livesImpacted: 150
+        livesImpacted: 150,
+        academicSkills: ["Logic: State Machines", "English: Tech Writing"]
     },
     commander: {
         id: 103,
@@ -119,7 +122,8 @@ export const ONBOARDING_BOUNTIES: Record<string, {
         time: "40 mins",
         description: "Review this AWS bill and identify 3 unused instances. Help a nonprofit save $2,000/month.",
         tags: ["Ops", "Finance"],
-        livesImpacted: 400
+        livesImpacted: 400,
+        academicSkills: ["Algebra I: Linear Equations", "Economics: Cost/Benefit"]
     },
     guardian: {
         id: 104,
@@ -129,7 +133,8 @@ export const ONBOARDING_BOUNTIES: Record<string, {
         time: "60 mins",
         description: "Review this Solidity contract for reentrancy vulnerabilities. Protect $50K in community funds.",
         tags: ["Web3", "Security"],
-        livesImpacted: 85
+        livesImpacted: 85,
+        academicSkills: ["Logic: Proof Validity", "Civics: Contract Law"]
     },
     visionary: {
         id: 105,
@@ -139,7 +144,8 @@ export const ONBOARDING_BOUNTIES: Record<string, {
         time: "50 mins",
         description: "The current checkout drop-off rate is 60%. Propose a 3-step UI improvement in Figma.",
         tags: ["Design", "UX"],
-        livesImpacted: 500
+        livesImpacted: 500,
+        academicSkills: ["Psychology: Behavioral Nudges", "Art: Composition"]
     },
     scribe: {
         id: 106,
@@ -149,7 +155,8 @@ export const ONBOARDING_BOUNTIES: Record<string, {
         time: "45 mins",
         description: "Turn raw data from a Kenya well project into a compelling 300-word blog post for donors.",
         tags: ["Content", "Storytelling"],
-        livesImpacted: 200
+        livesImpacted: 200,
+        academicSkills: ["English: Persuasive Writing", "Geography: Resource Mgmt"]
     },
     hacker: {
         id: 107,
@@ -216,7 +223,7 @@ export const EVERGREEN_BOUNTIES = [
         difficulty: "Easy",
         time: "15 mins",
         description: "Review a small documentation fix for a popular React library. Verify links and grammar.",
-        tags: ["Open Source", "Docs"],
+        tags: ["Development", "Open Source"],
         livesImpacted: 50
     },
     {
@@ -236,7 +243,7 @@ export const EVERGREEN_BOUNTIES = [
         difficulty: "Easy",
         time: "25 mins",
         description: "Write a script to normalize phone numbers in a CSV file to E.164 format.",
-        tags: ["Python", "Data"],
+        tags: ["Development", "Python"],
         livesImpacted: 20
     },
     {
@@ -246,7 +253,7 @@ export const EVERGREEN_BOUNTIES = [
         difficulty: "Hard",
         time: "90 mins",
         description: "Audit a landing page for WCAG 2.1 compliance. Write a report on navigation issues.",
-        tags: ["A11y", "Audit"],
+        tags: ["Research", "Audit"],
         livesImpacted: 1000
     },
     {
@@ -256,7 +263,7 @@ export const EVERGREEN_BOUNTIES = [
         difficulty: "Medium",
         time: "40 mins",
         description: "Refactor a slow JOIN operation in PostgreSQL. Current execution: 3.5s. Target: <500ms.",
-        tags: ["SQL", "DB"],
+        tags: ["Development", "SQL"],
         livesImpacted: 200
     },
     {
@@ -278,6 +285,26 @@ export const EVERGREEN_BOUNTIES = [
         description: "Design 3 variations of a CTA button (Hover/Active states) matching our brand guide.",
         tags: ["Design", "UI"],
         livesImpacted: 0
+    },
+    {
+        id: 208,
+        title: "Growth Hacking: Viral Tweet Thread",
+        reward: "$60.00",
+        difficulty: "Medium",
+        time: "45 mins",
+        description: "Draft a 5-tweet thread explaining 'Zero-Knowledge Proofs' to a non-technical audience.",
+        tags: ["Marketing", "Social"],
+        livesImpacted: 5000
+    },
+    {
+        id: 209,
+        title: "Write Non-Profit Grant Proposal",
+        reward: "$100.00",
+        difficulty: "Medium",
+        time: "3 Hours",
+        description: "Draft a 2-page grant proposal for an inner-city garden initiative. Focus on community impact metrics.",
+        tags: ["Writing", "Grant"],
+        livesImpacted: 800
     },
     // FLAGSHIP SQUAD CONTRACT
     {

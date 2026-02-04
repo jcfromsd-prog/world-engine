@@ -25,12 +25,12 @@ const Economics: React.FC = () => {
                         className="bg-slate-900 border border-slate-800 p-8 rounded-2xl"
                     >
                         <div className="text-4xl mb-4">⚡</div>
-                        <h2 className="text-2xl font-bold text-white mb-4">I. The Value Exchange</h2>
+                        <h2 className="text-2xl font-bold text-white mb-4">I. WORLD HUMAN POTENTIAL ENGINE</h2>
                         <p className="text-slate-400 leading-relaxed">
-                            MyBestPurpose functions as a Neural Workforce. Value is NOT created by "gig work" but by **Verified Digital Assets**.
+                            MyBestPurpose is not a gig platform; it is the **MyBestPurpose WORLD HUMAN POTENTIAL ENGINE**. Value is created by transforming raw talent into verified **Legendary Assets**.
                         </p>
                         <p className="text-slate-400 mt-4 leading-relaxed">
-                            When a Solver produces Code, Content, Design, or Research that passes the Engine Audit, they are mining efficiency for the requester. This value is captured and transferred instantly via our Smart Contract layer.
+                            When a Solver produces Code, Content, or Design, they are building their own "Proof of Work" record. The Engine captures this value and routes it through the **Sovereign 2.0 Protocol**, ensuring the creator, the squad, and the ecosystem all grow in tandem.
                         </p>
                     </motion.div>
 
@@ -41,19 +41,19 @@ const Economics: React.FC = () => {
                         className="bg-slate-900 border border-slate-800 p-8 rounded-2xl"
                     >
                         <div className="text-4xl mb-4">🏦</div>
-                        <h2 className="text-2xl font-bold text-white mb-4">II. Revenue & Fees</h2>
+                        <h2 className="text-2xl font-bold text-white mb-4">II. The Sovereign Split</h2>
                         <ul className="space-y-4">
                             <li className="flex gap-3">
-                                <span className="text-cyan-400 font-bold whitespace-nowrap">Governance Levy (10%)</span>
-                                <span className="text-sm text-slate-400">A flat fee deducted from successful bounties. This funds the automated auditing system (Engine Sage) and platform security.</span>
+                                <span className="text-emerald-400 font-bold whitespace-nowrap">Solver (45%)</span>
+                                <span className="text-sm text-slate-400">Direct reward for the Lead Architect of the solve.</span>
                             </li>
                             <li className="flex gap-3">
-                                <span className="text-purple-400 font-bold whitespace-nowrap">Commander Tier</span>
-                                <span className="text-sm text-slate-400">Subscription model for power users to access high-yield "Gauntlet" events and advanced squad-building tools.</span>
+                                <span className="text-purple-400 font-bold whitespace-nowrap">Squad (15%)</span>
+                                <span className="text-sm text-slate-400">Bonus for peer reviewers, analysts, and supporting roles.</span>
                             </li>
                             <li className="flex gap-3">
-                                <span className="text-emerald-400 font-bold whitespace-nowrap">Impact Sponsorships</span>
-                                <span className="text-sm text-slate-400">Organizations fund specific "Cause-Based Bounties" (e.g., Climate). The platform takes a management fee to facilitate the crowd-sourced solution.</span>
+                                <span className="text-cyan-400 font-bold whitespace-nowrap">Engine Fund (40%)</span>
+                                <span className="text-sm text-slate-400">Equally split: 10% Ops, 10% Legal Defense, 10% AI Compute, 10% Growth.</span>
                             </li>
                         </ul>
                     </motion.div>
@@ -66,29 +66,32 @@ const Economics: React.FC = () => {
                 >
                     <div className="absolute top-0 right-0 p-32 bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none" />
 
-                    <h2 className="text-3xl font-bold text-white mb-8 text-center">III. The Payout Protocol</h2>
+                    <h2 className="text-3xl font-bold text-white mb-8 text-center">III. Value Flow Architecture</h2>
 
-                    <div className="flex flex-col md:flex-row gap-6 items-center justify-center">
-                        <div className="w-full md:w-1/3 bg-slate-950 p-6 rounded-xl border border-slate-800 text-center relative z-10">
-                            <div className="text-emerald-400 font-black text-2xl mb-1">Lead Solver</div>
-                            <div className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">Primary Execution</div>
-                            <p className="text-sm text-slate-400">Receives the lion's share (70-90%) for delivering the core asset.</p>
+                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                            <div className="text-emerald-400 font-black text-xl mb-1">45%</div>
+                            <div className="text-[10px] uppercase text-slate-500 font-bold">SOLVER</div>
                         </div>
-
-                        <div className="text-2xl text-slate-600">→</div>
-
-                        <div className="w-full md:w-1/3 bg-slate-950 p-6 rounded-xl border border-slate-800 text-center relative z-10">
-                            <div className="text-purple-400 font-black text-2xl mb-1">The Squad</div>
-                            <div className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">Collaborator Bonus</div>
-                            <p className="text-sm text-slate-400">Split among supporting roles (Reviewers, Scribes, Researchers) defined in the contract.</p>
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                            <div className="text-purple-400 font-black text-xl mb-1">15%</div>
+                            <div className="text-[10px] uppercase text-slate-500 font-bold">SQUAD</div>
                         </div>
-
-                        <div className="text-2xl text-slate-600">→</div>
-
-                        <div className="w-full md:w-1/3 bg-slate-950 p-6 rounded-xl border border-slate-800 text-center relative z-10">
-                            <div className="text-cyan-400 font-black text-2xl mb-1">Platform</div>
-                            <div className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">System Health</div>
-                            <p className="text-sm text-slate-400">Retains the Governance Levy to ensure the decentralized engine remains secure.</p>
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                            <div className="text-blue-400 font-black text-xl mb-1">10%</div>
+                            <div className="text-[10px] uppercase text-slate-500 font-bold">OPS</div>
+                        </div>
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                            <div className="text-red-400 font-black text-xl mb-1">10%</div>
+                            <div className="text-[10px] uppercase text-slate-500 font-bold">LEGAL</div>
+                        </div>
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                            <div className="text-yellow-400 font-black text-xl mb-1">10%</div>
+                            <div className="text-[10px] uppercase text-slate-500 font-bold">AI</div>
+                        </div>
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                            <div className="text-cyan-400 font-black text-xl mb-1">10%</div>
+                            <div className="text-[10px] uppercase text-slate-500 font-bold">GROWTH</div>
                         </div>
                     </div>
                 </motion.div>

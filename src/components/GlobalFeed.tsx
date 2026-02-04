@@ -7,6 +7,7 @@ import LiveInsights from './LiveInsights';
 import GitHubBounties from './GitHubBounties';
 import OneClickNDA from './OneClickNDA';
 import BountyCard from './BountyCard';
+import { useRealBounties } from '../hooks/useRealBounties';
 
 const defaultQuests = [
     {
@@ -31,31 +32,64 @@ const defaultQuests = [
     }))
 ];
 
+import type { Bounty } from '../types/bounty';
+
 interface GlobalFeedProps {
     onOpenLogin?: () => void;
     searchQuery?: string;
     category?: string;
     difficulty?: 'all' | 'easy' | 'medium' | 'hard';
     sortBy?: 'newest' | 'highest-reward';
+    initialRole?: string | null;
 }
+
+const ROLE_MAP: Record<string, string[]> = {
+    'Architect': ['Development', 'Python', 'React', 'Web3', 'Code', 'SQL', 'Security', 'Ops'],
+    'Scribe': ['Writing', 'Content', 'Copy', 'Translation', 'Grant', 'Docs'],
+    'Visionary': ['Design', 'UI', 'UX', 'SVG', 'Brand'],
+    'Strategist': ['Marketing', 'Social', 'Growth', 'Research', 'Audit']
+};
 
 const GlobalFeed: React.FC<GlobalFeedProps> = ({
     onOpenLogin,
     searchQuery = '',
     category = 'All Causes',
     difficulty = 'all',
-    sortBy = 'newest'
+    sortBy = 'newest',
+    initialRole
 }) => {
     const navigate = useNavigate();
     const { participantCount, hasJoined, isLoading, error, user, byteIn, maxParticipants } = useGauntlet();
-    const [allBounties, setAllBounties] = useState<any[]>(defaultQuests);
-    const [filteredBounties, setFilteredBounties] = useState<any[]>(defaultQuests);
+    const { bounties: externalBounties } = useRealBounties();
 
-    // Fetch real bounties
+    const [allBounties, setAllBounties] = useState<Bounty[]>(defaultQuests);
+    const [filteredBounties, setFilteredBounties] = useState<Bounty[]>(defaultQuests);
+
+    const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+
     useEffect(() => {
-        getBounties().then(data => {
+        if (initialRole) {
+            const timer = setTimeout(() => setSelectedRoles([initialRole]), 0);
+            return () => clearTimeout(timer);
+        }
+    }, [initialRole]);
+
+    const toggleRole = (role: string) => {
+        setSelectedRoles(prev =>
+            prev.includes(role)
+                ? prev.filter(r => r !== role)
+                : [...prev, role]
+        );
+    };
+
+    // Fetch real bounties (Internal + External)
+    useEffect(() => {
+        const fetchInternal = async () => {
+            const data = await getBounties();
+            let internalBounties: Bounty[] = [];
+
             if (data && data.length > 0) {
-                const realBounties = data.map(b => ({
+                internalBounties = data.map((b: { id: string; title: string; reward: string; category?: string; time_estimate?: string; difficulty: string; tags?: string[]; created_at: string }) => ({
                     id: b.id,
                     title: b.title,
                     reward: b.reward + " Bounty",
@@ -63,13 +97,18 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({
                     cause: b.category || "General",
                     time: b.time_estimate || "Unknown",
                     difficulty: b.difficulty,
+                    tags: b.tags || [],
                     createdAt: b.created_at
                 }));
-                const merged = [...realBounties, ...defaultQuests];
-                setAllBounties(merged);
             }
-        });
-    }, []);
+
+            // MERGE: External + Internal + Default
+            const merged = [...externalBounties, ...internalBounties, ...defaultQuests];
+            setAllBounties(merged);
+        };
+
+        fetchInternal();
+    }, [externalBounties]);
 
     // Filter & Sort Logic
     useEffect(() => {
@@ -94,16 +133,33 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({
             result = result.filter(b => b.difficulty.toLowerCase() === difficulty.toLowerCase());
         }
 
-        // 4. Sorting
-        if (sortBy === 'highest-reward') {
-            result.sort((a, b) => b.rewardValue - a.rewardValue);
-        } else {
-            // Newest (Default)
-            result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        // 4. Role Filter (New)
+        if (selectedRoles.length > 0) {
+            result = result.filter(b => {
+                // If bounty has no tags, fallback to generic
+                if (!b.tags) return false;
+
+                // Check if any of the selected roles match the bounty's tags
+                return b.tags?.some((t: string) => {
+                    return selectedRoles.some(role => {
+                        const allowedTags = ROLE_MAP[role];
+                        return allowedTags.includes(t);
+                    });
+                }) || false;
+            });
         }
 
-        setFilteredBounties(result);
-    }, [searchQuery, category, difficulty, sortBy, allBounties]);
+        // 5. Sorting
+        if (sortBy === 'highest-reward') {
+            result.sort((a, b) => (b.rewardValue ?? 0) - (a.rewardValue ?? 0));
+        } else {
+            // Newest (Default)
+            result.sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
+        }
+
+        const timer = setTimeout(() => setFilteredBounties(result), 0);
+        return () => clearTimeout(timer);
+    }, [searchQuery, category, difficulty, sortBy, allBounties, selectedRoles]);
 
 
     const handleByteIn = async () => {
@@ -124,9 +180,9 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({
     };
 
     const [showNDA, setShowNDA] = useState(false);
-    const [selectedBounty, setSelectedBounty] = useState<any>(null);
+    const [selectedBounty, setSelectedBounty] = useState<Bounty | null>(null);
 
-    const handleSolve = (quest: any) => {
+    const handleSolve = (quest: Bounty) => {
         const isProtected = quest.difficulty === 'Hard' || quest.reward.includes('$5,000') || quest.reward.includes('$1,000');
 
         if (isProtected) {
@@ -196,6 +252,32 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({
 
                     {/* Left: Bounty Feed */}
                     <div style={{ flex: 2 }}>
+
+                        {/* ROLE FILTERS UI */}
+                        <div className="flex flex-wrap gap-4 mb-8 p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider w-full mb-2">Filter by Role:</span>
+                            {['Architect', 'Scribe', 'Visionary', 'Strategist'].map(role => (
+                                <label key={role} className="flex items-center gap-2 cursor-pointer group">
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${selectedRoles.includes(role)
+                                        ? 'bg-cyan-500 border-cyan-500'
+                                        : 'border-slate-600 group-hover:border-cyan-400'
+                                        }`}>
+                                        {selectedRoles.includes(role) && <span className="text-black text-xs font-bold">✓</span>}
+                                    </div>
+                                    <span className={`text-sm font-bold ${selectedRoles.includes(role) ? 'text-white' : 'text-slate-400 group-hover:text-cyan-300'
+                                        }`}>
+                                        {role} {role === 'Architect' ? '(Code)' : role === 'Scribe' ? '(Writing)' : role === 'Visionary' ? '(Design)' : '(Growth)'}
+                                    </span>
+                                    <input
+                                        type="checkbox"
+                                        className="hidden"
+                                        checked={selectedRoles.includes(role)}
+                                        onChange={() => toggleRole(role)}
+                                    />
+                                </label>
+                            ))}
+                        </div>
+
                         {filteredBounties.length === 0 ? (
                             <div className="text-center py-20 bg-slate-900/50 rounded-xl border border-dashed border-slate-700">
                                 <span className="text-4xl text-slate-600 block mb-4">🔍</span>
@@ -212,7 +294,10 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({
                                         cause={quest.cause}
                                         time={quest.time}
                                         difficulty={quest.difficulty}
-                                        squadRoles={quest.squadRoles} // Pass squad roles if they exist
+                                        squadRoles={quest.squadRoles}
+                                        // External Props
+                                        source={quest.source}
+                                        financials={quest.financials as Record<string, unknown>}
                                         onSolve={() => handleSolve(quest)}
                                     />
                                 ))}

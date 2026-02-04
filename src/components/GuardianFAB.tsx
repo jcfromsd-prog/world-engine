@@ -1,7 +1,10 @@
+import { motion, useDragControls } from 'framer-motion';
 import React, { useState, useRef, useEffect } from 'react';
+import { Sun } from 'lucide-react';
 import { classifyIntent, getAutoResponse } from '../data/sageRules';
 import type { Intent } from '../data/sageRules';
 import SupportTriageModal from './SupportTriageModal';
+import { SageService } from '../services/SageService';
 
 interface GuardianFABProps {
     onInitialize: () => void;
@@ -30,7 +33,7 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
 
     const [input, setInput] = useState('');
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
-        { sender: 'sage', text: "Greetings. I am Engine Sage. I solve problems. How can I help you today?", type: 'text' }
+        { sender: 'sage', text: "James, are we building toward your purpose today? I found a task that matches your desire to master your craft. Shall we look at it?", type: 'text' }
     ]);
 
     // Triage Modal State
@@ -55,8 +58,8 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
             }
         };
         // Use type assertion for custom event
-        window.addEventListener('sageStatusChange' as any, handleStatusChange as any);
-        return () => window.removeEventListener('sageStatusChange' as any, handleStatusChange as any);
+        window.addEventListener('sageStatusChange' as keyof WindowEventMap, handleStatusChange as EventListener);
+        return () => window.removeEventListener('sageStatusChange' as keyof WindowEventMap, handleStatusChange as EventListener);
     }, []);
 
     // Hide hint after 8 seconds
@@ -111,23 +114,52 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
         setInput('');
 
         // 2. Analyze Intent (The Iron Dome)
-        setTimeout(() => {
+        setTimeout(async () => {
             const intent: Intent = classifyIntent(userMsg);
             const autoResponse = getAutoResponse(intent);
 
             if (autoResponse) {
-                // Sage Solves It
+                // Sage Solves It with static wisdom
                 setChatHistory(prev => [...prev, { sender: 'sage', text: autoResponse, type: 'text' }]);
             } else {
-                // Sage Escalate
-                setChatHistory(prev => [...prev, { sender: 'sage', text: "I detect a request that requires human authorization. Opening secure channel...", type: 'text' }]);
+                // BRIDGE TO NEURAL CORE (Dynamic Insight)
+                setChatHistory(prev => [...prev, { sender: 'sage', text: "Analyzing the neural stream... Stand by.", type: 'text' }]);
 
-                let category: 'MONEY' | 'BUG' | 'GENERAL' = 'GENERAL';
-                if (intent === 'ESCALATE_MONEY') category = 'MONEY';
-                if (intent === 'ESCALATE_BUG') category = 'BUG';
+                try {
+                    const apiKey = localStorage.getItem('SOVEREIGN_GEMINI_KEY') || "";
+                    if (!apiKey) {
+                        setChatHistory(prev => [...prev, { sender: 'sage', text: "I cannot reach the Engine without your Neural Key. Please configure it in the Command Center.", type: 'text' }]);
+                        return;
+                    }
 
-                setTriageCategory(category);
-                setTimeout(() => setShowTriage(true), 1000);
+                    // Format history for SageService
+                    const history = chatHistory.map(m => ({
+                        role: m.sender === 'user' ? 'user' as const : 'model' as const,
+                        parts: [{ text: m.text }]
+                    }));
+
+                    const response = await SageService.sendMessage(
+                        apiKey,
+                        history,
+                        userMsg,
+                        `Current Rank: Level 4 | Balance: $0.00 | Focus: Sovereignty`
+                    );
+
+                    setChatHistory(prev => [
+                        ...prev.filter(m => m.text !== "Analyzing the neural stream... Stand by."),
+                        { sender: 'sage', text: response, type: 'text' }
+                    ]);
+                } catch {
+                    // Fallback to Triage if API fails
+                    setChatHistory(prev => [...prev.filter(m => m.text !== "Analyzing the neural stream... Stand by."), { sender: 'sage', text: "I detect a request that requires human authorization. Opening secure channel...", type: 'text' }]);
+
+                    let category: 'MONEY' | 'BUG' | 'GENERAL' = 'GENERAL';
+                    if (intent === 'ESCALATE_MONEY') category = 'MONEY';
+                    if (intent === 'ESCALATE_BUG') category = 'BUG';
+
+                    setTriageCategory(category);
+                    setTimeout(() => setShowTriage(true), 1000);
+                }
             }
         }, 600);
     };
@@ -175,6 +207,8 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
         }
     };
 
+    const dragControls = useDragControls();
+
     return (
         <>
             {/* ... (Triage Modal) */}
@@ -184,11 +218,11 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
                 category={triageCategory}
             />
 
-            {/* AI CORE WIDGET */}
-            <div className="fixed bottom-6 right-6 z-[2000] flex flex-col items-end gap-3">
+            {/* AI CORE WIDGET - Pointer events passed through to children */}
+            <div className="fixed bottom-6 right-6 z-[2000] flex flex-col items-end gap-3 pointer-events-none">
                 {/* ... (Hint Bubble) */}
                 {showHint && !isOpen && isInitialized && isSageActive && (
-                    <div className="bg-black/90 border border-cyan-400/30 rounded-2xl px-4 py-3 max-w-[200px] text-right backdrop-blur-xl animate-fade-in">
+                    <div className="bg-black/90 border border-cyan-400/30 rounded-2xl px-4 py-3 max-w-[200px] text-right backdrop-blur-xl animate-fade-in pointer-events-auto">
                         <p className="text-xs text-gray-300 leading-relaxed">
                             <strong className="text-cyan-400 block mb-1">👋 Welcome, Solver.</strong>
                             Complete your profile to earn your first <span className="text-white font-bold">$5 credit</span>.
@@ -199,9 +233,18 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
 
                 {/* Chat Interface */}
                 {isOpen && isInitialized && (
-                    <div className="bg-slate-950 border border-cyan-500/30 rounded-2xl w-80 md:w-96 overflow-hidden backdrop-blur-xl shadow-2xl shadow-cyan-500/10 animate-slide-up flex flex-col h-[500px]">
-                        {/* Header */}
-                        <div className="bg-slate-900/80 p-4 border-b border-cyan-500/20 flex items-center gap-3">
+                    <motion.div
+                        drag
+                        dragListener={false}
+                        dragControls={dragControls}
+                        dragMomentum={false}
+                        className="bg-slate-950 border border-cyan-500/30 rounded-2xl w-80 md:w-[450px] overflow-hidden backdrop-blur-xl shadow-2xl shadow-cyan-500/10 animate-slide-up flex flex-col h-[600px] pointer-events-auto"
+                    >
+                        {/* Header - Drag Handle */}
+                        <div
+                            className="bg-slate-900/80 p-4 border-b border-cyan-500/20 flex items-center gap-3 cursor-move"
+                            onPointerDown={(e) => dragControls.start(e)}
+                        >
                             <div className="w-10 h-10 rounded-full border-2 border-cyan-400 overflow-hidden bg-cyan-900/50 relative">
                                 <img src="/guardian_avatar.png" alt="Sage" className="w-full h-full object-cover" />
                                 <div className="absolute inset-0 bg-cyan-400/20 animate-pulse"></div>
@@ -212,7 +255,8 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="ml-auto text-gray-500 hover:text-white transition"
+                                className="ml-auto text-gray-500 hover:text-white transition cursor-pointer"
+                                onPointerDown={(e) => e.stopPropagation()} // Prevent drag start when clicking close
                             >
                                 ✕
                             </button>
@@ -266,18 +310,22 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
 
                         {/* Input Area */}
                         <div className="p-4 bg-slate-900 border-t border-white/5">
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
+                            <div className="flex gap-2 items-end">
+                                <textarea
                                     value={input}
-                                    onChange={(e) => setInput(e.target.value)}
+                                    onChange={(e) => {
+                                        setInput(e.target.value);
+                                        e.target.style.height = 'auto';
+                                        e.target.style.height = e.target.scrollHeight + 'px';
+                                    }}
                                     onKeyDown={handleKeyDown}
                                     placeholder="Type your query..."
-                                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500 outline-none"
+                                    rows={1}
+                                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-3 text-sm text-white focus:border-cyan-500 outline-none resize-none custom-scrollbar max-h-32"
                                 />
                                 <button
                                     onClick={handleSend}
-                                    className="p-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition"
+                                    className="p-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition shadow-lg shadow-cyan-500/20 mb-[1px]"
                                 >
                                     ➤
                                 </button>
@@ -286,7 +334,7 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
                                 Sage Protocol v9.2 • "The Iron Dome"
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* The AI Core Orb */}
@@ -294,7 +342,7 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
                     onClick={handleClick}
                     className={`
                         w-14 h-14 rounded-full flex items-center justify-center
-                        transition-all duration-300 ease-out z-10
+                        transition-all duration-300 ease-out z-10 pointer-events-auto
                         ${isInitialized
                             ? 'bg-gradient-to-br from-cyan-500 to-cyan-700 shadow-lg shadow-cyan-500/40 hover:shadow-cyan-400/60 hover:scale-110'
                             : 'bg-gradient-to-br from-red-500 to-red-700 shadow-lg shadow-red-500/40 hover:shadow-red-400/60 hover:scale-110'
@@ -306,11 +354,7 @@ const GuardianFAB: React.FC<GuardianFABProps> = ({ onInitialize, isInitialized }
                     {isInitialized ? (
                         <div className="relative">
                             <div className="absolute inset-0 rounded-full bg-cyan-400/30 animate-ping" />
-                            <svg className="w-6 h-6 text-white relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="12" cy="12" r="4" />
-                                <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-                                <path d="M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                            </svg>
+                            <Sun className="w-6 h-6 text-black relative z-10" />
                         </div>
                     ) : (
                         <span className="text-xl">🔒</span>

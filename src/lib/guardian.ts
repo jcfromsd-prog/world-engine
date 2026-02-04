@@ -72,7 +72,7 @@ export class Guardian {
         this.subscribers.forEach(cb => cb([...this.messages]));
     }
 
-    private addMessage(msg: GuardianMessage) {
+    public addMessage(msg: GuardianMessage) {
         this.messages = [...this.messages, msg];
         this.notify();
     }

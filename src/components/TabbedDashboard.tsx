@@ -49,9 +49,10 @@ const tabs: Tab[] = [
 
 interface TabbedDashboardProps {
     onOpenLogin?: () => void;
+    initialRole?: string | null;
 }
 
-const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ onOpenLogin }) => {
+const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ onOpenLogin, initialRole }) => {
     const [activeTab, setActiveTab] = useState<TabId>('opportunities');
     const userRank = 4; // Mock rank for logic demonstration
 
@@ -140,7 +141,7 @@ const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ onOpenLogin }) => {
                                 {['all', 'easy', 'medium', 'hard'].map((lvl) => (
                                     <button
                                         key={lvl}
-                                        onClick={() => setDifficulty(lvl as any)}
+                                        onClick={() => setDifficulty(lvl as 'all' | 'easy' | 'medium' | 'hard')}
                                         className={`px-3 py-1 text-xs font-bold rounded capitalize transition-all ${difficulty === lvl
                                             ? 'bg-slate-700 text-white'
                                             : 'text-slate-500 hover:text-slate-300'
@@ -154,7 +155,7 @@ const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ onOpenLogin }) => {
                             {/* Sort */}
                             <select
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as any)}
+                                onChange={(e) => setSortBy(e.target.value as 'newest' | 'highest-reward')}
                                 className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
                             >
                                 <option value="newest">Newest First</option>
@@ -201,6 +202,7 @@ const TabbedDashboard: React.FC<TabbedDashboardProps> = ({ onOpenLogin }) => {
                                 category={selectedCategory}
                                 difficulty={difficulty}
                                 sortBy={sortBy}
+                                initialRole={initialRole}
                             />
                         </motion.div>
                     )}

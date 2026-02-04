@@ -28,7 +28,7 @@ const Profile: React.FC = () => {
         ]
     });
 
-    const handleSaveProfile = (updatedData: any) => {
+    const handleSaveProfile = (updatedData: Partial<typeof user>) => {
         setUser(prev => ({ ...prev, ...updatedData }));
     };
 
@@ -120,7 +120,7 @@ const Profile: React.FC = () => {
                     {['overview', 'portfolio', 'badges'].map((tab) => (
                         <button
                             key={tab}
-                            onClick={() => setActiveTab(tab as any)}
+                            onClick={() => setActiveTab(tab as 'overview' | 'portfolio' | 'badges')}
                             className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative ${activeTab === tab ? 'text-white' : 'text-slate-500 hover:text-slate-300'
                                 }`}
                         >

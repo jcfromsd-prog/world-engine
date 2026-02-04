@@ -1,0 +1,23 @@
+﻿
+> the-world-engine@0.0.0 build
+> tsc -b && vite build
+
+src/components/GlobalFeed.tsx(154,35): error TS18048: 'b.rewardValue' is possibly 'undefined'.
+src/components/GlobalFeed.tsx(154,51): error TS18048: 'a.rewardValue' is possibly 'undefined'.
+src/components/GlobalFeed.tsx(157,44): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/GlobalFeed.tsx(157,78): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/GlobalFeed.tsx(300,41): error TS2322: Type 'Record<string, any> | BountyFinancials | undefined' is not assignable to type 'Record<string, unknown> | undefined'.
+  Type 'BountyFinancials' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'BountyFinancials'.

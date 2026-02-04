@@ -6,16 +6,10 @@ interface WalletModalProps {
 }
 
 const WalletModal: React.FC<WalletModalProps> = ({ balance, onClose }) => {
-    const [withdrawing, setWithdrawing] = useState(false);
+    // const [withdrawing, setWithdrawing] = useState(false);
     const [success, setSuccess] = useState(false);
 
-    const handleWithdraw = () => {
-        setWithdrawing(true);
-        setTimeout(() => {
-            setWithdrawing(false);
-            setSuccess(true);
-        }, 2000);
-    };
+    // const handleWithdraw = () => { ... } removed
 
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -32,37 +26,35 @@ const WalletModal: React.FC<WalletModalProps> = ({ balance, onClose }) => {
                 {!success ? (
                     <>
                         <div style={{ marginBottom: '32px' }}>
-                            <div style={{ marginBottom: '16px', fontWeight: 600 }}>Select Payout Method</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                                <div className="glass" style={{ padding: '20px', cursor: 'pointer', borderColor: 'var(--accent-neon)', background: 'rgba(0,255,202,0.05)' }}>
-                                    <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🏦</div>
-                                    <div style={{ fontWeight: 600 }}>Bank Transfer</div>
-                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>US / UK / EU / IN</div>
-                                </div>
-                                <div className="glass" style={{ padding: '20px', cursor: 'pointer' }}>
-                                    <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>⛓️</div>
-                                    <div style={{ fontWeight: 600 }}>Crypto (USDC)</div>
-                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Polygon / Solana</div>
+                            <div style={{ marginBottom: '16px', fontWeight: 600 }}>Configuration</div>
+                            <div className="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                                <p className="text-sm text-slate-400 mb-2">
+                                    To receive payouts, you must complete the KYC/AML onboarding via our secure form.
+                                </p>
+                                <div className="flex items-center gap-2 text-xs text-blue-400 bg-blue-900/10 p-2 rounded border border-blue-900/30">
+                                    ℹ️ Manual Verification Required (24-48h)
                                 </div>
                             </div>
                         </div>
 
                         <button
-                            onClick={handleWithdraw}
-                            disabled={withdrawing}
+                            onClick={() => {
+                                window.open('https://forms.google.com/placeholder_payout_onboarding', '_blank');
+                                setSuccess(true); // Close/Show success state
+                            }}
                             className="btn-primary"
                             style={{ width: '100%', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
-                            {withdrawing ? 'Processing Payout...' : 'Initiate Withdrawal'}
+                            Connect Bank Account
                         </button>
                     </>
                 ) : (
                     <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s' }}>
-                        <div style={{ fontSize: '4rem', marginBottom: '16px' }}>✅</div>
-                        <h3 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Funds Sent!</h3>
+                        <div style={{ fontSize: '4rem', marginBottom: '16px' }}>📝</div>
+                        <h3 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Onboarding Started</h3>
                         <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>
-                            $14,515.00 has been initiated to your Bank Account (ending 4402).
-                            <br />ETA: Instant.
+                            Please complete the form in the new tab.
+                            <br />Our admin team will verify your details shortly.
                         </p>
                         <button onClick={onClose} className="glass" style={{ padding: '12px 32px' }}>Close Wallet</button>
                     </div>
@@ -70,13 +62,8 @@ const WalletModal: React.FC<WalletModalProps> = ({ balance, onClose }) => {
 
                 <div style={{ marginTop: '32px', borderTop: '1px solid var(--glass-border)', paddingTop: '20px' }}>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Recent Income</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
-                        <span>Cleaned Climate Data Set #402</span>
-                        <span style={{ color: 'var(--accent-neon)' }}>+$15.00</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                        <span>Royalty: "Python API Hook" (12 uses)</span>
-                        <span style={{ color: 'var(--accent-neon)' }}>+$4.80</span>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0', opacity: 0.5 }}>
+                        No recent activity.
                     </div>
                 </div>
 

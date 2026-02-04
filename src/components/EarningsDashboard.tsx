@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const EarningsDashboard: React.FC = () => {
@@ -6,21 +6,32 @@ const EarningsDashboard: React.FC = () => {
 
     // Mock Data
     const financialState = {
-        availableBalance: "$2,450.00",
-        pendingBalance: "$850.00",
-        totalEarnings: "$14,500.00",
+        availableBalance: "$0.00",
+        pendingBalance: "$0.00",
+        totalEarnings: "$0.00",
         stripeStatus: 'connected', // 'connected' | 'pending' | 'marketing'
     };
 
-    const transactions = [
-        { id: 'tx_1', type: 'payout', amount: '-$1,200.00', status: 'processed', date: 'Oct 24, 2025', desc: 'Transfer to Bank •••• 4242' },
-        { id: 'tx_2', type: 'reward', amount: '+$850.00', status: 'pending', date: 'Oct 22, 2025', desc: 'Bounty: Quantum Resistant Ledger' },
-        { id: 'tx_3', type: 'reward', amount: '+$2,500.00', status: 'processed', date: 'Oct 15, 2025', desc: 'Bounty: Optimize zk-Rollup' },
-        { id: 'tx_4', type: 'reward', amount: '+$450.00', status: 'processed', date: 'Oct 01, 2025', desc: 'fix: Dashboard Performance' },
-    ];
+    interface Transaction {
+        id: string | number;
+        desc: string;
+        date: string;
+        amount: string;
+        status: 'processed' | 'pending';
+        type: 'payout' | 'income';
+    }
+
+    const transactions: Transaction[] = [];
 
     // Simple Bar Chart Visualization (Mock)
-    const chartData = [35, 60, 25, 80, 50, 95]; // Heights relative to 100%
+    const chartData = [0, 0, 0, 0, 0, 0]; // Heights relative to 100%
+
+    const [isLive, setIsLive] = useState(false);
+
+    useEffect(() => {
+        // Simulate secure handshake
+        setTimeout(() => setIsLive(true), 800);
+    }, []);
 
     return (
         <div className="min-h-screen bg-black text-white pt-20 pb-20">
@@ -29,7 +40,12 @@ const EarningsDashboard: React.FC = () => {
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
                     <div>
-                        <h1 className="text-3xl font-black text-white mb-2">Financial Command Center</h1>
+                        <div className="flex items-center gap-3 mb-2">
+                            <h1 className="text-3xl font-black text-white">Financial Command Center</h1>
+                            <div className={`px-2 py-0.5 rounded text-[10px] font-bold border ${isLive ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+                                {isLive ? '● ONLINE' : '○ CONNECTING'}
+                            </div>
+                        </div>
                         <p className="text-slate-400">Manage your earnings, payouts, and tax documents.</p>
                     </div>
                     {financialState.stripeStatus === 'connected' ? (
@@ -90,7 +106,7 @@ const EarningsDashboard: React.FC = () => {
                                     {['1M', '6M', '1Y'].map((range) => (
                                         <button
                                             key={range}
-                                            onClick={() => setTimeRange(range as any)}
+                                            onClick={() => setTimeRange(range as '1M' | '6M' | '1Y')}
                                             className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${timeRange === range ? 'bg-slate-800 text-white' : 'text-slate-500 hover:text-white'
                                                 }`}
                                         >
@@ -145,24 +161,32 @@ const EarningsDashboard: React.FC = () => {
                         <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl h-full">
                             <h3 className="font-bold text-white mb-6">Recent Transactions</h3>
                             <div className="space-y-4">
-                                {transactions.map((tx) => (
-                                    <div key={tx.id} className="flex items-start justify-between pb-4 border-b border-slate-800 last:border-0 last:pb-0">
-                                        <div>
-                                            <div className="text-white font-bold text-sm mb-1">{tx.desc}</div>
-                                            <div className="text-xs text-slate-500 mb-1">{tx.date}</div>
-                                            <div className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded inline-block ${tx.status === 'processed'
-                                                ? 'bg-emerald-500/10 text-emerald-400'
-                                                : 'bg-yellow-500/10 text-yellow-400'
+                                {transactions.length > 0 ? (
+                                    transactions.map((tx) => (
+                                        <div key={tx.id} className="flex items-start justify-between pb-4 border-b border-slate-800 last:border-0 last:pb-0">
+                                            <div>
+                                                <div className="text-white font-bold text-sm mb-1">{tx.desc}</div>
+                                                <div className="text-xs text-slate-500 mb-1">{tx.date}</div>
+                                                <div className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded inline-block ${tx.status === 'processed'
+                                                    ? 'bg-emerald-500/10 text-emerald-400'
+                                                    : 'bg-yellow-500/10 text-yellow-400'
+                                                    }`}>
+                                                    {tx.status}
+                                                </div>
+                                            </div>
+                                            <div className={`font-mono font-bold ${tx.type === 'payout' ? 'text-slate-400' : 'text-white'
                                                 }`}>
-                                                {tx.status}
+                                                {tx.amount}
                                             </div>
                                         </div>
-                                        <div className={`font-mono font-bold ${tx.type === 'payout' ? 'text-slate-400' : 'text-white'
-                                            }`}>
-                                            {tx.amount}
-                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="py-8 text-center">
+                                        <div className="text-4xl mb-3 opacity-20">🧾</div>
+                                        <div className="text-slate-500 text-sm">No transactions yet.</div>
+                                        <div className="text-slate-600 text-xs mt-1">Complete your first bounty to see history.</div>
                                     </div>
-                                ))}
+                                )}
                             </div>
                             <button className="w-full mt-6 py-2 border border-slate-700 rounded-lg text-slate-400 text-sm font-bold hover:text-white hover:bg-slate-800 transition-colors">
                                 View All History

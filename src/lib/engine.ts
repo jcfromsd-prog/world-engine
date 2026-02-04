@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { ledger } from '../services/LedgerService';
 
 // --- CONFIGURATION ---
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -92,17 +93,19 @@ export const useEngine = () => {
         }));
     };
 
-    const buyAsset = (assetId: string) => {
+    const buyAsset = useCallback((assetId: string) => {
         // In a real app, this would call Supabase/Stripe
-        console.log(`💰 Purchasing Asset: ${assetId}`);
+        // console.log(`💰 Purchasing Asset: ${assetId}`);
         setOwnedAssets(prev => [...prev, assetId]);
         simulateTransaction('asset', 89, 'You');
-    };
+    }, []);
 
     useEffect(() => {
         if (IS_MOCK) {
-            console.log("⚡ ENGINE: Running in MOCK MODE");
-            setIsConnected(true);
+            // console.log("⚡ ENGINE: Running in MOCK MODE");
+            const syncTimer = setTimeout(() => {
+                setIsConnected(true);
+            }, 0);
 
             // Mock Timer
             const timer = setInterval(() => {
@@ -118,7 +121,7 @@ export const useEngine = () => {
                     // 10% chance to change status
                     if (Math.random() > 0.9) {
                         const newStatus = m.status === 'idle' ? 'active' : 'idle';
-                        return { ...m, status: newStatus as any };
+                        return { ...m, status: newStatus as SquadMember['status'] };
                     }
                     return m;
                 }));
@@ -136,22 +139,23 @@ export const useEngine = () => {
             }, 8000);
 
             return () => {
+                clearTimeout(syncTimer);
                 clearInterval(timer);
                 clearInterval(squadTimer);
                 clearInterval(txTimer);
             };
         } else {
             // REAL SUPABASE IMPLEMENTATION
-            console.log("⚡ ENGINE: Connecting to Supabase...");
+            // console.log("⚡ ENGINE: Connecting to Supabase...");
 
             // 1. Subscribe to Thunderdome Channel
             const channel = supabase!.channel('global_events');
 
             channel
-                .on('broadcast', { event: 'timer_sync' }, (payload) => {
+                .on('broadcast', { event: 'timer_sync' }, (payload: { payload: { time: number } }) => {
                     setThunderdomeTime(payload.payload.time);
                 })
-                .subscribe((status) => {
+                .subscribe((status: string) => {
                     if (status === 'SUBSCRIBED') setIsConnected(true);
                 });
 
@@ -159,10 +163,10 @@ export const useEngine = () => {
             const room = supabase!.channel('squad_room_1');
             room
                 .on('presence', { event: 'sync' }, () => {
-                    const state = room.presenceState();
+                    // const state = room.presenceState();
                     // Transform presence state to SquadMember[]
                     // For now, simpler implementation: just log it
-                    console.log('Squad Presence:', state);
+                    // console.log('Squad Presence:', state);
                 })
                 .subscribe();
 
@@ -173,13 +177,14 @@ export const useEngine = () => {
         }
     }, []);
 
-    return {
+    return useMemo(() => ({
         thunderdomeTime,
         squadMembers,
         ownedAssets,
         buyAsset,
         revenue,
         isMock: IS_MOCK,
-        isConnected
-    };
+        isConnected,
+        ledger
+    }), [thunderdomeTime, squadMembers, ownedAssets, buyAsset, revenue, isConnected]);
 };

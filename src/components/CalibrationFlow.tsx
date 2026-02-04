@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ARCHETYPES, ONBOARDING_BOUNTIES, SUGGESTED_TEAMMATES, determineArchetype } from '../data/gameData';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { updateProfile } from '../lib/supabase';
 
 interface CalibrationFlowProps {
@@ -17,7 +17,13 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
     const [glitchFixed, setGlitchFixed] = useState(false);
     const [analysisProgress, setAnalysisProgress] = useState(0);
     const [result, setResult] = useState<typeof ARCHETYPES[keyof typeof ARCHETYPES] | null>(null);
-    const startTimeRef = useRef<number>(Date.now());
+    const startTimeRef = useRef<number>(0);
+
+    useEffect(() => {
+        if (startTimeRef.current === 0) {
+            startTimeRef.current = Date.now();
+        }
+    }, []);
 
     // Intro timer
     useEffect(() => {
@@ -198,19 +204,19 @@ const CalibrationFlow: React.FC<CalibrationFlowProps> = ({ onClose, onComplete }
                                                 <div className="space-y-3 text-sm">
                                                     <div className="flex justify-between items-center text-white font-bold p-2 bg-slate-800/50 rounded">
                                                         <span>Lead Solver (You)</span>
-                                                        <span className="text-emerald-400">$2.75 (55%)</span>
+                                                        <span className="text-emerald-400">$2.25 (45%)</span>
                                                     </div>
                                                     <div className="flex justify-between items-center text-slate-400 px-2">
-                                                        <span>Squad Fund</span>
-                                                        <span>$1.00 (20%)</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center text-slate-400 px-2">
-                                                        <span>Platform Governance</span>
+                                                        <span>Support Squad</span>
                                                         <span>$0.75 (15%)</span>
                                                     </div>
+                                                    <div className="flex justify-between items-center text-slate-400 px-2">
+                                                        <span>Sov. Ops & Legal</span>
+                                                        <span>$1.00 (20%)</span>
+                                                    </div>
                                                     <div className="flex justify-between items-center text-slate-500 px-2 text-xs">
-                                                        <span>AI Compute / Growth</span>
-                                                        <span>$0.50 (10%)</span>
+                                                        <span>AI & Growth</span>
+                                                        <span>$1.00 (20%)</span>
                                                     </div>
                                                 </div>
                                             </div>

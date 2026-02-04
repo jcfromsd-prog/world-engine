@@ -6,9 +6,10 @@ interface SquadInviteModalProps {
     isOpen: boolean;
     onClose: () => void;
     userRank?: number; // Percentile rank (e.g., 5 = top 5%)
+    onJoin?: () => void;
 }
 
-const SquadInviteModal: React.FC<SquadInviteModalProps> = ({ isOpen, onClose, userRank = 5 }) => {
+const SquadInviteModal: React.FC<SquadInviteModalProps> = ({ isOpen, onClose, userRank = 5, onJoin }) => {
     const squad = {
         name: 'Squad Alpha',
         bounty: '$2,500',
@@ -125,7 +126,11 @@ const SquadInviteModal: React.FC<SquadInviteModalProps> = ({ isOpen, onClose, us
                                 </button>
                                 <Link
                                     to="/"
-                                    onClick={onClose}
+                                    onClick={() => {
+                                        localStorage.setItem('sovereign_squad_joined', 'true');
+                                        if (onJoin) onJoin();
+                                        onClose();
+                                    }}
                                     className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold rounded-xl text-center hover:shadow-lg hover:shadow-purple-500/25 transition"
                                 >
                                     Join Squad Alpha

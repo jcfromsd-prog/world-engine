@@ -19,7 +19,7 @@ interface CommandCenterProps {
 }
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { getProfile, type Profile } from '../lib/supabase';
 
 const CommandCenter: React.FC<CommandCenterProps> = ({
@@ -100,12 +100,29 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
 
                         {/* Scrollable Content */}
                         <div className="overflow-y-auto flex-1 custom-scrollbar">
-                            <div className="px-4 py-2 flex items-center gap-2 border-b border-white/5">
+                            <div className="px-4 py-2 flex items-center justify-between border-b border-white/5">
                                 <div className="flex items-center gap-2 mt-1">
                                     <p className="text-xs text-slate-500">Strategic AI Insights</p>
                                     <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`} />
                                     {isMock && <span className="text-[10px] bg-slate-800 text-slate-400 px-1 rounded">SIMULATION</span>}
                                 </div>
+                                {/* LOGIN BUTTON (Moved from Header) */}
+                                {!user && (
+                                    <button
+                                        onClick={() => {
+                                            onClose(); // Close CC
+                                            // We need to trigger the login modal from App.tsx via a prop or context?
+                                            // App.tsx passes `isConnected` via `useEngine`? No, simpler to rely on parent routing or add a prop.
+                                            // For now, I'll use a hack or assume onOpenFounderDashboard opens login if not auth?
+                                            // Actually, I'll add a specific `onLogin` prop to CommandCenter in next step.
+                                            // For this step I'll just add the button visual.
+                                            window.dispatchEvent(new CustomEvent('OPEN_LOGIN_MODAL')); // Quick Event Bus or just add prop. 
+                                        }}
+                                        className="px-3 py-1 bg-cyan-500/20 text-cyan-400 text-xs font-bold rounded hover:bg-cyan-500/30 border border-cyan-500/50"
+                                    >
+                                        LOG IN
+                                    </button>
+                                )}
                             </div>
 
                             <div className="p-4 space-y-4">
@@ -144,6 +161,20 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                                                 </div>
                                                 <span className="text-indigo-500">↗</span>
                                             </button>
+
+                                            <button
+                                                onClick={() => window.open('/admin', '_blank')}
+                                                className="w-full flex items-center justify-between p-3 bg-cyan-900/20 hover:bg-cyan-900/40 border border-cyan-500/30 rounded-lg transition-all group"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xl">🧬</span>
+                                                    <div className="text-left">
+                                                        <div className="text-sm font-bold text-white group-hover:text-cyan-400">Neural Network</div>
+                                                        <div className="text-xs text-cyan-400/70">Manage Gemini API Key</div>
+                                                    </div>
+                                                </div>
+                                                <span className="text-cyan-500">→</span>
+                                            </button>
                                         </div>
                                     </div>
                                 )}
@@ -164,7 +195,10 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                                     <p className="text-xs text-slate-400 mb-3">Winner Takes All • $5,000 Prize</p>
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs text-slate-500">Req: Level 5 Architect</span>
-                                        <button className="px-3 py-1 bg-yellow-500 text-black text-xs font-bold rounded hover:bg-yellow-400">
+                                        <button
+                                            onClick={() => window.alert("⚔️ THE GAUNTLET PROTOCOL ⚔️\n\nStatus: LOCKED\nRequirement: Level 5 Security Clearance\n\nCurrent Level: 4\n\nComplete 3 more bounties to qualify.")}
+                                            className="px-3 py-1 bg-yellow-500 text-black text-xs font-bold rounded hover:bg-yellow-400"
+                                        >
                                             PREPARE NOW
                                         </button>
                                     </div>
@@ -238,6 +272,20 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                                         <button className="w-full py-1.5 bg-slate-700 text-white text-xs rounded hover:bg-slate-600">
                                             VIEW IN WORKSHOP
                                         </button>
+                                    </div>
+
+                                    {/* NEW: Remix Interface Link */}
+                                    <div className="mt-4">
+                                        <button
+                                            onClick={() => {
+                                                onClose();
+                                                window.location.href = '/remix';
+                                            }}
+                                            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
+                                        >
+                                            <span className="text-xl">🛠️</span> REMIX NEW ASSET
+                                        </button>
+                                        <p className="text-[10px] text-center text-slate-500 mt-2 uppercase tracking-widest">Architect your neural workforce</p>
                                     </div>
                                 </div>
 

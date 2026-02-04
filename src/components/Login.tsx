@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 interface LoginProps {
     onClose: () => void;
+    onRegister?: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onClose }) => {
+const Login: React.FC<LoginProps> = ({ onClose, onRegister }) => {
     const { login, signup } = useAuth();
     const [mode, setMode] = useState<'login' | 'signup'>('login');
     const [email, setEmail] = useState('');
@@ -39,7 +40,7 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                     setError(result.error || 'Signup failed.');
                 }
             }
-        } catch (err) {
+        } catch {
             setError('System error. Please retry.');
         } finally {
             setIsLoading(false);
@@ -79,8 +80,8 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                             type="button"
                             onClick={() => { setMode('login'); setError(''); setSuccess(''); }}
                             className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${mode === 'login'
-                                    ? 'bg-white text-slate-800 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             Log In
@@ -89,8 +90,8 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                             type="button"
                             onClick={() => { setMode('signup'); setError(''); setSuccess(''); }}
                             className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${mode === 'signup'
-                                    ? 'bg-white text-slate-800 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             Sign Up
@@ -163,8 +164,8 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                             type="submit"
                             disabled={isLoading}
                             className={`w-full py-4 font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 group ${mode === 'login'
-                                    ? 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-200'
-                                    : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-200'
+                                ? 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-200'
+                                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-200'
                                 }`}
                         >
                             {isLoading
@@ -174,6 +175,16 @@ const Login: React.FC<LoginProps> = ({ onClose }) => {
                             <span className="group-hover:translate-x-1 transition-transform">→</span>
                         </button>
                     </form>
+
+                    <div className="mt-6 text-center border-t border-slate-100 pt-4">
+                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">New to the World Engine?</p>
+                        <button
+                            onClick={onRegister}
+                            className="text-cyan-600 hover:text-cyan-500 text-xs font-black uppercase tracking-widest hover:underline"
+                        >
+                            Initialize Sovereign Identity
+                        </button>
+                    </div>
                 </div>
 
                 <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-center">

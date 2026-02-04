@@ -5,30 +5,30 @@ interface TerminalFeedbackProps {
     onComplete: (success: boolean) => void;
 }
 
+// Simulated "Grandma" Execution Steps
+const STEPS = [
+    { text: "> parsed_instructions = load_text(user_input)", delay: 800 },
+    { text: "> docker run -d --name sandbox-01 ubuntu:latest", delay: 1500 },
+    { text: "> git clone [DETECTED_REPO] .", delay: 2400 },
+    { text: "> npm install ...", delay: 3500 },
+    { text: "  - installed 420 packages in 1.2s", delay: 4200 },
+    { text: "> npm run dev", delay: 5000 },
+    { text: "  - Local server active on port 5173", delay: 5800 },
+    { text: "> Verifying 'Grandma Test' requirements...", delay: 6500 },
+    { text: "> SUCCESS: App is running and responding.", delay: 7200, color: "text-emerald-400" },
+];
+
 const TerminalFeedback: React.FC<TerminalFeedbackProps> = ({ onComplete }) => {
     const [lines, setLines] = useState<string[]>(["> Initializing Agent Sandbox..."]);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Simulated "Grandma" Execution Steps
-    const steps = [
-        { text: "> parsed_instructions = load_text(user_input)", delay: 800 },
-        { text: "> docker run -d --name sandbox-01 ubuntu:latest", delay: 1500 },
-        { text: "> git clone [DETECTED_REPO] .", delay: 2400 },
-        { text: "> npm install ...", delay: 3500 },
-        { text: "  - installed 420 packages in 1.2s", delay: 4200 },
-        { text: "> npm run dev", delay: 5000 },
-        { text: "  - Local server active on port 5173", delay: 5800 },
-        { text: "> Verifying 'Grandma Test' requirements...", delay: 6500 },
-        { text: "> SUCCESS: App is running and responding.", delay: 7200, color: "text-emerald-400" },
-    ];
-
     useEffect(() => {
-        let timeouts: ReturnType<typeof setTimeout>[] = [];
+        const timeouts: ReturnType<typeof setTimeout>[] = [];
 
-        steps.forEach((step, index) => {
+        STEPS.forEach((step, index) => {
             const timeout = setTimeout(() => {
                 setLines(prev => [...prev, step.text]);
-                if (index === steps.length - 1) {
+                if (index === STEPS.length - 1) {
                     setTimeout(() => onComplete(true), 1000);
                 }
             }, step.delay);
@@ -41,7 +41,7 @@ const TerminalFeedback: React.FC<TerminalFeedbackProps> = ({ onComplete }) => {
         }
 
         return () => timeouts.forEach(clearTimeout);
-    }, []);
+    }, [onComplete]);
 
     useEffect(() => {
         if (scrollRef.current) {

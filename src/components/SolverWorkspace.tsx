@@ -1,161 +1,218 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import SubmissionModal from './SubmissionModal';
-import SquadInviteModal from './SquadInviteModal';
+import { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 
-const SolverWorkspace: React.FC = () => {
-    const { id } = useParams();
-    const [isComplete, setIsComplete] = useState(false);
-    const [showSubmission, setShowSubmission] = useState(false);
-    const [showSquadInvite, setShowSquadInvite] = useState(false);
+// ----------------- UNIVERSAL TYPES -----------------
+interface Mission {
+    title: string;
+    price: string;
+    desc: string;
+    tags?: string[];
+    type?: string;
+}
 
-    // Detect if this is the first/onboarding bounty (calibration)
-    const isCalibrationComplete = localStorage.getItem('calibration_complete') === 'true';
-    const isFirstBounty = localStorage.getItem('first_bounty_completed') !== 'true';
-    const isOnboarding = isCalibrationComplete && isFirstBounty;
+interface SolverWorkspaceProps {
+    mission?: Mission | null;
+    onSolve?: (rewards: { xp: number, balance: number }) => void;
+    onBack?: () => void;
+}
 
-    // Mock Quest Data lookup based on ID
-    const questTitle = id === "1" ? "Clean Climate Data Set" : "Unknown Quest";
+// ----------------- COMPONENT: UNIVERSAL SOLVER WORKSPACE -----------------
+export default function SolverWorkspace({ mission, onBack, onSolve }: SolverWorkspaceProps) {
+    // 1. DETERMINE WORKSPACE TYPE
+    // Fallback if mission is missing (debug mode)
+    const activeQuest = mission || { title: "Unknown Mission", tags: ["CODE", "DEBUG"], type: "CODE" };
+
+    // Safety check for tags
+    const tags = activeQuest.tags || [];
+
+    const isVisualMission = tags.includes("VISUAL") || tags.includes("NATURE") || tags.includes("PATTERN");
+    const isNatureMission = tags.includes("NATURE");
 
     return (
-        <div style={{ padding: '80px 20px', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ width: '100%', maxWidth: '1200px', marginBottom: '24px' }}>
-                <Link to="/" style={{ color: '#888', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
-                    <span>←</span> BACK TO FEED
-                </Link>
-            </div>
+        <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col animate-in fade-in duration-500">
 
-            <div style={{ width: '100%', maxWidth: '1200px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
-                <div>
-                    <h1 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '8px', textTransform: 'uppercase', fontStyle: 'italic' }}>
-                        Solver Workspace
-                    </h1>
-                    <p style={{ color: 'var(--accent-neon)', fontFamily: 'monospace' }}>
-                        ACTIVE PROTOCOL: {questTitle}
-                    </p>
-                </div>
-                <div className="glass" style={{ padding: '12px 24px', borderRadius: '50px' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>STATUS: </span>
-                    <span style={{ color: isComplete ? '#00ffca' : '#ffaa00', fontWeight: 800 }}>
-                        {isComplete ? 'COMPLETED' : 'IN PROGRESS'}
-                    </span>
-                </div>
-            </div>
-
-            <div style={{ width: '100%', maxWidth: '1200px', flex: 1 }}>
-                {!isComplete ? (
-                    <div className="flex flex-col gap-6">
-                        {/* THE SANDBOX INTERFACE (Inlined) */}
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[500px]">
-                            {/* File Explorer Sidebar */}
-                            <div className="w-full md:w-64 bg-slate-950 border-r border-slate-800 p-4 font-mono text-xs overflow-y-auto">
-                                <div className="text-slate-600 mb-4 uppercase tracking-widest font-bold">Filesystem</div>
-                                <div className="space-y-2">
-                                    <div className="text-emerald-500 flex items-center gap-2">📁 src/</div>
-                                    <div className="text-emerald-400 flex items-center gap-2 pl-4">📁 components/</div>
-                                    <div className="text-cyan-400 flex items-center gap-2 pl-8 border-l border-cyan-500/30 font-bold bg-cyan-500/5 px-2 py-1 rounded">📄 LogicController.ts</div>
-                                    <div className="text-slate-400 flex items-center gap-2 pl-4">📁 assets/</div>
-                                    <div className="text-slate-400 flex items-center gap-2">📄 package.json</div>
-                                    <div className="text-slate-400 flex items-center gap-2">📄 tsconfig.json</div>
-                                </div>
-                            </div>
-
-                            {/* Code Editor Body */}
-                            <div className="flex-1 flex flex-col min-w-0">
-                                <div className="bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center gap-4 text-xs font-mono">
-                                    <span className="text-cyan-400">LogicController.ts</span>
-                                    <span className="text-slate-600">|</span>
-                                    <span className="text-slate-500">Read-Only Check-out</span>
-                                </div>
-                                <div className="flex-1 bg-black p-6 font-mono text-sm overflow-auto text-slate-300 leading-relaxed">
-                                    <div className="opacity-50 select-none">
-                                        <span className="text-purple-400">import</span> &#123; Engine &#125; <span className="text-purple-400">from</span> <span className="text-emerald-400">"@world-engine/core"</span>;<br />
-                                        <br />
-                                        <span className="text-slate-500">// TODO: Optimize this transition logic</span><br />
-                                        <span className="text-purple-400">export const</span> <span className="text-cyan-400">handleSync</span> = () =&gt; &#123;<br />
-                                        &nbsp;&nbsp;<span className="text-purple-400">const</span> state = Engine.<span className="text-cyan-400">getState</span>();<br />
-                                    </div>
-                                    <div className="bg-emerald-500/10 border-l-2 border-emerald-500 px-4 py-2 my-2">
-                                        &nbsp;&nbsp;<span className="text-emerald-400 font-bold">// FIX: Reduce render iterations by batching state updates</span><br />
-                                        &nbsp;&nbsp;<span className="text-purple-400">return</span> state.<span className="text-cyan-400">map</span>(item =&gt; item.<span className="text-cyan-400">id</span>).<span className="text-cyan-400">filter</span>(Boolean);
-                                    </div>
-                                    <div className="opacity-50 select-none">
-                                        &#125;;
-                                    </div>
-                                </div>
-                                <div className="bg-slate-900 p-4 border-t border-slate-800 flex justify-end gap-3">
-                                    <button className="px-4 py-2 bg-slate-800 text-slate-400 rounded-lg text-xs font-bold hover:text-white transition">RUN TESTS</button>
-                                    <button
-                                        onClick={() => setShowSubmission(true)}
-                                        className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-xs font-bold hover:shadow-lg hover:shadow-cyan-500/20 transition"
-                                    >
-                                        VERIFY & SUBMIT
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Terminal / Sage Feedback */}
-                        <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs">
-                            <div className="flex items-center gap-2 mb-2 text-slate-500">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                NEURAL INTERFACE STATUS: CONNECTED
-                            </div>
-                            <div className="text-cyan-400 font-bold mb-1">[SAGE]: ANALYSIS COMPLETE.</div>
-                            <div className="text-slate-400 leading-relaxed">
-                                Solution optimization detected. Batched updates will reduce main-thread blocking by 40%. Recommend immediate submission to the Guardian Ledger.
-                            </div>
-                        </div>
+            {/* TOOLBAR (Universal) */}
+            <div className="h-14 border-b border-gray-800 flex items-center justify-between px-4 bg-[#0a0a0a]">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={onBack}
+                        className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors hover:bg-zinc-900 px-3 py-1.5 rounded"
+                    >
+                        <ArrowLeft size={14} /> Abort Mission
+                    </button>
+                    <div className="h-4 w-[1px] bg-gray-800"></div>
+                    <div>
+                        <h2 className="text-sm font-black text-white uppercase tracking-wider">{activeQuest.title}</h2>
+                        <div className="text-[10px] text-gray-500 font-mono">PROTOCOL: {tags.join(" // ")}</div>
                     </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/50 text-yellow-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div> Status: Active
+                    </div>
+                </div>
+            </div>
+
+            {/* CONTENT SWITCHER */}
+            <div className="flex-1 overflow-hidden relative">
+                {isVisualMission ? (
+                    <VisualMatcherGame
+                        theme={isNatureMission ? "NATURE" : "TECH"}
+                        onComplete={() => onSolve && onSolve({ xp: 100, balance: 15.00 })}
+                    />
                 ) : (
-                    <div className="glass" style={{ padding: '80px', borderRadius: '32px', textAlign: 'center', border: '1px solid var(--accent-neon)' }}>
-                        <div style={{ fontSize: '5rem', marginBottom: '24px' }}>✅</div>
-                        <h2 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '16px', color: 'white' }}>Mission Accomplished</h2>
-                        <p style={{ color: '#aaa', marginBottom: '40px' }}>
-                            Your solution has been verified by the Engine Guardian. Payment has been released to your wallet.
-                        </p>
-                        <Link to="/" style={{
-                            padding: '16px 48px',
-                            background: 'white',
-                            color: 'black',
-                            fontWeight: 900,
-                            borderRadius: '50px',
-                            textDecoration: 'none',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.1em'
-                        }}>
-                            Return to Feed
-                        </Link>
-                    </div>
+                    <CodeEditorGame onComplete={() => onSolve && onSolve({ xp: 150, balance: 25.00 })} />
                 )}
             </div>
 
-            {/* Submission Modal */}
-            <SubmissionModal
-                isOpen={showSubmission}
-                onClose={() => setShowSubmission(false)}
-                onSubmit={() => {
-                    setShowSubmission(false);
-                    setIsComplete(true);
-                    // Mark first bounty as completed so future submissions use full form
-                    if (isOnboarding) {
-                        localStorage.setItem('first_bounty_completed', 'true');
-                        // Show Squad Invite after first bounty!
-                        setTimeout(() => setShowSquadInvite(true), 1000);
-                    }
-                }}
-                questTitle={questTitle}
-                isOnboarding={isOnboarding}
-            />
-
-            {/* Squad Invite Modal - appears after first bounty */}
-            <SquadInviteModal
-                isOpen={showSquadInvite}
-                onClose={() => setShowSquadInvite(false)}
-                userRank={5}
-            />
+            {/* FOOTER (Universal) */}
+            <div className="h-8 bg-black border-t border-gray-800 flex items-center px-4 justify-between relative z-50">
+                <div className="flex items-center gap-2 text-[10px] text-green-500 font-mono tracking-widest uppercase">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div> Neural Interface Status: Connected
+                </div>
+                <div className="text-[10px] text-gray-600 font-mono">
+                    <span className="text-purple-500 font-bold">[SAGE]:</span> Monitoring performance...
+                </div>
+            </div>
         </div>
     );
-};
+}
 
-export default SolverWorkspace;
+// ----------------- SUB-GAME: VISUAL MATCHER (NATURE / JUNIOR) -----------------
+function VisualMatcherGame({ theme, onComplete }: { theme: string, onComplete: () => void }) {
+    const [matches, setMatches] = useState<Record<string, boolean>>({});
+    const [selectedItem, setSelectedItem] = useState<{ id: number, type: string, icon: string } | null>(null);
+
+    // Setup Data based on Theme
+    const isNature = theme === "NATURE";
+
+    const slots = isNature
+        ? [{ id: 'oak', label: 'Oak Tree', icon: '🌳' }, { id: 'maple', label: 'Maple Tree', icon: '🍁' }, { id: 'pine', label: 'Pine Tree', icon: '🌲' }]
+        : [{ id: 'aa', label: 'AA Slot', icon: '🔋' }, { id: '9v', label: '9V Slot', icon: '⚡' }, { id: 'aaa', label: 'AAA Slot', icon: '🔋' }];
+
+    const items = isNature
+        ? [{ id: 1, type: 'oak', icon: '🍃' }, { id: 2, type: 'pine', icon: '🌿' }, { id: 3, type: 'maple', icon: '🍂' }]
+        : [{ id: 1, type: '9v', icon: '⚡' }, { id: 2, type: 'aa', icon: '🔋' }, { id: 3, type: 'aaa', icon: '🤏' }];
+
+    const handleSlotClick = (slotId: string) => {
+        if (selectedItem && selectedItem.type === slotId) {
+            setMatches(prev => {
+                const newState = { ...prev, [selectedItem.id]: true };
+                return newState;
+            });
+            setSelectedItem(null);
+        }
+    };
+
+    const allMatched = Object.keys(matches).length === items.length;
+
+    return (
+        <div className="h-full bg-zinc-900/50 flex flex-col items-center justify-center p-8 gap-12">
+            {/* 1. THE SLOTS (Drop Zones) */}
+            <div className="flex gap-8">
+                {slots.map(slot => (
+                    <button
+                        key={slot.id}
+                        onClick={() => handleSlotClick(slot.id)}
+                        className="w-32 h-40 border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-zinc-800 transition-colors"
+                    >
+                        <div className="text-4xl grayscale opacity-50">{slot.icon}</div>
+                        <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">{slot.label}</div>
+                    </button>
+                ))}
+            </div>
+
+            {/* 2. THE ITEMS (Draggables) */}
+            <div className="p-8 bg-black/50 rounded-2xl border border-gray-800 w-full max-w-2xl flex justify-center gap-6 min-h-[120px]">
+                {allMatched ? (
+                    <div className="flex flex-col items-center animate-in zoom-in">
+                        <div className="text-green-500 font-bold text-2xl mb-2">SEQUENCE COMPLETE</div>
+                        <button onClick={onComplete} className="bg-green-500 text-black font-bold px-6 py-2 rounded-full uppercase tracking-widest hover:scale-105 transition-transform">Claim Reward</button>
+                    </div>
+                ) : (
+                    items.map(item => (
+                        !matches[item.id] && (
+                            <button
+                                key={item.id}
+                                onClick={() => setSelectedItem(item)}
+                                className={`w-20 h-20 bg-zinc-800 rounded-lg flex items-center justify-center text-4xl border-2 transition-all hover:-translate-y-2 ${selectedItem?.id === item.id ? 'border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.5)] scale-110' : 'border-gray-700'}`}
+                            >
+                                {item.icon}
+                            </button>
+                        )
+                    ))
+                )}
+            </div>
+            <div className="text-gray-500 text-xs font-mono">INSTRUCTION: Select an ITEM below, then click the correct SLOT above.</div>
+        </div>
+    );
+}
+
+// ----------------- SUB-GAME: CODE EDITOR (ORIGINAL) -----------------
+function CodeEditorGame({ onComplete }: { onComplete: () => void }) {
+    return (
+        <div className="flex h-full">
+            {/* SIDEBAR: FILES */}
+            <div className="w-64 border-r border-gray-800 bg-[#050505] hidden md:flex flex-col">
+                <div className="p-4 text-xs font-bold text-gray-600 uppercase tracking-widest">Filesystem</div>
+                <div className="px-2 space-y-1">
+                    <FileItem name="src/" isFolder />
+                    <FileItem name="components/" isFolder indent />
+                    <FileItem name="LogicController.ts" active indent />
+                    <FileItem name="assets/" isFolder />
+                    <FileItem name="package.json" />
+                </div>
+            </div>
+
+            {/* MAIN EDITOR AREA */}
+            <div className="flex-1 flex flex-col bg-[#0c0c0c] relative">
+                <div className="flex items-center justify-between bg-[#0a0a0a] border-b border-gray-800 px-4">
+                    <div className="flex">
+                        <div className="px-4 py-2 text-xs font-mono text-cyan-400 bg-[#0c0c0c] border-t-2 border-cyan-400">LogicController.ts</div>
+                    </div>
+                    <div className="text-[10px] text-gray-600 uppercase tracking-widest">Read-Only Check-out</div>
+                </div>
+
+                {/* CODE MOCKUP */}
+                <div className="flex-1 p-6 font-mono text-sm leading-relaxed overflow-y-auto text-gray-400 selection:bg-cyan-900 selection:text-white">
+                    <div className="flex gap-4">
+                        <div className="text-gray-700 select-none text-right">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11</div>
+                        <div>
+                            <span className="text-purple-400">import</span> {"{ Engine }"} <span className="text-purple-400">from</span> <span className="text-green-400">"@world-engine/core"</span>;
+                            <br /><br />
+                            <span className="text-gray-600">// Optimized transition logic</span>
+                            <br />
+                            <span className="text-purple-400">export const</span> <span className="text-yellow-200">handleSync</span> = () ={">"} {"{"}
+                            <br />
+                            &nbsp;&nbsp;<span className="text-purple-400">const</span> state = Engine.<span className="text-blue-400">getState</span>();
+                            <br /><br />
+                            <div className="bg-green-900/20 border-l-2 border-green-500 pl-4 py-2 my-2">
+                                <span className="text-green-400 font-bold">// FIX: Reduce render iterations by batching state updates</span>
+                                <br />
+                                <span className="text-purple-400">return</span> state.<span className="text-blue-400">map</span>(item ={">"} item.id).<span className="text-blue-400">filter</span>(Boolean);
+                            </div>
+                            <br />
+                            {"};"}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ACTIONS */}
+                <div className="p-4 border-t border-gray-800 bg-[#0a0a0a] flex justify-end gap-3">
+                    <button className="px-6 py-3 rounded bg-zinc-800 text-gray-300 text-xs font-bold uppercase tracking-widest hover:bg-zinc-700">Run Tests</button>
+                    <button onClick={onComplete} className="px-6 py-3 rounded bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.3)]">Verify & Submit</button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// HELPERS
+function FileItem({ name, isFolder, active, indent }: { name: string, isFolder?: boolean, active?: boolean, indent?: boolean }) {
+    return (
+        <div className={`flex items-center gap-2 py-1.5 px-2 rounded cursor-pointer ${active ? 'bg-blue-900/20 text-blue-400' : 'text-gray-500 hover:text-gray-300 hover:bg-zinc-900'} ${indent ? 'ml-4' : ''}`}>
+            {isFolder ? <span className="text-yellow-600">📁</span> : <span className="text-gray-600">📄</span>}
+            <span className="text-xs font-mono">{name}</span>
+        </div>
+    );
+}
