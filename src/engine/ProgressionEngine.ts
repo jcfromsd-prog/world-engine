@@ -29,7 +29,7 @@ export const addSkillXP = (
     skill: Skill,
     xpGained: number
 ): { skill: Skill; leveledUp: boolean; newTier: MasteryTier | null } => {
-    let { level, xp, xpToNext, tier, streak: _streak, lastPracticed } = skill;
+    let { level, xp, xpToNext, tier, lastPracticed } = skill;
     let leveledUp = false;
     let newTier: MasteryTier | null = null;
 

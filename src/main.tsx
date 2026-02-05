@@ -6,13 +6,21 @@ import App from './App.tsx'
 
 import { AuthProvider } from './context/AuthProvider.tsx'
 
+import { validateEnv } from './utils/envValidation'
+import { ErrorBoundary } from './components/ErrorBoundary'
+
+// Validate environment early
+validateEnv()
+
 // Initializing App Root
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary scope="Root">
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </StrictMode>,
 )

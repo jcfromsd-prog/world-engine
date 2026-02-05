@@ -25,3 +25,8 @@ dist-ssr
 
 .vercel
 .env*.local
+
+# Temp output files
+build_output*.txt
+lint_output*.txt
+connection_check*.txt

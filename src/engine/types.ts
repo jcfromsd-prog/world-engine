@@ -57,6 +57,7 @@ export interface SoulboundProfile {
     avatarUrl?: string;
     createdAt: number;
     lastActiveAt: number;
+    gradeLevel?: number; // Added for refined recommendations
 
     // Progression
     skillGraph: SkillGraph;
@@ -267,7 +268,8 @@ export const createDefaultProfile = (userId: string, name: string, archetype: st
 
     dailyStreak: 0,
     longestStreak: 0,
-    lastLoginDate: new Date().toISOString().split('T')[0]
+    lastLoginDate: new Date().toISOString().split('T')[0],
+    gradeLevel: 10 // Default to Sophomore/Grade 10
 });
 
 export const ECONOMY_CONFIG: EconomyConfig = {

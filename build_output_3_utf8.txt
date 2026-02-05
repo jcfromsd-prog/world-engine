@@ -1,6 +1,0 @@
-﻿
-> the-world-engine@0.0.0 build
-> tsc -b && vite build
-
-src/components/GlobalFeed.tsx(9,27): error TS6133: 'SquadRole' is declared but its value is never read.
-src/components/GlobalFeed.tsx(35,10): error TS1484: 'Bounty' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.

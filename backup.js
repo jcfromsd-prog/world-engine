@@ -24,8 +24,9 @@ output.on('close', function () {
 
     // PROACTIVE: Copy to USB D: if available
     try {
-        if (fs.existsSync('D:')) {
-            const usbPath = `D:\\${outputName}`;
+        const usbRoot = 'D:\\';
+        if (fs.existsSync(usbRoot)) {
+            const usbPath = path.join(usbRoot, outputName);
             fs.copyFileSync(path.join(__dirname, outputName), usbPath);
             console.log(`💾 USB SYNC: Successfully saved to D:\\`);
         } else {

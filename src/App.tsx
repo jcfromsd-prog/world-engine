@@ -1,12 +1,19 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Shield, Zap, Lock, Menu, X, Brain, CheckCircle, Activity, CreditCard, GraduationCap, LogOut } from 'lucide-react';
 import SolveAndEarnButton from './components/SolveAndEarnButton';
-import SolverWorkspace from './components/SolverWorkspace';
-import AssessmentModule from './components/AssessmentModule';
-import SystemDiagnostic from './components/SystemDiagnostic';
+// Lazy Load Large Components
+const SolverWorkspace = React.lazy(() => import('./components/SolverWorkspace'));
+const AssessmentModule = React.lazy(() => import('./components/AssessmentModule'));
+
 import ProgressionDashboard from './components/ProgressionDashboard';
+// import SystemDiagnostic from './components/SystemDiagnostic'; // Removed: Replaced by new Sim/Founder Tools
 
 // ----------------- SOULBOUND ENGINE IMPORTS -----------------
+import { useLeitnerQueue } from "./hooks/useLeitnerQueue";
+import { FlashcardDeck } from "./components/learning/FlashcardDeck";
+import { UserStats } from "./components/dashboard/UserStats";
+import { SquadRoster } from "./components/squad/SquadRoster";
+import { SquadMatcher, type MatchResult } from "./services/SquadMatcher";
 import type { SoulboundProfile } from './engine/types';
 import {
   loadProfile,
@@ -15,6 +22,8 @@ import {
   updateStreak,
   addGenesisPoints
 } from './engine';
+import { SimulationEngine, getTargetPersonaKey } from "./services/SimulationEngine";
+import { FounderCheckModal } from "./components/dashboard/FounderCheckModal";
 
 // ----------------- TYPES -----------------
 // UI Mission Type (Compatible with BountyCard)
@@ -124,23 +133,7 @@ function BountyCard({ title, price, desc, tags = [], locked, highlight, onClick 
   );
 }
 
-function SolverCard({ rank, name, role, earnings, badges, highlight }: { rank: string, name: string, role: string, earnings: string, badges: string[], highlight?: boolean }) {
-  return (
-    <div className={`flex items-center gap-4 p-4 border transition-colors cursor-pointer group ${highlight ? 'bg-blue-900/10 border-blue-500/30' : 'bg-zinc-900/20 border-gray-800 hover:bg-zinc-900/40'}`}>
-      <div className="text-xl font-black text-gray-800 group-hover:text-green-500/50 transition-colors italic">{rank}</div>
-      <div className="flex-1">
-        <div className={`font-bold ${highlight ? 'text-white' : 'text-gray-300'}`}>{name}</div>
-        <div className="text-[10px] text-gray-600 uppercase tracking-wide">{role}</div>
-      </div>
-      <div className="text-right">
-        <div className="text-sm font-mono text-green-500">{earnings}</div>
-        <div className="flex justify-end gap-1 mt-1">
-          {badges.map((b, i) => <span key={i} className="text-[10px] text-gray-500">{b}</span>)}
-        </div>
-      </div>
-    </div>
-  );
-}
+// function SolverCard... (Removed unused)
 
 // ----------------- COMPONENT: MISSION MODAL -----------------
 function MissionModal({ mission, onClose, onLaunch }: { mission: UIMission, onClose: () => void, onLaunch: () => void }) {
@@ -237,6 +230,29 @@ function HeroSection({ onStart }: { onStart: () => void }) {
 
 // ----------------- COMPONENT: SOLVER DASHBOARD (SOULBOUND EDITION) -----------------
 function SolverDashboard({ profile, onMissionStart }: { profile: SoulboundProfile, onMissionStart: (m: any) => void }) {
+
+  // --- LEARNING & GAMIFICATION ---
+  const leitnerQueue = useLeitnerQueue();
+  const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
+  const [points, setPoints] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [lastReviewDate, setLastReviewDate] = useState<Date | null>(null);
+
+  const incrementStreak = () => {
+    const today = new Date();
+    if (!lastReviewDate || (today.getTime() - lastReviewDate.getTime()) / (1000 * 60 * 60 * 24) <= 1) {
+      setStreak(s => s + 1);
+    } else {
+      setStreak(1);
+    }
+    setLastReviewDate(today);
+  };
+  const addPoints = (pts: number) => setPoints(p => p + pts);
+
+  useEffect(() => {
+    setMatchResult(SquadMatcher.findOptimalSquad());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally run only on mount
 
   // ----------------- MISSION GENERATOR (ADAPTED) -----------------
   const getRecommendedMissions = () => {
@@ -387,6 +403,21 @@ function SolverDashboard({ profile, onMissionStart }: { profile: SoulboundProfil
           />
         </div>
 
+        {/* DAILY REVIEW */}
+        <section className="mb-12 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-5">
+          <UserStats totalReviewed={leitnerQueue.queue.length} totalPoints={points} streakDays={streak} />
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
+            <FlashcardDeck
+              key={leitnerQueue.currentItem?.id || 'empty'}
+              queue={leitnerQueue.queue}
+              currentItem={leitnerQueue.currentItem}
+              onAnswer={leitnerQueue.recordAnswer}
+              onEarnPoints={addPoints}
+              onUpdateStreak={incrementStreak}
+            />
+          </div>
+        </section>
+
         {/* MISSION GRID */}
         <div>
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
@@ -414,13 +445,14 @@ function SolverDashboard({ profile, onMissionStart }: { profile: SoulboundProfil
 
             {/* SQUAD SIDEBAR */}
             <div>
-              <div className="bg-zinc-900/20 border border-gray-800 p-6 rounded-xl">
-                <h3 className="font-bold text-white mb-4">Your Squad</h3>
-                <div className="space-y-4">
-                  <SolverCard rank="1" name={profile.displayName} role={profile.archetype} earnings={`${profile.genesisPoints} GP`} badges={["🔵 Apprentice"]} highlight />
-                  <SolverCard rank="-" name="Sage_AI" role="Mentor" earnings="∞" badges={["🟢 Online"]} />
+              {matchResult ? (
+                <div className="bg-zinc-900/20 border border-gray-800 p-4 rounded-xl">
+                  <h3 className="font-bold text-white mb-4">Squad Command</h3>
+                  <SquadRoster squads={matchResult.squads} unmatched={matchResult.unmatched} />
                 </div>
-              </div>
+              ) : (
+                <div className="p-6 text-gray-500 animate-pulse bg-zinc-900/10 rounded-xl border border-dashed border-gray-800">Scanning for Squad Beacons...</div>
+              )}
             </div>
           </main>
         </div>
@@ -439,6 +471,24 @@ function App() {
   const [activeMission, setActiveMission] = useState<UIMission | null>(null);
   const [activeQuest, setActiveQuest] = useState<UIMission | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+
+  // --- SIMULATION ENGINE STATE ---
+  const [simulationLog, setSimulationLog] = useState<string[]>([]);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [showFounderModal, setShowFounderModal] = useState(false);
+
+  const handleRunSimulation = async () => {
+    setIsSimulating(true);
+    setSimulationLog([]); // Clear log
+
+    // Use persona from localStorage (for E2E tests) or default to HS_SOPHOMORE
+    const personaKey = getTargetPersonaKey();
+    await SimulationEngine.runSimulation(personaKey, (msg) => {
+      setSimulationLog(prev => [...prev, msg]);
+    });
+
+    setTimeout(() => setIsSimulating(false), 3000); // Reset after 3s
+  };
 
   const handleLaunchMission = () => {
     setActiveQuest(activeMission);
@@ -459,10 +509,12 @@ function App() {
   if (activeQuest) {
     return (
       <div className="min-h-screen bg-black text-white font-mono">
-        <SolverWorkspace
-          onBack={() => handleReturnToDash()}
-          onSolve={(rewards) => handleReturnToDash(rewards)}
-        />
+        <React.Suspense fallback={<div className="p-10 text-center">Loading Workspace...</div>}>
+          <SolverWorkspace
+            onBack={() => handleReturnToDash()}
+            onSolve={(rewards) => handleReturnToDash(rewards)}
+          />
+        </React.Suspense>
       </div>
     )
   }
@@ -473,17 +525,35 @@ function App() {
       {/* ----------------- OVERLAYS ----------------- */}
 
       {/* DEV TOOL: Path Simulation Diagnostic */}
-      <SystemDiagnostic />
+      {/* <SystemDiagnostic />  -- Replacing with new overlay/modal system below */}
+
+      {/* Simulation Log Overlay */}
+      {isSimulating && (
+        <div style={{
+          position: 'fixed', bottom: '20px', left: '20px', right: '20px',
+          background: 'rgba(0,0,0,0.85)', color: '#00d4ff', padding: '20px',
+          borderRadius: '10px', border: '1px solid #00d4ff', zIndex: 999,
+          fontFamily: 'monospace', maxHeight: '300px', overflowY: 'auto'
+        }} id="simulation-log" data-testid="simulation-log">
+          <h3>🚀 RUNNING PATH SIMULATION...</h3>
+          {simulationLog.map((log, i) => <div key={i}>{log}</div>)}
+        </div>
+      )}
+
+      {/* Founder Check Modal */}
+      <FounderCheckModal isOpen={showFounderModal} onClose={() => setShowFounderModal(false)} />
 
       {/* 1. ADAPTIVE ASSESSMENT MODAL */}
       {showAssessment && (
-        <AssessmentModule
-          onClose={() => setShowAssessment(false)}
-          onComplete={(data, selectedPath) => {
-            initUser(data.name, selectedPath.role, selectedPath.focus);
-            setShowAssessment(false);
-          }}
-        />
+        <React.Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">Loading Assessment...</div>}>
+          <AssessmentModule
+            onClose={() => setShowAssessment(false)}
+            onComplete={(data, selectedPath) => {
+              initUser(data.name, selectedPath.role, selectedPath.focus);
+              setShowAssessment(false);
+            }}
+          />
+        </React.Suspense>
       )}
 
       {/* 2. ACTIVE MISSION MODAL */}
@@ -563,7 +633,29 @@ function App() {
         <SolverDashboard profile={userState} onMissionStart={setActiveMission} />
       )}
 
-      <footer className="py-12 px-6 border-t border-gray-800 bg-zinc-950 text-center">
+      <footer className="py-12 px-6 border-t border-gray-800 bg-zinc-950 text-center relative z-10">
+
+        {/* SIMULATION CONTROLS */}
+        <div className="mb-8 flex justify-center gap-4">
+          <button
+            onClick={() => setShowFounderModal(true)}
+            className="text-green-500 border border-green-900 bg-green-900/10 px-4 py-2 rounded text-xs uppercase tracking-widest hover:bg-green-500 hover:text-black transition-colors"
+          >
+            👁️ Founder Check
+          </button>
+
+          <button
+            onClick={handleRunSimulation}
+            disabled={isSimulating}
+            className={`px-4 py-2 rounded text-xs uppercase tracking-widest transition-colors ${isSimulating
+              ? 'bg-blue-900 text-blue-300 border border-blue-800 cursor-not-allowed'
+              : 'text-cyan-400 border border-cyan-900 bg-cyan-900/10 hover:bg-cyan-500 hover:text-black cursor-pointer'
+              }`}
+          >
+            {isSimulating ? "📈 Simulating..." : "📈 Run Path Simulation"}
+          </button>
+        </div>
+
         <div className="flex justify-center gap-6 mb-8">
           <FooterIcon icon={<Shield size={20} />} />
           <FooterIcon icon={<Zap size={20} />} />
