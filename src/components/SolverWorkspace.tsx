@@ -148,59 +148,142 @@ function VisualMatcherGame({ theme, onComplete }: { theme: string, onComplete: (
     );
 }
 
-// ----------------- SUB-GAME: CODE EDITOR (ORIGINAL) -----------------
+// ----------------- SUB-GAME: CODE EDITOR (INTERACTIVE) -----------------
 function CodeEditorGame({ onComplete }: { onComplete: () => void }) {
+    const [code, setCode] = useState(`// Task: Optimize solar grid distribution
+// Input: Array of GridNodes
+// Output: Active Node IDs
+
+export const handleSync = (nodes) => {
+  // TODO: Filter for active nodes and map to IDs
+  
+  return []; 
+};`);
+    const [status, setStatus] = useState<'IDLE' | 'RUNNING' | 'SUCCESS' | 'ERROR'>('IDLE');
+    const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
+
+    const activeQuest = {
+        title: "Clean Energy Algorithm",
+        brief: "Optimize the load-balancing logic for a decentralized solar grid."
+    };
+
+    const handleRun = async () => {
+        setStatus('RUNNING');
+        setConsoleOutput(['> Compiling...', '> Running Unit Tests...']);
+
+        // Artificial delay for realism
+        await new Promise(r => setTimeout(r, 1500));
+
+        // Simple validation logic (keyword check for prototype)
+        const hasMap = code.includes('.map');
+        const hasFilter = code.includes('.filter');
+
+        if (hasMap && hasFilter) {
+            setConsoleOutput(p => [...p, '√ Test 1: Active Nodes Filtered (PASS)', '√ Test 2: IDs Mapped (PASS)', '√ Performance: 12ms', 'ALL TESTS PASSED']);
+            setStatus('SUCCESS');
+        } else {
+            setConsoleOutput(p => [...p, 'x Test 1: Active Nodes Filtered (FAIL)', 'x Test 2: IDs Mapped (FAIL)', 'Hint: Use .filter() and .map() to transform the data.']);
+            setStatus('ERROR');
+        }
+    };
+
     return (
-        <div className="flex h-full">
+        <div className="flex h-full animate-in fade-in">
             {/* SIDEBAR: FILES */}
             <div className="w-64 border-r border-gray-800 bg-[#050505] hidden md:flex flex-col">
-                <div className="p-4 text-xs font-bold text-gray-600 uppercase tracking-widest">Filesystem</div>
+                <div className="p-4 text-xs font-bold text-gray-600 uppercase tracking-widest">Project Explorer</div>
                 <div className="px-2 space-y-1">
                     <FileItem name="src/" isFolder />
-                    <FileItem name="components/" isFolder indent />
-                    <FileItem name="LogicController.ts" active indent />
-                    <FileItem name="assets/" isFolder />
-                    <FileItem name="package.json" />
+                    <FileItem name="grid_logic/" isFolder indent />
+                    <FileItem name="Optimizer.ts" active indent />
+                    <FileItem name="GridNode.d.ts" indent />
+                    <FileItem name="tests/" isFolder />
+                </div>
+
+                <div className="mt-auto p-4 border-t border-gray-900">
+                    <div className="text-[10px] text-gray-500 font-mono mb-2">MISSION BRIEF</div>
+                    <p className="text-xs text-gray-400 leading-relaxed">{activeQuest.brief}</p>
                 </div>
             </div>
 
             {/* MAIN EDITOR AREA */}
             <div className="flex-1 flex flex-col bg-[#0c0c0c] relative">
+                {/* TAB BAR */}
                 <div className="flex items-center justify-between bg-[#0a0a0a] border-b border-gray-800 px-4">
                     <div className="flex">
-                        <div className="px-4 py-2 text-xs font-mono text-cyan-400 bg-[#0c0c0c] border-t-2 border-cyan-400">LogicController.ts</div>
+                        <div className="px-4 py-2 text-xs font-mono text-cyan-400 bg-[#0c0c0c] border-t-2 border-cyan-400 flex items-center gap-2">
+                            <span className="text-blue-400">TS</span> Optimizer.ts
+                        </div>
                     </div>
-                    <div className="text-[10px] text-gray-600 uppercase tracking-widest">Read-Only Check-out</div>
                 </div>
 
-                {/* CODE MOCKUP */}
-                <div className="flex-1 p-6 font-mono text-sm leading-relaxed overflow-y-auto text-gray-400 selection:bg-cyan-900 selection:text-white">
-                    <div className="flex gap-4">
-                        <div className="text-gray-700 select-none text-right">1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11</div>
-                        <div>
-                            <span className="text-purple-400">import</span> {"{ Engine }"} <span className="text-purple-400">from</span> <span className="text-green-400">"@world-engine/core"</span>;
-                            <br /><br />
-                            <span className="text-gray-600">// Optimized transition logic</span>
-                            <br />
-                            <span className="text-purple-400">export const</span> <span className="text-yellow-200">handleSync</span> = () ={">"} {"{"}
-                            <br />
-                            &nbsp;&nbsp;<span className="text-purple-400">const</span> state = Engine.<span className="text-blue-400">getState</span>();
-                            <br /><br />
-                            <div className="bg-green-900/20 border-l-2 border-green-500 pl-4 py-2 my-2">
-                                <span className="text-green-400 font-bold">// FIX: Reduce render iterations by batching state updates</span>
-                                <br />
-                                <span className="text-purple-400">return</span> state.<span className="text-blue-400">map</span>(item ={">"} item.id).<span className="text-blue-400">filter</span>(Boolean);
-                            </div>
-                            <br />
-                            {"};"}
+                {/* EDITOR + CONSOLE SPLIT */}
+                <div className="flex-1 flex flex-col">
+                    {/* EDITABLE TEXTAREA */}
+                    <div className="flex-1 relative">
+                        <textarea
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            className="w-full h-full bg-[#0c0c0c] text-gray-300 font-mono text-sm p-6 resize-none outline-none selection:bg-cyan-900/50"
+                            spellCheck={false}
+                        />
+                        {/* Line Numbers (Fake visual) */}
+                        <div className="absolute top-6 left-2 text-right text-gray-800 font-mono text-sm select-none pointer-events-none w-6 leading-relaxed">
+                            {code.split('\n').map((_, i) => <div key={i}>{i + 1}</div>)}
+                        </div>
+                    </div>
+
+                    {/* TERMINAL UI */}
+                    <div className="h-48 border-t border-gray-800 bg-[#050505] p-4 font-mono text-xs overflow-y-auto">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-gray-500 uppercase tracking-wider font-bold">Terminal</span>
+                            {status === 'SUCCESS' && <span className="text-green-500 font-bold">BUILD SUCCESSFUL</span>}
+                            {status === 'ERROR' && <span className="text-red-500 font-bold">BUILD FAILED</span>}
+                        </div>
+                        <div className="space-y-1">
+                            {consoleOutput.map((line, i) => (
+                                <div key={i} className={`${line.includes('PASS') ? 'text-green-400' : line.includes('FAIL') ? 'text-red-400' : line.includes('Hint') ? 'text-yellow-400' : 'text-gray-400'}`}>
+                                    {line}
+                                </div>
+                            ))}
+                            {status === 'RUNNING' && <div className="text-cyan-400 animate-pulse">_</div>}
                         </div>
                     </div>
                 </div>
 
                 {/* ACTIONS */}
-                <div className="p-4 border-t border-gray-800 bg-[#0a0a0a] flex justify-end gap-3">
-                    <button className="px-6 py-3 rounded bg-zinc-800 text-gray-300 text-xs font-bold uppercase tracking-widest hover:bg-zinc-700">Run Tests</button>
-                    <button onClick={onComplete} className="px-6 py-3 rounded bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.3)]">Verify & Submit</button>
+                <div className="p-4 border-t border-gray-800 bg-[#0a0a0a] flex justify-end gap-3 z-10">
+                    <button
+                        onClick={() => setCode(`// Task: Optimize solar grid distribution
+// Input: Array of GridNodes
+// Output: Active Node IDs
+
+export const handleSync = (nodes) => {
+  return nodes
+    .filter(n => n.isActive)
+    .map(n => n.id);
+};`)}
+                        className="px-4 py-3 text-gray-500 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors"
+                    >
+                        Reset / Hint
+                    </button>
+
+                    {status === 'SUCCESS' ? (
+                        <button
+                            onClick={onComplete}
+                            className="px-8 py-3 rounded bg-green-500 text-black text-xs font-black uppercase tracking-widest hover:bg-green-400 shadow-[0_0_20px_rgba(34,197,94,0.4)] animate-pulse"
+                        >
+                            Submit & Claim Rewards
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleRun}
+                            disabled={status === 'RUNNING'}
+                            className={`px-6 py-3 rounded bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all ${status === 'RUNNING' ? 'opacity-50 cursor-wait' : ''}`}
+                        >
+                            {status === 'RUNNING' ? 'Compiling...' : 'Run Analysis'}
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

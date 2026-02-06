@@ -19,44 +19,37 @@ import { SquadMatcher } from "./SquadMatcher";
 // USER PERSONAS (NY/CA K-16 Standards-Aligned)
 // ═══════════════════════════════════════════════════════════════════════════
 export const USER_PERSONAS: Record<string, UserProfile> = {
-    // Kindergarten Explorer
-    KINDER_NOVICE: {
-        id: "p_k",
-        name: "Leo",
+    // THE KID (Grades K-5)
+    ELEMENTARY_NOVICE: {
+        id: "user_sim_01",
+        name: "Leo (The Explorer)",
         archetype: "Explorer",
+        passion: "Science",
         skillTheta: -2.5,
-        gradeLevel: 0,
-        interests: ["Shapes", "Nature", "Animals"],
+        gradeLevel: 3,
+        interests: ["Nature", "Science", "Animals"],
         competencies: {},
     },
-    // 4th Grade Builder
-    GRADE_4_BUILDER: {
-        id: "p_4",
-        name: "Sofia",
-        archetype: "Builder",
-        skillTheta: -1.2,
-        gradeLevel: 4,
-        interests: ["Minecraft", "Science", "Ecosystems"],
-        competencies: {},
-    },
-    // High School Sophomore
+    // THE TEEN (Grades 9-12)
     HS_SOPHOMORE: {
-        id: "p_hs",
-        name: "Jordan",
-        archetype: "Analyst",
+        id: "user_sim_02",
+        name: "Maya (The Builder)",
+        archetype: "Builder",
+        passion: "Coding",
         skillTheta: 0.8,
         gradeLevel: 10,
-        interests: ["Tech", "Coding", "Environment"],
+        interests: ["Coding", "Tech", "Engineering"],
         competencies: {},
     },
-    // College Freshman
-    COLLEGE_FRESH: {
-        id: "p_col",
-        name: "Alex",
+    // THE PRO (College/Career)
+    COLLEGE_SENIOR: {
+        id: "user_sim_03",
+        name: "Alex (The Legend)",
         archetype: "Innovator",
+        passion: "Creative",
         skillTheta: 2.2,
-        gradeLevel: 13,
-        interests: ["AI", "Startup", "Technology"],
+        gradeLevel: 15,
+        interests: ["Leadership", "Business", "Startup"],
         competencies: {},
     },
 };
@@ -270,6 +263,48 @@ export const SimulationEngine = {
      */
     async runFromInjectedPersona(onUpdate: (log: string) => void): Promise<boolean> {
         return this.runSimulation(undefined, onUpdate);
+    },
+
+    /**
+     * Runs ALL personas in sequence and reports pass/fail stats.
+     * The "Audit Button" logic.
+     */
+    async runFullQA(onUpdate: (log: string) => void): Promise<void> {
+        let passed = 0;
+        let failed = 0;
+        const report: string[] = [];
+
+        onUpdate(`🚨 STARTING FULL QA BATCH TEST (ALL PERSONAS)`);
+
+        for (const [key] of Object.entries(USER_PERSONAS)) {
+            onUpdate(`\n🔹 TESTING PERSONA: ${key}...`);
+            try {
+                const result = await this.runSimulation(key as PersonaKey, (msg) => {
+                    // Show Milestones and Errors
+                    if (msg.includes('RED ALERT') || msg.includes('FAIL') || msg.includes('✅') || msg.includes('🛡️') || msg.includes('🏁')) {
+                        onUpdate(msg);
+                    }
+                });
+
+                if (result) {
+                    passed++;
+                    report.push(`✅ ${key}: PASSED`);
+                } else {
+                    failed++;
+                    report.push(`❌ ${key}: FAILED`);
+                }
+            } catch (e) {
+                failed++;
+                report.push(`❌ ${key}: CRASHED (${e})`);
+            }
+        }
+
+        onUpdate(`\n═══════════════════════════════════════════════════════════════`);
+        onUpdate(`🏁 QA BATCH COMPLETE`);
+        onUpdate(`   PASSED: ${passed} | FAILED: ${failed}`);
+        onUpdate(`   REPORT SUMMARY:`);
+        report.forEach(r => onUpdate(`   ${r}`));
+        onUpdate(`═══════════════════════════════════════════════════════════════`);
     },
 
     /**

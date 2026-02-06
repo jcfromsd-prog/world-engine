@@ -156,6 +156,12 @@ export const RecommendationEngine = {
             reason = "Optimal next step in your learning path";
         }
 
+        // SAFETY GUARD: Final Red Alert Check
+        if (best.node.minGrade > user.gradeLevel + 2) {
+            console.error(`❌ RED ALERT: SYSTEM FAILURE. Attempted to assign Grade ${best.node.minGrade} content to Grade ${user.gradeLevel} user.`);
+            return null;
+        }
+
         return {
             node: best.node,
             successProbability: best.successProbability,

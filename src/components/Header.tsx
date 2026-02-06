@@ -18,6 +18,7 @@ interface HeaderProps {
     onOpenDiscovery?: () => void;
     isAdmin?: boolean;
     squadActive?: boolean;
+    streak?: number;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -31,7 +32,8 @@ const Header: React.FC<HeaderProps> = ({
     onOpenCommandCenter,
     onOpenDiscovery,
     isAdmin = false,
-    squadActive = false
+    squadActive = false,
+    streak = 0
 }) => {
     // Local state removed, using props
 
@@ -122,9 +124,21 @@ const Header: React.FC<HeaderProps> = ({
 
                 {/* DESKTOP: Stats Group */}
                 <div className="hidden md:flex items-center gap-4 mr-2">
-                    {/* ... (Existing Desktop Stats Code - kept clean by relying on original logic if pasted, but here we replace block) ... */}
-                    {/* Re-inserting the conditional stats logic for brevity in replace tool I will assume existing logic. */}
-                    {/* Wait, I need to provide the FULL content for the replacement block. I will copy the stats logic from lines 116-164 */}
+
+                    {/* STREAK COUNTER (New Enhancement) */}
+                    {streak > 0 && (
+                        <div className="flex flex-col items-end group cursor-help" title="Daily Login Streak">
+                            <span className="text-[10px] text-orange-500 uppercase tracking-widest font-black group-hover:text-orange-400">Streak</span>
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-orange-500 animate-pulse">🔥</span>
+                                <span className="text-white font-mono font-bold text-lg leading-tight">{streak}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Divider */}
+                    {streak > 0 && <div className="w-px h-8 bg-slate-800" />}
+
                     {isAdmin ? (
                         <>
                             <div className="flex flex-col items-end">

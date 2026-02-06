@@ -16,6 +16,7 @@ export interface UserProfile {
     id: string;
     name: string;
     archetype: string; // e.g., "Builder", "Explorer", "Analyst", "Innovator"
+    passion: string;   // PRIMARY PASSION (Coding, Science, Creative) 
     skillTheta: number; // -3.0 to +3.0 (IRT ability parameter)
     gradeLevel: number; // 0=PreK, 1-12=K-12, 13-16=College
     interests: string[];

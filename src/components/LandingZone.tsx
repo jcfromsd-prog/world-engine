@@ -16,7 +16,8 @@ const LandingZone = ({
     setViewMode,
     isLocked = false,
     onToggleNeural,
-    isAdmin = false
+    isAdmin = false,
+    streak = 0
 }: {
     onOpenDiscovery?: () => void;
     viewMode?: 'solver' | 'client';
@@ -24,6 +25,7 @@ const LandingZone = ({
     isLocked?: boolean;
     onToggleNeural?: () => void;
     isAdmin?: boolean;
+    streak?: number;
 }) => {
     const { isAuthenticated, user } = useAuth();
     const [profile, setProfile] = useState<Profile | null>(null);
@@ -46,6 +48,7 @@ const LandingZone = ({
                 setViewMode={setViewMode || (() => { })}
                 squadActive={isAdmin} // Use logic to show S or CC
                 onToggleNeural={onToggleNeural}
+                streak={streak}
             />
 
             {!isAuthenticated && (
