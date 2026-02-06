@@ -134,8 +134,9 @@ export const updateStreak = (
     profile: SoulboundProfile,
     todayDate: string // YYYY-MM-DD format
 ): { profile: SoulboundProfile; streakBroken: boolean; streakBonus: number } => {
-    const lastLogin = profile.lastLoginDate;
-    let { dailyStreak, longestStreak } = profile;
+    const lastLogin = profile?.lastLoginDate;
+    let dailyStreak = profile?.dailyStreak || 0;
+    let longestStreak = profile?.longestStreak || 0;
     let streakBroken = false;
     let streakBonus = 0;
 
@@ -145,7 +146,7 @@ export const updateStreak = (
     }
 
     // Calculate days since last login
-    const last = new Date(lastLogin);
+    const last = new Date(lastLogin || 0); // Use 0 if lastLogin is undefined/null
     const today = new Date(todayDate);
     const diffDays = Math.floor((today.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -263,7 +264,7 @@ export const addGenesisPoints = (
     return {
         profile: {
             ...profile,
-            genesisPoints: profile.genesisPoints + amount
+            genesisPoints: (profile?.genesisPoints || 0) + amount
         },
         transaction: {
             type: 'mission_reward',

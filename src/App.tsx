@@ -340,7 +340,7 @@ function HeroSection({ onStart, onOpenConnect, onOpenLearn, onOpenIdentity }: { 
 // ----------------- ENTRY POINT: APP -----------------
 function App() {
   const { userState, updateProfile, initUser, clearMemory } = useSageMemory();
-  const { isInitialized, setUser, interventions } = useUser();
+  const { isInitialized, setUser, interventions, userProfile, heroPath } = useUser();
 
   const [showAssessment, setShowAssessment] = useState(false);
   const [showConnect, setShowConnect] = useState(false);
@@ -362,6 +362,18 @@ function App() {
     });
     setTimeout(() => setIsSimulating(false), 3000);
   };
+
+  // Sync effect: If global profile is loaded but local legacy state is missing, initialize it
+  useEffect(() => {
+    if (isInitialized && !userState && userProfile && heroPath) {
+      initUser(
+        userProfile.name,
+        heroPath.role,
+        userProfile.passion || "Logic",
+        userProfile.age || 10
+      );
+    }
+  }, [isInitialized, userState, userProfile, heroPath]);
 
   const handleLaunchMission = () => {
     setActiveQuest(activeMission);
@@ -526,7 +538,7 @@ function App() {
             <nav className="flex-1 space-y-4">
               <MenuLink icon={<Activity size={18} />} label="Genesis Feed" onClick={() => setShowMenu(false)} active />
               <MenuLink icon={<GraduationCap size={18} />} label="The Syllabus" onClick={() => alert("Acquiring targets...")} />
-              <MenuLink icon={<CreditCard size={18} />} label="Vault & USD" onClick={() => alert(`GP: ${userState?.genesisPoints}\nReal Balance: USD Unlocked at Level 5`)} />
+              <MenuLink icon={<CreditCard size={18} />} label="Vault & USD" onClick={() => alert(`GP: ${userState?.genesisPoints || 0}\nReal Balance: USD Unlocked at Level 5`)} />
 
               <div className="pt-12">
                 {userState && (

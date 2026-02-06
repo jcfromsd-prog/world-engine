@@ -110,9 +110,9 @@ const ProgressionDashboard: React.FC<ProgressionDashboardProps> = ({
                         <div>
                             <h2 className="text-xl font-black text-white">{profile?.displayName || 'Legend'}</h2>
                             <div className="flex items-center gap-2 mt-1">
-                                <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">{profile.archetype}</span>
+                                <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">{profile?.archetype || 'Tactician'}</span>
                                 <span className="text-gray-600">•</span>
-                                <span className="text-xs text-cyan-400 font-bold uppercase tracking-wider">{profile.sector}</span>
+                                <span className="text-xs text-cyan-400 font-bold uppercase tracking-wider">{profile?.sector || 'Global Impact'}</span>
                             </div>
                         </div>
                     </div>
@@ -139,11 +139,11 @@ const ProgressionDashboard: React.FC<ProgressionDashboardProps> = ({
                     <div className="text-[9px] text-gray-500 uppercase tracking-widest">GP</div>
                 </div>
                 <div className="p-4 text-center border-r border-gray-800">
-                    <div className="text-xl font-black text-cyan-400">{profile.completedNodes.length}</div>
+                    <div className="text-xl font-black text-cyan-400">{profile?.completedNodes?.length || 0}</div>
                     <div className="text-[9px] text-gray-500 uppercase tracking-widest">Missions</div>
                 </div>
                 <div className="p-4 text-center">
-                    <div className="text-xl font-black text-orange-400">{longestStreak}</div>
+                    <div className="text-xl font-black text-orange-400">{longestStreak || 0}</div>
                     <div className="text-[9px] text-gray-500 uppercase tracking-widest">Best Streak</div>
                 </div>
             </div>
@@ -177,20 +177,20 @@ const ProgressionDashboard: React.FC<ProgressionDashboardProps> = ({
             {/* PROGRESSION GATES */}
             <div className="px-6 pb-6 space-y-3">
                 {/* Squad Gate */}
-                <div className={`p-4 rounded-xl border ${profile.squadId ? 'bg-green-900/10 border-green-800/50' : 'bg-zinc-900/50 border-gray-800'}`}>
+                <div className={`p-4 rounded-xl border ${profile?.squadId ? 'bg-green-900/10 border-green-800/50' : 'bg-zinc-900/50 border-gray-800'}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${profile.squadId ? 'bg-green-900/30' : 'bg-gray-800'}`}>
-                                <Users size={20} className={profile.squadId ? 'text-green-400' : 'text-gray-500'} />
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${profile?.squadId ? 'bg-green-900/30' : 'bg-gray-800'}`}>
+                                <Users size={20} className={profile?.squadId ? 'text-green-400' : 'text-gray-500'} />
                             </div>
                             <div>
                                 <div className="text-white font-bold text-sm">Squad Status</div>
                                 <div className="text-[10px] text-gray-500">
-                                    {profile.squadId ? 'Connected to Squad' : 'Solo Mode (Level 5 Cap)'}
+                                    {profile?.squadId ? 'Connected to Squad' : 'Solo Mode (Level 5 Cap)'}
                                 </div>
                             </div>
                         </div>
-                        {!profile.squadId && (
+                        {!profile?.squadId && (
                             <button
                                 onClick={onJoinSquad}
                                 className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors"

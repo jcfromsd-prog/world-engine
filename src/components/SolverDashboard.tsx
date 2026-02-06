@@ -48,13 +48,13 @@ const SolverDashboard: React.FC<SolverDashboardProps> = ({ profile, onMissionSta
     const [showSuccess, setShowSuccess] = useState<Mission | null>(null);
 
     // Fallback to local profile if context is somehow missing (though it shouldn't be)
-    const userName = profile?.displayName || "Legend";
+    const userName = profile?.displayName || userProfile?.name || "Legend";
     const userRole = heroPath?.role || profile?.archetype || "Tactician";
     const userGoal = profile?.sector || "Global Impact";
 
     const getSageMessage = () => {
-        if (userRole.includes("Code")) return "I've detected a logic breach in the energy grid. Ready to override?";
-        if (userRole.includes("Design")) return "A narrative vacuum detected. The world needs your vision.";
+        if (userRole?.includes("Code")) return "I've detected a logic breach in the energy grid. Ready to override?";
+        if (userRole?.includes("Design")) return "A narrative vacuum detected. The world needs your vision.";
         return "The board is set. The world is waiting for your move.";
     };
 
