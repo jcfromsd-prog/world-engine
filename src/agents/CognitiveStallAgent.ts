@@ -7,7 +7,7 @@
  * It should NOT be imported in frontend code.
  */
 
-// @ts-nocheck - Backend dependencies not available in frontend build context
+// Backend dependencies not available in frontend build context
 import type { Driver, Session } from "neo4j-driver";
 
 // Configuration

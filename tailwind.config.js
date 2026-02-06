@@ -6,6 +6,9 @@ export default {
     ],
     theme: {
         extend: {
+            colors: {
+                'neon-green': '#39FF14',
+            },
             animation: {
                 marquee: 'marquee 60s linear infinite',
             },

@@ -260,7 +260,7 @@ export const createDefaultProfile = (userId: string, name: string, archetype: st
     reputation: 100,
     collaborationScore: 0,
 
-    genesisPoints: 0,
+    genesisPoints: 500, // Founding Solver Bootstrap Credit ($5.00)
     realBalance: 0,
     pendingPayout: 0,
     lifetimeEarnings: 0,

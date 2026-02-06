@@ -147,7 +147,7 @@ const ConnectView: React.FC<ConnectViewProps> = ({ onBack }) => {
                                         onClick={() => handleJoin(s)}
                                         className={`px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${joiningId === s.id
                                             ? "bg-zinc-800 text-zinc-600 animate-pulse"
-                                            : !!squad
+                                            : squad
                                                 ? "bg-zinc-900/50 text-zinc-700 cursor-not-allowed border border-zinc-800"
                                                 : "bg-white text-black hover:bg-indigo-400 hover:scale-105"
                                             }`}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 
 export interface FlashcardItem {
     id: string;
@@ -35,16 +35,20 @@ const MAX_BOX = 5;
 
 export function useLeitnerQueue(): LeitnerQueueHook {
     const [queue, setQueue] = useState<FlashcardItem[]>(INITIAL_FLASHCARDS);
-    const [currentItem, setCurrentItem] = useState<FlashcardItem | null>(null);
+    const [now, setNow] = useState(() => Date.now());
 
-    // Update current item when queue changes
+    // Update 'now' every 10 seconds to refresh due cards naturally
     useEffect(() => {
-        const now = Date.now();
+        const interval = setInterval(() => setNow(Date.now()), 10000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Derived state: currentItem is calculated based on the queue and current time
+    const currentItem = useMemo(() => {
         const dueCards = queue.filter((item) => item.nextReview <= now);
         // Sort by nextReview to show oldest due first
-        dueCards.sort((a, b) => a.nextReview - b.nextReview);
-        setCurrentItem(dueCards.length > 0 ? dueCards[0] : null);
-    }, [queue]); // setCurrentItem is stable, no need in deps
+        return dueCards.sort((a, b) => a.nextReview - b.nextReview)[0] || null;
+    }, [queue, now]);
 
     // Memoized answer handler for stable reference
     const recordAnswer = useCallback((itemId: string, success: boolean) => {
