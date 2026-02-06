@@ -5,16 +5,30 @@ const URI = import.meta.env.VITE_NEO4J_URI || 'bolt://localhost:7687';
 const USER = import.meta.env.VITE_NEO4J_USER || 'neo4j';
 const PASSWORD = import.meta.env.VITE_NEO4J_PASSWORD || 'password';
 
-let driver: Driver;
+let driver: Driver | null = null;
+let isOfflineMode = false;
 
 try {
     driver = neo4j.driver(URI, neo4j.auth.basic(USER, PASSWORD));
+    // Verify connection immediately
+    driver.verifyConnectivity()
+        .then(() => console.log('✅ Neo4j Connection Established'))
+        .catch(() => {
+            console.warn('⚠️ Neo4j Offline: Entering Sovereign Fallback Mode');
+            isOfflineMode = true;
+        });
 } catch (err) {
     console.error('Neo4j Driver Initialization Failed', err);
+    isOfflineMode = true;
 }
 
 export const Neo4jService = {
+    isHealthy() {
+        return driver !== null && !isOfflineMode;
+    },
+
     async saveUserProfile(userId: string, profile: UserProfile, path: HeroPath, wallet: Wallet, psychometrics: Psychometrics) {
+        if (!this.isHealthy() || !driver) return;
         const session = driver.session();
         try {
             await session.executeWrite(tx =>
@@ -56,6 +70,7 @@ export const Neo4jService = {
     },
 
     async updatePsychometrics(userId: string, psychometrics: Psychometrics) {
+        if (!this.isHealthy() || !driver) return;
         const session = driver.session();
         try {
             await session.executeWrite(tx =>
@@ -79,6 +94,7 @@ export const Neo4jService = {
     },
 
     async joinSquad(userId: string, squad: Squad) {
+        if (!this.isHealthy() || !driver) return;
         const session = driver.session();
         try {
             await session.executeWrite(tx =>
@@ -102,6 +118,7 @@ export const Neo4jService = {
     },
 
     async completeMission(userId: string, missionId: string, path: HeroPath, wallet: Wallet) {
+        if (!this.isHealthy() || !driver) return;
         const session = driver.session();
         try {
             await session.executeWrite(tx =>
@@ -127,6 +144,7 @@ export const Neo4jService = {
     },
 
     async fetchUserData(userId: string) {
+        if (!this.isHealthy() || !driver) return null;
         const session = driver.session();
         try {
             const result = await session.executeRead(tx =>
@@ -173,12 +191,16 @@ export const Neo4jService = {
                     role: squadNode.properties.role
                 } as Squad : null
             };
+        } catch (e) {
+            console.error("Fetch User Data Failed", e);
+            return null;
         } finally {
             await session.close();
         }
     },
 
     async fetchRecommendations(userId: string) {
+        if (!this.isHealthy() || !driver) return [];
         const session = driver.session();
         try {
             const result = await session.executeRead(tx =>
@@ -200,6 +222,9 @@ export const Neo4jService = {
                     type: props.type
                 };
             });
+        } catch (e) {
+            console.error("Fetch Recommendations Failed", e);
+            return [];
         } finally {
             await session.close();
         }
