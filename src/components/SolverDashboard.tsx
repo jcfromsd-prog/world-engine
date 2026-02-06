@@ -177,7 +177,7 @@ const SolverDashboard: React.FC<SolverDashboardProps> = ({ profile, onMissionSta
                     <DashboardStat icon={<Shield size={20} />} label="Security Level" value={`Level 1`} color="text-cyan-400" />
                     <DashboardStat icon={<Award size={20} />} label="Operative Class" value={userRole} color="text-purple-400" />
                     <DashboardStat icon={<Target size={20} />} label="Tactical Focus" value={userGoal.split(' ')[0]} color="text-blue-400" />
-                    <DashboardStat icon={<Zap size={20} />} label="Energy Stored" value={`${profile.genesisPoints} GP`} color="text-lime-400" />
+                    <DashboardStat icon={<Zap size={20} />} label="Energy Stored" value={`${profile?.genesisPoints || 0} GP`} color="text-lime-400" />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">

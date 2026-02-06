@@ -91,6 +91,7 @@ const ProgressionDashboard: React.FC<ProgressionDashboardProps> = ({
     onOpenMission,
     onJoinSquad
 }) => {
+    if (!profile) return null;
     const { skillGraph, dailyStreak, longestStreak, genesisPoints, verifiedSolverBadge } = profile;
 
     // Calculate overall progress
