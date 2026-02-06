@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.tsx'
 
 import { AuthProvider } from './context/AuthProvider.tsx'
+import { UserProvider } from './context/UserContext.tsx'
 
 import { validateEnv } from './utils/envValidation'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -18,7 +19,9 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary scope="Root">
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <UserProvider>
+            <App />
+          </UserProvider>
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>

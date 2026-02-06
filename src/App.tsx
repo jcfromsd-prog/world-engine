@@ -1,19 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Shield, Zap, Lock, Menu, X, Brain, CheckCircle, Activity, CreditCard, GraduationCap, LogOut } from 'lucide-react';
+﻿import React, { useState, useEffect, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Shield, Zap, Menu, X, Brain, CheckCircle, CreditCard, GraduationCap, LogOut, ArrowRight, Activity, Users } from 'lucide-react';
 import SolveAndEarnButton from './components/SolveAndEarnButton';
-// Lazy Load Large Components
-const SolverWorkspace = React.lazy(() => import('./components/SolverWorkspace'));
-const AssessmentModule = React.lazy(() => import('./components/AssessmentModule'));
-
-import ProgressionDashboard from './components/ProgressionDashboard';
-// import SystemDiagnostic from './components/SystemDiagnostic'; // Removed: Replaced by new Sim/Founder Tools
-
-// ----------------- SOULBOUND ENGINE IMPORTS -----------------
-import { useLeitnerQueue } from "./hooks/useLeitnerQueue";
-import { FlashcardDeck } from "./components/learning/FlashcardDeck";
-import { UserStats } from "./components/dashboard/UserStats";
-import { SquadRoster } from "./components/squad/SquadRoster";
-import { SquadMatcher, type MatchResult } from "./services/SquadMatcher";
 import type { SoulboundProfile } from './engine/types';
 import {
   loadProfile,
@@ -24,9 +12,17 @@ import {
 } from './engine';
 import { SimulationEngine, getTargetPersonaKey } from "./services/SimulationEngine";
 import { FounderCheckModal } from "./components/dashboard/FounderCheckModal";
+import { useUser } from './context/UserContext';
+
+// Lazy Load Large Components
+const SolverWorkspace = React.lazy(() => import('./components/SolverWorkspace'));
+const AssessmentModule = React.lazy(() => import('./components/AssessmentModule'));
+const SolverDashboard = React.lazy(() => import('./components/SolverDashboard'));
+const ConnectView = React.lazy(() => import('./components/ConnectView'));
+const LearnView = React.lazy(() => import('./components/LearnView'));
+const IdentityView = React.lazy(() => import('./components/IdentityView'));
 
 // ----------------- TYPES -----------------
-// UI Mission Type (Compatible with BountyCard)
 type UIMission = {
   id: string;
   title: string;
@@ -36,7 +32,6 @@ type UIMission = {
   locked?: boolean;
   highlight?: boolean;
   type?: string;
-  // Engine properties
   difficulty?: string;
   rewards?: any;
 };
@@ -44,10 +39,8 @@ type UIMission = {
 // ----------------- THE SAGE MEMORY ENGINE (HOOK) -----------------
 function useSageMemory() {
   const [userState, setUserState] = useState<SoulboundProfile | null>(() => {
-    // 1. Try to load existing profile
     const saved = loadProfile();
     if (saved) {
-      // 2. Update streak on load
       const { profile } = updateStreak(saved, new Date().toISOString().split('T')[0]);
       saveProfile(profile);
       return profile;
@@ -65,12 +58,13 @@ function useSageMemory() {
     setUserState(prev => prev ? ({ ...prev, ...updates }) : null);
   };
 
-  const initUser = (name: string, archetype: string, sector: string) => {
+  const initUser = (name: string, archetype: string, sector: string, gradeLevel: number) => {
     const newProfile = initializeProfile(
       `user_${Date.now()}`,
       name,
       archetype,
-      sector
+      sector,
+      gradeLevel
     );
     setUserState(newProfile);
   };
@@ -86,7 +80,7 @@ function useSageMemory() {
 // ----------------- SUB-COMPONENTS -----------------
 function MenuLink({ icon, label, onClick, active }: { icon: React.ReactNode, label: string, onClick: () => void, active?: boolean }) {
   return (
-    <button onClick={onClick} className={`w-full flex items-center gap-4 p-4 rounded-lg transition-all ${active ? 'bg-zinc-900 text-white border-l-2 border-green-500' : 'text-gray-400 hover:text-white hover:bg-zinc-900'}`}>
+    <button onClick={onClick} className={`w-full flex items-center gap-4 p-4 rounded-lg transition-all ${active ? 'bg-zinc-900 text-white border-l-2 border-cyan-500' : 'text-gray-400 hover:text-white hover:bg-zinc-900'}`}>
       {icon}
       <span className="font-bold tracking-widest uppercase text-xs">{label}</span>
     </button>
@@ -95,92 +89,73 @@ function MenuLink({ icon, label, onClick, active }: { icon: React.ReactNode, lab
 
 function FooterIcon({ icon }: { icon: React.ReactNode }) {
   return (
-    <div className="p-3 bg-zinc-900/50 rounded-full text-gray-500 hover:bg-green-500 hover:text-black transition-all cursor-pointer">
+    <div className="p-3 bg-zinc-900/50 rounded-full text-zinc-600 hover:bg-cyan-500 hover:text-black transition-all cursor-pointer">
       {icon}
     </div>
   );
 }
 
-function BountyCard({ title, price, desc, tags = [], locked, highlight, onClick }: { title: string, price: string, desc: string, tags?: string[], locked?: boolean, highlight?: boolean, onClick?: () => void }) {
-  return (
-    <div onClick={onClick} className={`p-6 border rounded-xl transition-all cursor-pointer group relative overflow-hidden ${highlight ? 'bg-zinc-900/60 border-lime-500/50 hover:border-lime-400' : 'bg-zinc-900/20 border-gray-800 hover:border-gray-600'} ${locked && 'opacity-75 grayscale'}`}>
-      {locked && (
-        <div className="absolute inset-0 z-20 bg-black/50 flex items-center justify-center backdrop-blur-[1px]">
-          <div className="text-center">
-            <Lock className="text-gray-500 mb-2 mx-auto" size={32} />
-            <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">Authentication Required</span>
-          </div>
-        </div>
-      )}
-      {highlight && <div className="absolute top-0 right-0 bg-lime-500 text-black text-[10px] font-bold px-3 py-1 uppercase tracking-widest">Purpose Match</div>}
-
-      <div className="flex justify-between items-start mb-2">
-        <div><h3 className={`text-lg font-bold mb-1 ${highlight ? 'text-white' : 'text-gray-300'}`}>{title}</h3></div>
-        <div className={`text-xl font-mono font-bold ${highlight ? 'text-lime-400' : 'text-gray-400'}`}>{price}</div>
-      </div>
-
-      <p className="text-gray-500 text-sm mb-4 leading-relaxed">{desc}</p>
-
-      <div className="flex gap-2 flex-wrap items-center">
-        <button className={`bg-green-900/20 text-green-400 border border-green-900/50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${!locked && 'hover:bg-green-500 hover:text-black transition-colors'}`}>
-          {locked ? "LOCKED" : "[INITIATE PROTOCOL]"}
-        </button>
-        {tags && tags.map((tag, i) => (
-          <span key={i} className="px-2 py-1 bg-black border border-gray-800 text-gray-600 text-[10px] uppercase tracking-wider">{tag}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// function SolverCard... (Removed unused)
-
 // ----------------- COMPONENT: MISSION MODAL -----------------
 function MissionModal({ mission, onClose, onLaunch }: { mission: UIMission, onClose: () => void, onLaunch: () => void }) {
-  const [status, setStatus] = useState('initializing'); // initializing, connected, active
+  const [status, setStatus] = useState('initializing');
 
   useEffect(() => {
-    // Simulate connection sequence
-    const t1 = setTimeout(() => setStatus('connected'), 1000);
-    const t2 = setTimeout(() => setStatus('active'), 2200);
+    const t1 = setTimeout(() => setStatus('connected'), 800);
+    const t2 = setTimeout(() => setStatus('active'), 1800);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-300">
-      <div className="w-full max-w-2xl px-6 text-center">
+    <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-2xl flex items-center justify-center animate-in fade-in duration-500 p-6">
+      <div className="w-full max-w-xl">
         {status === 'initializing' && (
-          <div className="space-y-6">
-            <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto" />
-            <h2 className="text-2xl font-bold text-green-500 animate-pulse uppercase tracking-widest">Establishing Neural Handshake...</h2>
-            <div className="font-mono text-gray-500 text-sm">Encrypting: {mission.title}</div>
+          <div className="text-center space-y-8">
+            <div className="relative w-24 h-24 mx-auto">
+              <div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-[0.3em] mb-2">Neural Link</h2>
+              <div className="font-mono text-cyan-500/50 text-[10px] uppercase tracking-widest animate-pulse">Establishing Handshake...</div>
+            </div>
           </div>
         )}
 
         {status === 'connected' && (
-          <div className="space-y-6">
-            <CheckCircle size={64} className="text-green-500 mx-auto animate-in zoom-in duration-300" />
-            <h2 className="text-3xl font-black text-white uppercase">Uplink Secure</h2>
-            <p className="text-gray-400">Sage is ready to guide you.</p>
+          <div className="text-center space-y-6">
+            <div className="w-20 h-20 bg-lime-500 rounded-full mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(132,204,22,0.4)] animate-in zoom-in duration-300">
+              <CheckCircle size={40} className="text-black" strokeWidth={3} />
+            </div>
+            <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Uplink Stable</h2>
+            <p className="text-zinc-500 font-medium">Sage resonance at 99.8%</p>
           </div>
         )}
 
         {status === 'active' && (
-          <div className="bg-zinc-900 border border-green-500/50 rounded-2xl p-8 relative overflow-hidden animate-in slide-in-from-bottom duration-500">
-            <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
-            <h2 className="text-3xl font-black text-white mb-2">{mission.title}</h2>
-            <div className="text-green-400 font-bold mb-6 font-mono">{mission.price} REWARD POOL</div>
-            <p className="text-gray-300 mb-8 max-w-md mx-auto">{mission.desc}</p>
-            <div className="flex flex-col gap-4">
-              <button
-                onClick={onLaunch}
-                className="bg-green-500 hover:bg-green-400 text-black font-black text-xl py-4 rounded-xl uppercase tracking-widest shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all transform hover:scale-[1.02]"
-              >
-                Launch Environment
-              </button>
-              <button onClick={onClose} className="text-gray-500 hover:text-white font-bold text-xs uppercase tracking-widest mt-4">
-                Abort Mission
-              </button>
+          <div className="bg-zinc-900/40 backdrop-blur-3xl border border-zinc-800 rounded-[2.5rem] p-10 relative overflow-hidden animate-in zoom-in-95 duration-500 shadow-2xl">
+            <div className="absolute top-0 right-0 p-8 opacity-5 uppercase font-black text-6xl -rotate-12 translate-x-8 -translate-y-8">MISSION</div>
+
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-black uppercase tracking-widest rounded-full">Active Objective</span>
+              </div>
+
+              <h2 className="text-4xl font-black text-white mb-3 tracking-tight">{mission.title}</h2>
+              <div className="text-2xl font-black text-lime-400 mb-8 font-mono">{mission.price} <span className="text-xs uppercase tracking-widest text-zinc-600">Reward</span></div>
+
+              <p className="text-zinc-400 mb-10 text-lg leading-relaxed">{mission.desc}</p>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={onLaunch}
+                  className="h-16 bg-white text-black font-black text-lg rounded-2xl uppercase tracking-[0.2em] shadow-2xl hover:bg-cyan-400 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 group"
+                >
+                  Launch <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+                <button onClick={onClose} className="h-12 text-zinc-600 hover:text-white font-black text-[10px] uppercase tracking-[0.4em] transition-colors">
+                  Abort Sequence
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -190,271 +165,172 @@ function MissionModal({ mission, onClose, onLaunch }: { mission: UIMission, onCl
 }
 
 // ----------------- COMPONENT: HERO SECTION -----------------
-function HeroSection({ onStart }: { onStart: () => void }) {
+function HeroSection({ onStart, onOpenConnect, onOpenLearn, onOpenIdentity }: { onStart: () => void, onOpenConnect: () => void, onOpenLearn: () => void, onOpenIdentity: () => void }) {
+  const { heroPath, wallet, squad, synapseCount, psychometrics } = useUser();
+  const activeMission = heroPath?.currentMission;
+  const hasActiveMission = !!heroPath?.currentMissionId;
+
+  const identityScore = Math.floor((psychometrics.autonomy + psychometrics.competence + psychometrics.relatedness) / 3);
+
   return (
-    <section className="relative py-24 md:py-32 px-6 border-b border-gray-900 bg-black overflow-hidden animate-in fade-in duration-700">
-      <div className="relative z-10 max-w-7xl mx-auto text-center">
-
-        {/* 1. THE NEON TEXT */}
-        <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4 mb-16 font-black text-4xl md:text-6xl lg:text-7xl tracking-tighter leading-tight">
-          <span className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">CONNECT</span>
-          <span className="text-gray-800 font-light text-2xl md:text-5xl mx-2">/</span>
-          <span className="text-indigo-500 drop-shadow-[0_0_15px_rgba(99,102,241,0.4)]">LEARN</span>
-          <span className="text-gray-800 font-light text-2xl md:text-5xl mx-2">/</span>
-          <span className="text-fuchsia-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.4)]">SOLVE</span>
-          <span className="text-gray-800 font-light text-2xl md:text-5xl mx-2">/</span>
-          <span className="text-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.4)]">EARN</span>
-        </div>
-
-        {/* 2. THE TAGLINE */}
-        <div className="flex flex-col md:flex-row justify-center gap-3 md:gap-8 text-xs md:text-sm text-gray-400 font-bold tracking-widest uppercase mb-16">
-          <span className="hover:text-cyan-400 transition-colors">CONNECT with a Squad</span>
-          <span className="hidden md:block text-gray-800">|</span>
-          <span className="hover:text-indigo-400 transition-colors">LEARN with AI Speed</span>
-          <span className="hidden md:block text-gray-800">|</span>
-          <span className="hover:text-fuchsia-400 transition-colors">SOLVE for Impact</span>
-          <span className="hidden md:block text-gray-800">|</span>
-          <span className="hover:text-orange-400 transition-colors">EARN your Legend</span>
-        </div>
-
-        {/* 3. THE SUPERCHARGED BUTTON */}
-        <SolveAndEarnButton onClick={onStart} />
-
-        <div className="text-gray-700 text-[10px] tracking-[0.4em] uppercase font-mono">
-          Built with the Global Innovation Stack
-        </div>
+    <section className="relative min-h-[90vh] flex items-center justify-center px-6 overflow-hidden bg-[#050505]">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-cyan-500/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-purple-500/10 blur-[120px] rounded-full" />
       </div>
-    </section>
-  );
-}
 
-// ----------------- COMPONENT: SOLVER DASHBOARD (SOULBOUND EDITION) -----------------
-function SolverDashboard({ profile, onMissionStart }: { profile: SoulboundProfile, onMissionStart: (m: any) => void }) {
-
-  // --- LEARNING & GAMIFICATION ---
-  const leitnerQueue = useLeitnerQueue();
-  const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
-  const [points, setPoints] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [lastReviewDate, setLastReviewDate] = useState<Date | null>(null);
-
-  const incrementStreak = () => {
-    const today = new Date();
-    if (!lastReviewDate || (today.getTime() - lastReviewDate.getTime()) / (1000 * 60 * 60 * 24) <= 1) {
-      setStreak(s => s + 1);
-    } else {
-      setStreak(1);
-    }
-    setLastReviewDate(today);
-  };
-  const addPoints = (pts: number) => setPoints(p => p + pts);
-
-  useEffect(() => {
-    setMatchResult(SquadMatcher.findOptimalSquad());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Intentionally run only on mount
-
-  // ----------------- MISSION GENERATOR (ADAPTED) -----------------
-  const getRecommendedMissions = () => {
-    const { sector, archetype } = profile;
-    let missions: UIMission[] = [];
-
-    // ----------------- 1. DESIGN PATH (CREATOR) -----------------
-    if (archetype === 'Creator') {
-      missions = [
-        {
-          id: "des_1",
-          title: "Logo Symmetry Studio",
-          price: "25 GP",
-          desc: "Analyze the geometric balance of corporate identities. Adjust vectors to achieve perfect golden ratio alignment.",
-          tags: ["DESIGN", "GEOMETRY", "VISUAL"],
-          locked: false,
-          highlight: true,
-          type: "visual"
-        },
-        {
-          id: "des_2",
-          title: "UI Color Harmonizer",
-          price: "20 GP",
-          desc: "Select the complementary palette for a high-stress medical dashboard. Optimize contrast for calm and clarity.",
-          tags: ["UX", "COLOR", "VISUAL"],
-          locked: false,
-          highlight: false,
-          type: "visual"
-        }
-      ];
-    }
-    // ----------------- 2. LEAD PATH (COMMANDER) -----------------
-    else if (archetype === 'Commander') {
-      missions = [
-        {
-          id: "lead_1",
-          title: "Crisis Resource Allocator",
-          price: "30 GP",
-          desc: "A server farm has overheated. You have 3 cooling units and 5 critical clusters. Prioritize deployment to minimize data loss.",
-          tags: ["STRATEGY", "LOGIC", "CRISIS"],
-          locked: false,
-          highlight: true,
-          type: "logic"
-        },
-        {
-          id: "lead_2",
-          title: "Sprint Velocity Rescue",
-          price: "25 GP",
-          desc: "Your dev team is burned out. Analyze the burndown chart and choose the correct intervention to restore momentum.",
-          tags: ["AGILE", "LEADERSHIP", "EMPATHY"],
-          locked: false,
-          highlight: false,
-          type: "logic"
-        }
-      ];
-    }
-    // ----------------- 3. ENGINEER / ARCHITECT PATHS -----------------
-    else {
-      // Fallback to Sector-based logic for other archetypes
-      if (sector === "Nature") {
-        missions = [
-          {
-            id: "nat_1",
-            title: "Leaf Pattern Match",
-            price: "15 GP",
-            desc: "Identify the fractal patterns in fern leaves to predict growth rates. Requires keen observation.",
-            tags: ["NATURE", "PATTERN", "SCIENCE"],
-            locked: false,
-            highlight: true,
-            type: "visual"
-          },
-          {
-            id: "nat_2",
-            title: "Eco-System Balancer",
-            price: "20 GP",
-            desc: "Adjust the predator/prey ratio in the simulation to stabilize the food web for 3 cycles.",
-            tags: ["BIOLOGY", "LOGIC", "SYSTEMS"],
-            locked: false,
-            highlight: false,
-            type: "logic"
-          }
-        ];
-      } else if (sector === "Tech") {
-        missions = [
-          {
-            id: "tech_1",
-            title: "Quantum Circuit Logic",
-            price: "30 GP",
-            desc: "Debug the qubit superposition states. Ensure the logic gates resolve to a stable output.",
-            tags: ["QUANTUM", "LOGIC", "CODE"],
-            locked: false,
-            highlight: true,
-            type: "code"
-          },
-          {
-            id: "tech_2",
-            title: "Algorithm Optimizer",
-            price: "25 GP",
-            desc: "The sorting algorithm is O(n^2). Refactor the code block to achieve O(n log n) efficiency.",
-            tags: ["CODE", "PERFORMANCE", "MATH"],
-            locked: false,
-            highlight: false,
-            type: "code"
-          }
-        ];
-      } else {
-        // People Sector
-        missions = [
-          {
-            id: "ppl_1",
-            title: "Social Sentiment Analysis",
-            price: "20 GP",
-            desc: "Parse the social feed for rising negative sentiment. Flag keywords for the community manager.",
-            tags: ["DATA", "SOCIAL", "ANALYSIS"],
-            locked: false,
-            highlight: true,
-            type: "logic"
-          },
-          {
-            id: "ppl_2",
-            title: "Conflict Resolution",
-            price: "25 GP",
-            desc: "Two support tickets contradict each other. Find the root cause in the user data logs.",
-            tags: ["SUPPORT", "EMPATHY", "LOGIC"],
-            locked: false,
-            highlight: false,
-            type: "logic"
-          }
-        ];
-      }
-    }
-
-    return missions;
-  };
-
-  const missions = getRecommendedMissions();
-
-  return (
-    <section className="relative py-12 px-6 border-b border-gray-900 bg-zinc-950 animate-in slide-in-from-bottom-10 duration-700">
-      <div className="max-w-7xl mx-auto">
-
-        {/* SOULBOUND PROGRESSION DASHBOARD */}
-        <div className="mb-12">
-          <ProgressionDashboard
-            profile={profile}
-            onOpenMission={() => onMissionStart(missions[0])}
-            onJoinSquad={() => alert("Searching for local squad beacons...")}
-          />
+      <div className="relative z-10 max-w-5xl mx-auto text-center">
+        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 mb-12 font-black text-5xl md:text-8xl tracking-tighter leading-none uppercase">
+          <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-700">Solve</span>
+          <span className="text-zinc-900 font-thin text-3xl md:text-6xl mx-2">/</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 drop-shadow-[0_0_30px_rgba(34,211,238,0.2)]">Impact</span>
         </div>
 
-        {/* DAILY REVIEW */}
-        <section className="mb-12 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-5">
-          <UserStats totalReviewed={leitnerQueue.queue.length} totalPoints={points} streakDays={streak} />
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
-            <FlashcardDeck
-              key={leitnerQueue.currentItem?.id || 'empty'}
-              queue={leitnerQueue.queue}
-              currentItem={leitnerQueue.currentItem}
-              onAnswer={leitnerQueue.recordAnswer}
-              onEarnPoints={addPoints}
-              onUpdateStreak={incrementStreak}
-            />
-          </div>
-        </section>
+        <h1 className="text-zinc-500 text-lg md:text-2xl font-medium mb-16 tracking-tight max-w-2xl mx-auto leading-relaxed">
+          The world's first <span className="text-white">Impact Engine</span>. Solve real-world challenges, earn direct payouts, and build your legend.
+        </h1>
 
-        {/* MISSION GRID */}
-        <div>
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <Activity className="text-green-500" />
-            Available Missions
-          </h3>
-          <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {missions.map((m) => (
-                <BountyCard
-                  key={m.id}
-                  {...m}
-                  onClick={() => onMissionStart(m)}
-                />
-              ))}
-              {/* LOCKED ELITE MISSION */}
-              <BountyCard
-                title="Solar Farm Deployed"
-                price="$500.00"
-                desc="Requires Level 5 and Squad of 3."
-                tags={["ELITE", "SQUAD"]}
-                locked={true}
-              />
+        <div className="flex flex-col items-center gap-12">
+          <SolveAndEarnButton onClick={onStart} />
+
+          {/* MAIN MENU CARDS / STATUS GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 w-full max-w-[1400px] mx-auto px-4">
+            {/* IDENTITY CARD - THE NEW BRAIN */}
+            <div
+              onClick={onOpenIdentity}
+              className="group relative p-8 rounded-[2rem] bg-zinc-900/40 backdrop-blur-xl border border-zinc-800 hover:border-cyan-500/50 hover:bg-zinc-900/60 transition-all duration-500 cursor-pointer overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] uppercase font-black text-6xl -rotate-12 translate-x-8 -translate-y-8">SAGE</div>
+
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                  <Shield size={20} />
+                </div>
+                <div className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em]">Neural Engine</div>
+              </div>
+              <h3 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">IDENTITY</h3>
+              <div className="text-cyan-400 font-mono text-xl font-bold tracking-tighter italic">
+                {identityScore}<span className="text-[10px] ml-1 not-italic opacity-50 uppercase">IDX</span>
+              </div>
+              <div className="mt-4 flex gap-1">
+                <div className="h-1 flex-1 rounded-full bg-pink-500" style={{ width: `${psychometrics.autonomy}%` }} />
+                <div className="h-1 flex-1 rounded-full bg-blue-500" style={{ width: `${psychometrics.competence}%` }} />
+                <div className="h-1 flex-1 rounded-full bg-green-500" style={{ width: `${psychometrics.relatedness}%` }} />
+              </div>
             </div>
 
-            {/* SQUAD SIDEBAR */}
-            <div>
-              {matchResult ? (
-                <div className="bg-zinc-900/20 border border-gray-800 p-4 rounded-xl">
-                  <h3 className="font-bold text-white mb-4">Squad Command</h3>
-                  <SquadRoster squads={matchResult.squads} unmatched={matchResult.unmatched} />
+            {/* CONNECT CARD */}
+            <div
+              onClick={onOpenConnect}
+              className={`group relative p-8 rounded-[2rem] border transition-all duration-500 cursor-pointer overflow-hidden ${squad
+                ? "bg-indigo-500/5 border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.2)]"
+                : "bg-zinc-900/40 backdrop-blur-xl border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/60"
+                }`}
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] uppercase font-black text-6xl -rotate-12 translate-x-8 -translate-y-8">SQUAD</div>
+
+              <div className="flex items-center gap-4 mb-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${squad ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-500/10 text-indigo-400'}`}>
+                  <Users size={20} />
                 </div>
-              ) : (
-                <div className="p-6 text-gray-500 animate-pulse bg-zinc-900/10 rounded-xl border border-dashed border-gray-800">Scanning for Squad Beacons...</div>
+                <div className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em]">Social Link</div>
+              </div>
+              <h3 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">CONNECT</h3>
+              <div className="text-indigo-400 font-mono text-xs font-bold uppercase tracking-widest">
+                {squad ? `Squad: ${squad.name}` : "Loading..."}
+              </div>
+              {!squad && (
+                <div className="mt-4 flex items-center gap-2 group-hover:gap-3 transition-all">
+                  <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">Find Match</span>
+                  <ArrowRight size={14} className="text-indigo-500" />
+                </div>
               )}
             </div>
-          </main>
+
+            {/* SOLVE CARD */}
+            <div className={`group relative p-8 rounded-[2rem] border transition-all duration-500 overflow-hidden ${hasActiveMission
+              ? "bg-cyan-500/5 border-cyan-500/50 animate-active-glow"
+              : "bg-zinc-900/40 backdrop-blur-xl border-zinc-800 hover:border-zinc-700"
+              }`}>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                  <Activity size={20} />
+                </div>
+                <div className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em]">Live Status</div>
+              </div>
+              <h3 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">SOLVE</h3>
+              <div className="text-cyan-400 font-mono text-xs font-bold uppercase tracking-widest">
+                {activeMission ? `Active: ${activeMission}` : "0 Active"}
+              </div>
+              {hasActiveMission && (
+                <div className="mt-4 h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-cyan-500 w-1/3 animate-progress-flow" />
+                </div>
+              )}
+            </div>
+
+            {/* EARN CARD */}
+            <div className="group relative p-8 rounded-[2rem] bg-zinc-900/40 backdrop-blur-xl border border-zinc-800 hover:border-zinc-700 transition-all duration-500">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-lime-500/10 flex items-center justify-center text-lime-400">
+                  <CreditCard size={20} />
+                </div>
+                <div className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                  {wallet.balance > 0 ? (
+                    <span className="text-lime-500">● Active</span>
+                  ) : (
+                    <span className="text-zinc-700">○ Locked</span>
+                  )}
+                </div>
+              </div>
+              <h3 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">EARN</h3>
+              <div className="text-lime-400 font-mono text-xl font-bold tracking-tighter italic">
+                {wallet.balance}<span className="text-[10px] ml-1 not-italic opacity-50 uppercase">GP</span>
+              </div>
+              <div className="text-[9px] text-zinc-600 font-black uppercase tracking-widest mt-1">
+                Verified Global Payouts
+              </div>
+            </div>
+
+            {/* LEARN CARD */}
+            <div
+              onClick={onOpenLearn}
+              className="group relative p-8 rounded-[2rem] bg-zinc-900/40 backdrop-blur-xl border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/60 transition-all duration-500 cursor-pointer overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] uppercase font-black text-6xl -rotate-12 translate-x-8 -translate-y-8">BRAIN</div>
+
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                  <GraduationCap size={20} />
+                </div>
+                <div className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em]">Neural Path</div>
+              </div>
+              <h3 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">LEARN</h3>
+              <div className="text-purple-400 font-mono text-xl font-bold tracking-tighter italic">
+                {synapseCount}<span className="text-[10px] ml-1 not-italic opacity-50 uppercase">SYN</span>
+              </div>
+              <div className="mt-4 flex gap-1">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className={`h-1 flex-1 rounded-full ${i <= (heroPath?.level || 1) ? 'bg-purple-500' : 'bg-zinc-800'}`} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-12 mt-8">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-zinc-600 text-[10px] uppercase tracking-[0.4em] font-black">Legends Active</span>
+              <span className="text-white font-black text-lg">12,402</span>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-zinc-600 text-[10px] uppercase tracking-[0.4em] font-black">Total Payouts</span>
+              <span className="text-white font-black text-lg">$1.2M</span>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-zinc-600 text-[10px] uppercase tracking-[0.4em] font-black">Causes Solved</span>
+              <span className="text-white font-black text-lg">412</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -463,100 +339,151 @@ function SolverDashboard({ profile, onMissionStart }: { profile: SoulboundProfil
 
 // ----------------- ENTRY POINT: APP -----------------
 function App() {
-  // Use the Soulbound Engine Hook
   const { userState, updateProfile, initUser, clearMemory } = useSageMemory();
+  const { isInitialized, setUser, interventions } = useUser();
 
-  // Local UI States
   const [showAssessment, setShowAssessment] = useState(false);
+  const [showConnect, setShowConnect] = useState(false);
+  const [showLearn, setShowLearn] = useState(false);
+  const [showIdentity, setShowIdentity] = useState(false);
   const [activeMission, setActiveMission] = useState<UIMission | null>(null);
   const [activeQuest, setActiveQuest] = useState<UIMission | null>(null);
   const [showMenu, setShowMenu] = useState(false);
-
-  // --- SIMULATION ENGINE STATE ---
   const [simulationLog, setSimulationLog] = useState<string[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
   const [showFounderModal, setShowFounderModal] = useState(false);
 
   const handleRunSimulation = async () => {
     setIsSimulating(true);
-    setSimulationLog([]); // Clear log
-
-    // Use persona from localStorage (for E2E tests) or default to HS_SOPHOMORE
+    setSimulationLog([]);
     const personaKey = getTargetPersonaKey();
     await SimulationEngine.runSimulation(personaKey, (msg) => {
       setSimulationLog(prev => [...prev, msg]);
     });
-
-    setTimeout(() => setIsSimulating(false), 3000); // Reset after 3s
+    setTimeout(() => setIsSimulating(false), 3000);
   };
 
   const handleLaunchMission = () => {
     setActiveQuest(activeMission);
-    setActiveMission(null); // Close the modal
+    setActiveMission(null);
   };
 
   const handleReturnToDash = (rewards?: { xp: number, balance: number }) => {
     setActiveQuest(null);
     if (rewards && userState) {
-      // Use Engine function to calculate updates
       const { profile: updatedProfile } = addGenesisPoints(userState, rewards.balance, "Mission Reward");
       updateProfile(updatedProfile);
-      // Note: We should also call addSkillXP here in a specific skill, 
-      // but simpler to just update GP for this demo.
     }
   };
 
   if (activeQuest) {
     return (
       <div className="min-h-screen bg-black text-white font-mono">
-        <React.Suspense fallback={<div className="p-10 text-center">Loading Workspace...</div>}>
+        <Suspense fallback={<div className="p-10 text-center">Loading Workspace...</div>}>
           <SolverWorkspace
             onBack={() => handleReturnToDash()}
             onSolve={(rewards) => handleReturnToDash(rewards)}
           />
-        </React.Suspense>
+        </Suspense>
       </div>
     )
   }
 
+  if (showConnect) {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black text-indigo-400 animate-pulse font-black uppercase tracking-[0.5em]">Establishing Squad Link...</div>}>
+        <ConnectView onBack={() => setShowConnect(false)} />
+      </Suspense>
+    );
+  }
+
+  if (showLearn) {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black text-purple-400 animate-pulse font-black uppercase tracking-[0.5em]">Syncing Knowledge Nodes...</div>}>
+        <LearnView onBack={() => setShowLearn(false)} />
+      </Suspense>
+    );
+  }
+
+  if (showIdentity) {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black text-cyan-400 animate-pulse font-black uppercase tracking-[0.5em]">Initializing Neural Graph...</div>}>
+        <IdentityView onBack={() => setShowIdentity(false)} />
+      </Suspense>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white font-mono selection:bg-green-900 selection:text-green-50 relative overflow-x-hidden">
-
-      {/* ----------------- OVERLAYS ----------------- */}
-
-      {/* DEV TOOL: Path Simulation Diagnostic */}
-      {/* <SystemDiagnostic />  -- Replacing with new overlay/modal system below */}
-
-      {/* Simulation Log Overlay */}
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-x-hidden">
       {isSimulating && (
-        <div style={{
-          position: 'fixed', bottom: '20px', left: '20px', right: '20px',
-          background: 'rgba(0,0,0,0.85)', color: '#00d4ff', padding: '20px',
-          borderRadius: '10px', border: '1px solid #00d4ff', zIndex: 999,
-          fontFamily: 'monospace', maxHeight: '300px', overflowY: 'auto'
-        }} id="simulation-log" data-testid="simulation-log">
-          <h3>🚀 RUNNING PATH SIMULATION...</h3>
-          {simulationLog.map((log, i) => <div key={i}>{log}</div>)}
+        <div className="fixed bottom-6 left-6 right-6 bg-black/90 border border-cyan-500/50 p-6 rounded-2xl z-[120] font-mono shadow-2xl backdrop-blur-xl animate-in slide-in-from-bottom" id="simulation-log">
+          <h3 className="text-cyan-400 font-black mb-4 uppercase tracking-[0.2em]">🚀 Path Simulation Active</h3>
+          <div className="max-h-[200px] overflow-y-auto text-[10px] space-y-1">
+            {simulationLog.map((log, i) => <div key={i} className="text-zinc-400">{log}</div>)}
+          </div>
         </div>
       )}
 
-      {/* Founder Check Modal */}
       <FounderCheckModal isOpen={showFounderModal} onClose={() => setShowFounderModal(false)} />
 
-      {/* 1. ADAPTIVE ASSESSMENT MODAL */}
       {showAssessment && (
-        <React.Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">Loading Assessment...</div>}>
+        <Suspense fallback={<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">Initializing Neural Assessment...</div>}>
           <AssessmentModule
             onClose={() => setShowAssessment(false)}
             onComplete={(data, selectedPath) => {
-              initUser(data.name, selectedPath.role, selectedPath.focus);
+              // 1. Sync legacy engine state
+              initUser(data.name, selectedPath.role, selectedPath.focus, data.grade);
+
+              // 2. Sync GLOBAL UserContext (Short-term memory)
+              setUser(
+                { name: data.name, age: data.grade, passion: data.passion, style: data.style },
+                { role: selectedPath.role, currentMission: "Initial Alignment", currentMissionId: null, status: "Idle", level: 1, xp: 0, history: [] }
+              );
+
               setShowAssessment(false);
             }}
           />
-        </React.Suspense>
+        </Suspense>
       )}
 
-      {/* 2. ACTIVE MISSION MODAL */}
+      {/* SPECIAL OPS INTERVENTION ALERT */}
+      {interventions.length > 0 && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[80] w-full max-w-xl px-6 pointer-events-none">
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-red-500/10 backdrop-blur-3xl border border-red-500/50 p-6 rounded-[2rem] shadow-[0_0_50px_rgba(239,68,68,0.2)] pointer-events-auto relative overflow-hidden group"
+          >
+            <div className="absolute top-0 right-0 p-6 opacity-[0.05] font-black text-6xl -rotate-12 translate-x-4 -translate-y-4">SPEC OPS</div>
+            <div className="flex items-start gap-5">
+              <div className="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center text-red-500 shrink-0 animate-pulse">
+                <Shield size={24} />
+              </div>
+              <div>
+                <div className="text-[10px] text-red-400 font-black uppercase tracking-[0.3em] mb-1 flex items-center gap-2">
+                  <Zap size={12} className="animate-bounce" /> Meta-Agent Intervention
+                </div>
+                <h4 className="text-xl font-black text-white uppercase tracking-tighter mb-2 italic">
+                  Critical Special Ops: {interventions[0].title}
+                </h4>
+                <p className="text-zinc-400 text-xs leading-relaxed mb-4">
+                  {interventions[0].description}
+                </p>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setActiveMission(interventions[0])}
+                    className="px-6 py-2 bg-red-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-white hover:text-red-500 transition-all shadow-xl"
+                  >
+                    Initialize Payload
+                  </button>
+                  <div className="text-[10px] text-red-500/50 font-mono italic">Unblock Competence Vector +{interventions[0].reward} XP</div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {activeMission && (
         <MissionModal
           mission={activeMission}
@@ -565,104 +492,137 @@ function App() {
         />
       )}
 
-      {/* 3. NAVIGATION DRAWER */}
       {showMenu && (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl animate-in slide-in-from-right duration-300 flex justify-end">
+        <div className="fixed inset-0 z-[130] bg-black/60 backdrop-blur-xl animate-in fade-in duration-300 flex justify-end">
           <div className="flex-1 hidden md:block" onClick={() => setShowMenu(false)}></div>
-          <div className="w-full md:w-[400px] h-full bg-zinc-950 border-l border-gray-800 p-8 flex flex-col relative shadow-2xl">
-            <button onClick={() => setShowMenu(false)} className="absolute top-6 right-6 p-2 text-gray-500 hover:text-white transition-colors"><X size={24} /></button>
-            <div className="mb-10 mt-4">
-              <div className="text-xs text-green-500 font-bold tracking-[0.2em] uppercase mb-2 flex items-center gap-2"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> SYSTEM ONLINE</div>
-              <h2 className="text-3xl font-black text-white uppercase tracking-tight">Command Center</h2>
+          <div className="w-full md:w-[450px] h-full bg-zinc-950/90 border-l border-zinc-900 p-10 flex flex-col relative shadow-2xl">
+            <button onClick={() => setShowMenu(false)} className="absolute top-10 right-10 p-2 text-zinc-600 hover:text-white transition-colors"><X size={24} /></button>
+            <div className="mb-12 mt-6">
+              <div className="text-[10px] text-cyan-400 font-black tracking-[0.4em] uppercase mb-2 flex items-center gap-2">Command Center</div>
+              <h2 className="text-4xl font-black text-white uppercase tracking-tight">Navigation</h2>
             </div>
+
             {userState ? (
-              <div className="bg-zinc-900/50 border border-gray-800 p-6 rounded-xl mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-500/50 text-purple-400 font-bold text-xl">{userState.displayName[0]}</div>
-                  <div><div className="font-bold text-white text-lg">{userState.displayName}</div><div className="text-xs text-gray-500 uppercase tracking-widest">{userState.archetype}</div></div>
+              <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] mb-12 shadow-2xl">
+                <div className="flex items-center gap-6 mb-6">
+                  <div className="w-16 h-16 bg-cyan-500 rounded-2xl flex items-center justify-center text-black font-black text-2xl shadow-xl shadow-cyan-500/20">{userState.displayName[0]}</div>
+                  <div>
+                    <div className="font-black text-white text-xl tracking-tight">{userState.displayName}</div>
+                    <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{userState.archetype}</div>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center pt-4 border-t border-gray-800"><span className="text-gray-500 text-xs uppercase tracking-widest">Vault Balance</span><span className="font-mono text-lime-400 font-bold text-xl">{userState.genesisPoints} GP</span></div>
+                <div className="flex justify-between items-center pt-6 border-t border-white/5">
+                  <span className="text-zinc-600 text-[10px] uppercase tracking-widest font-black">Escrow Balance</span>
+                  <span className="font-mono text-lime-400 font-black text-2xl">{userState.genesisPoints} GP</span>
+                </div>
               </div>
             ) : (
-              <div className="p-6 bg-blue-900/10 border border-blue-800 rounded-xl mb-8 text-center"><p className="text-blue-400 text-sm mb-4">Neural Link Inactive</p><button onClick={() => { setShowMenu(false); setShowAssessment(true); }} className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded w-full uppercase tracking-wider text-xs">Initialize Link</button></div>
+              <div className="p-8 bg-cyan-500/5 border border-cyan-500/10 rounded-[2rem] mb-12 text-center">
+                <p className="text-cyan-400 font-bold text-sm mb-6">Neural Link Inactive</p>
+                <button onClick={() => { setShowMenu(false); setShowAssessment(true); }} className="h-12 bg-white text-black font-black py-2 px-8 rounded-xl uppercase tracking-widest text-xs hover:bg-cyan-400 transition-all">Initialize Alignment</button>
+              </div>
             )}
-            <nav className="flex-1 space-y-2">
+
+            <nav className="flex-1 space-y-4">
               <MenuLink icon={<Activity size={18} />} label="Genesis Feed" onClick={() => setShowMenu(false)} active />
-              <MenuLink icon={<GraduationCap size={18} />} label="My Curriculum" onClick={() => alert("Sage Director: Curriculum Adapting...")} />
-              <MenuLink icon={<CreditCard size={18} />} label="Wallet & Vault" onClick={() => alert(`Balance: ${userState?.genesisPoints} GP\n\n(Real withdrawals unlock at Level 5)`)} />
-              <div className="pt-8 border-t border-gray-800">
-                {userState && (<button onClick={clearMemory} className="flex items-center gap-3 text-red-500 hover:text-red-400 transition-colors w-full p-2 rounded hover:bg-red-900/10"><LogOut size={18} /><span className="font-bold tracking-widest uppercase text-xs">Disconnect (Reset Memory)</span></button>)}
+              <MenuLink icon={<GraduationCap size={18} />} label="The Syllabus" onClick={() => alert("Acquiring targets...")} />
+              <MenuLink icon={<CreditCard size={18} />} label="Vault & USD" onClick={() => alert(`GP: ${userState?.genesisPoints}\nReal Balance: USD Unlocked at Level 5`)} />
+
+              <div className="pt-12">
+                {userState && (
+                  <button onClick={clearMemory} className="flex items-center gap-4 text-zinc-700 hover:text-red-500 transition-colors w-full px-4 py-2">
+                    <LogOut size={18} />
+                    <span className="font-black tracking-[0.2em] uppercase text-[10px]">Purge Session Data</span>
+                  </button>
+                )}
               </div>
             </nav>
           </div>
         </div>
       )}
 
-      {/* ----------------- HEADER ----------------- */}
-      <header className="border-b border-gray-900/50 p-4 md:p-6 flex items-center justify-between sticky top-0 z-50 bg-black/80 backdrop-blur-md">
-        {/* LEFT: Branding */}
-        <div className="flex flex-col items-start leading-none min-w-[120px] md:min-w-[150px] cursor-pointer" onClick={() => window.location.reload()}>
-          <span className="text-cyan-400 text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase mb-1 ml-0.5">MYBESTPURPOSE</span>
-          <div className="flex items-center gap-2"><span className="text-white text-lg md:text-2xl font-bold tracking-widest">WORLD ENGINE</span><div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]" /></div>
-        </div>
-
-        {/* CENTER: SOLVER/CLIENT Toggle (Strategic) */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex">
-          <div className="bg-zinc-900 p-1 rounded-full border border-gray-700 flex items-center shadow-lg">
-            <button
-              className="px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest transition-all bg-gradient-to-r from-cyan-500 to-cyan-400 text-black shadow-lg shadow-cyan-500/30"
-            >
-              SOLVER
-            </button>
-            <button
-              className="px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest transition-all text-gray-500 hover:text-white"
-            >
-              CLIENT
-            </button>
+      <header className="border-b border-white/5 p-6 md:p-8 flex items-center justify-between sticky top-0 z-[100] bg-black/60 backdrop-blur-xl">
+        <div className="flex flex-col items-start leading-none cursor-pointer group" onClick={() => window.location.reload()}>
+          <span className="text-cyan-400 text-[10px] font-black tracking-[0.4em] uppercase mb-1">Impact Engine</span>
+          <div className="flex items-center gap-3">
+            <span className="text-white text-xl md:text-3xl font-black tracking-tighter uppercase transition-colors group-hover:text-cyan-400">MBP // World Engine</span>
+            <div className="w-2 h-2 bg-lime-500 rounded-full animate-pulse shadow-[0_0_10px_#84cc16]" />
           </div>
         </div>
 
-        {/* RIGHT: Menu */}
-        <div className="flex justify-end min-w-[50px]"><button onClick={() => setShowMenu(true)} className="p-2 border border-gray-800 rounded bg-zinc-900/50 hover:bg-zinc-800 hover:text-white text-gray-400 transition-colors"><Menu size={24} /></button></div>
+        <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:block">
+          <div className="bg-zinc-900/50 p-1 rounded-2xl border border-white/5 flex items-center shadow-2xl backdrop-blur-md">
+            {['SOLVER', 'FOUNDER'].map((mode, i) => (
+              <button
+                key={mode}
+                className={`px-8 py-2 rounded-xl text-[10px] font-black tracking-[0.3em] transition-all ${i === 0 ? 'bg-white text-black shadow-xl shadow-white/5' : 'text-zinc-600 hover:text-white'
+                  }`}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button onClick={() => setShowMenu(true)} className="w-14 h-14 border border-white/10 rounded-2xl bg-zinc-900/40 hover:bg-white hover:text-black text-white transition-all flex items-center justify-center shadow-xl">
+          <Menu size={24} />
+        </button>
       </header>
 
-      {/* ----------------- DYNAMIC CONTENT SWITCHER ----------------- */}
-      {!userState ? (
-        <HeroSection onStart={() => setShowAssessment(true)} />
-      ) : (
-        <SolverDashboard profile={userState} onMissionStart={setActiveMission} />
-      )}
+      <main className="relative z-10">
+        {!isInitialized ? (
+          <HeroSection
+            onStart={() => setShowAssessment(true)}
+            onOpenConnect={() => alert("Initialize Neural Link first.")}
+            onOpenLearn={() => alert("Initialize Neural Link first.")}
+            onOpenIdentity={() => alert("Initialize Neural Link first.")}
+          />
+        ) : (
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-cyan-400 font-mono animate-pulse uppercase tracking-[0.5em]">Syncing Progress...</div>}>
+            <div className="animate-in fade-in duration-700">
+              <HeroSection
+                onStart={() => { }}
+                onOpenConnect={() => setShowConnect(true)}
+                onOpenLearn={() => setShowLearn(true)}
+                onOpenIdentity={() => setShowIdentity(true)}
+              />
+              <SolverDashboard profile={userState!} onMissionStart={setActiveMission} />
+            </div>
+          </Suspense>
+        )}
+      </main>
 
-      <footer className="py-12 px-6 border-t border-gray-800 bg-zinc-950 text-center relative z-10">
-
-        {/* SIMULATION CONTROLS */}
-        <div className="mb-8 flex justify-center gap-4">
+      <footer className="py-24 px-8 border-t border-white/5 bg-[#030303] text-center relative z-10">
+        <div className="mb-12 flex flex-wrap justify-center gap-6">
           <button
             onClick={() => setShowFounderModal(true)}
-            className="text-green-500 border border-green-900 bg-green-900/10 px-4 py-2 rounded text-xs uppercase tracking-widest hover:bg-green-500 hover:text-black transition-colors"
+            className="h-12 border border-zinc-800 bg-zinc-900/30 px-8 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 hover:border-cyan-500 hover:text-cyan-400 transition-all"
           >
-            👁️ Founder Check
+            Founder Diagnostic
           </button>
 
           <button
             onClick={handleRunSimulation}
             disabled={isSimulating}
-            className={`px-4 py-2 rounded text-xs uppercase tracking-widest transition-colors ${isSimulating
-              ? 'bg-blue-900 text-blue-300 border border-blue-800 cursor-not-allowed'
-              : 'text-cyan-400 border border-cyan-900 bg-cyan-900/10 hover:bg-cyan-500 hover:text-black cursor-pointer'
+            className={`h-12 px-8 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all border ${isSimulating
+              ? 'bg-zinc-900 border-zinc-800 text-zinc-700 cursor-not-allowed'
+              : 'border-white text-white hover:bg-white hover:text-black'
               }`}
           >
-            {isSimulating ? "📈 Simulating..." : "📈 Run Path Simulation"}
+            {isSimulating ? "Simulation Underway" : "Run Path Simulation"}
           </button>
         </div>
 
-        <div className="flex justify-center gap-6 mb-8">
-          <FooterIcon icon={<Shield size={20} />} />
-          <FooterIcon icon={<Zap size={20} />} />
-          <FooterIcon icon={<Brain size={20} />} />
+        <div className="flex justify-center gap-8 mb-12">
+          {[Shield, Zap, Brain].map((Icon, i) => (
+            <FooterIcon key={i} icon={<Icon size={20} />} />
+          ))}
         </div>
-        <div className="text-gray-600 text-[10px] uppercase tracking-widest font-mono">
-          Secured by Sage Identity Protocol &copy; 2025
+        <div className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.5em] mb-4">
+          Secured by Sage Identity Protocol &copy; 2026
+        </div>
+        <div className="text-zinc-800 text-[9px] font-mono uppercase tracking-widest">
+          Uptime: 99.999% // Latency: 4ms // Nodes: 4,102
         </div>
       </footer>
     </div>

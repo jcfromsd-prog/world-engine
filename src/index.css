@@ -345,6 +345,24 @@ h4 {
   }
 }
 
+@keyframes active-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.2), inset 0 0 20px rgba(34, 211, 238, 0.05);
+    border-color: rgba(34, 211, 238, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(34, 211, 238, 0.4), inset 0 0 30px rgba(34, 211, 238, 0.1);
+    border-color: rgba(34, 211, 238, 0.6);
+  }
+}
+
+.animate-active-glow {
+  animation: active-glow 3s ease-in-out infinite;
+}
+
 .animate-pulse-subtle {
   animation: subtle-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -358,6 +376,20 @@ h4 {
   100% {
     transform: translateX(200%);
   }
+}
+
+@keyframes progress-flow {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-progress-flow {
+  animation: progress-flow 2s linear infinite;
 }
 
 /* Sovereign Dark Mode Design Tokens */

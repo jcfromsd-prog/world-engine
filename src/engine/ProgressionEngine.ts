@@ -393,7 +393,8 @@ export const initializeProfile = (
     userId: string,
     name: string,
     archetype: string,
-    sector: string
+    sector: string,
+    gradeLevel?: number
 ): SoulboundProfile => {
     const existing = loadProfile();
     if (existing && existing.userId === userId) {
@@ -401,6 +402,7 @@ export const initializeProfile = (
     }
 
     const newProfile = createDefaultProfile(userId, name, archetype, sector);
+    if (gradeLevel) newProfile.gradeLevel = gradeLevel;
     saveProfile(newProfile);
     return newProfile;
 };
