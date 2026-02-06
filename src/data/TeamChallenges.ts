@@ -3,7 +3,7 @@
    Collaborative activities aligned with NY/CA standards and NACE skills
    ========================================================================== */
 
-import type { MasteryTier, SkillCategory } from "../engine/types";
+import type { SkillCategory } from "../engine/types";
 
 export type ChallengeType =
     | "COLLABORATIVE"    // All members work together simultaneously

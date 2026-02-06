@@ -82,7 +82,7 @@ export const SageAITutor = {
         level: HintLevel,
         bloomLevel: BloomLevel,
         gradeLevel: number,
-        previousHints: string[]
+        _previousHints: string[]
     ): HintResult {
         // Base encouragement messages by age group
         const encouragements = this.getAgeAppropriateEncouragement(gradeLevel);
@@ -94,8 +94,8 @@ export const SageAITutor = {
             case "NUDGE":
                 return {
                     level,
-                    message: scaffolds.nudge,
-                    encouragement: encouragements.nudge,
+                    message: scaffolds.NUDGE,
+                    encouragement: encouragements.NUDGE,
                     nextSteps: [
                         "Take a moment to re-read the question.",
                         "What do you already know about this topic?",
@@ -107,8 +107,8 @@ export const SageAITutor = {
             case "SCAFFOLD":
                 return {
                     level,
-                    message: scaffolds.scaffold,
-                    encouragement: encouragements.scaffold,
+                    message: scaffolds.SCAFFOLD,
+                    encouragement: encouragements.SCAFFOLD,
                     nextSteps: [
                         "Here's a hint to get you started...",
                         "Think about similar problems you've solved.",
@@ -121,8 +121,8 @@ export const SageAITutor = {
             case "DIRECT":
                 return {
                     level,
-                    message: scaffolds.direct,
-                    encouragement: encouragements.direct,
+                    message: scaffolds.DIRECT,
+                    encouragement: encouragements.DIRECT,
                     nextSteps: [
                         "Let me show you how to approach this...",
                         "Here's a worked example to follow.",
@@ -136,8 +136,8 @@ export const SageAITutor = {
             case "SOLUTION":
                 return {
                     level,
-                    message: scaffolds.solution,
-                    encouragement: encouragements.solution,
+                    message: scaffolds.SOLUTION,
+                    encouragement: encouragements.SOLUTION,
                     nextSteps: [
                         "Here's the complete solution breakdown.",
                         "Let's walk through each step together.",
@@ -257,7 +257,7 @@ export const SageAITutor = {
         expectedConcepts: string[],
         bloomLevel: BloomLevel,
         gradeLevel: number,
-        rubric?: { criteria: string; weight: number }[]
+        _rubric?: { criteria: string; weight: number }[]
     ): EvaluationResult {
         // Simplified evaluation logic (in production, this would use NLP/AI)
         const normalizedResponse = response.toLowerCase().trim();
@@ -387,10 +387,10 @@ export const SageAITutor = {
      */
     suggestNextSteps(
         currentNode: ContentNode,
-        evaluationResult: EvaluationResult,
-        historyLength: number
+        _evaluationResult: EvaluationResult,
+        _historyLength: number
     ): { immediate: string; shortTerm: string[]; longTerm: string } {
-        const { quality, shouldAdvance, masteryProgress } = evaluationResult;
+        const { shouldAdvance } = _evaluationResult;
 
         if (shouldAdvance) {
             return {

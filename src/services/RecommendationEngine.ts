@@ -3,8 +3,16 @@
    Uses IRT (Item Response Theory) + Interest Matching + History Filtering
    ========================================================================== */
 
-import type { UserProfile, ContentNode, FlashcardSignal, RecommendationResult } from "../types/EngineTypes";
+import type { UserProfile, FlashcardSignal, RecommendationResult } from "../types/EngineTypes";
 import { CONTENT_DB } from "../data/Curriculum";
+
+// Grade level constants for recommendation logic
+export const GradeBand = {
+    SECOND: 2,
+    FIFTH: 5,
+    SOPHOMORE: 10,
+    ADULT: 18
+} as const;
 
 /**
  * RECOMMENDATION ENGINE

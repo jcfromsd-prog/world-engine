@@ -3,7 +3,9 @@
    File: src/components/onboarding/GradeSelector.tsx
 ========================================================= */
 import React, { useState } from "react";
-import { GradeBand } from "../../services/RecommendationEngine";
+
+// Grade level enum values (matching RecommendationEngine)
+const GradeBand = { SECOND: 2, FIFTH: 5, SOPHOMORE: 10, ADULT: 18 } as const;
 
 interface GradeSelectorProps {
     onSubmit: (grade: number) => void;
