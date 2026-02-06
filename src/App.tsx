@@ -1,18 +1,11 @@
 ﻿/* ==========================================================================
-   MYBESTPURPOSE: WORLD ENGINE + "SAGE" AI ONBOARDING
-   Features:
-   1. Interactive Chat Onboarding (Identity -> Grade -> Passion -> Squad -> Unlock)
-   2. Dynamic Dashboard (Updates based on Onboarding Profile)
-   3. Full Learning Views (Connect, Learn, Solve, Earn pillars)
-   4. High-Fidelity UI (Glassmorphism + Neon)
+   MYBESTPURPOSE: WORLD ENGINE
    ========================================================================== */
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Brain, CheckCircle, GraduationCap, LogOut, Activity, Users, ArrowLeft } from 'lucide-react';
+import { X, CheckCircle, GraduationCap, LogOut, Activity } from 'lucide-react';
 import { SimulationEngine, getTargetPersonaKey } from "./services/SimulationEngine";
 import { FounderCheckModal } from "./components/dashboard/FounderCheckModal";
-import SolverDashboard from './components/SolverDashboard';
-import { addGenesisPoints } from './engine/ProgressionEngine';
 
 // Lazy Load Large Components
 const SolverWorkspace = React.lazy(() => import('./components/SolverWorkspace'));
@@ -21,8 +14,6 @@ const LearnView = React.lazy(() => import('./components/LearnView'));
 const IdentityView = React.lazy(() => import('./components/IdentityView'));
 
 // --- TYPES ---
-type OnboardingStep = "INTRO" | "NAME" | "GRADE" | "PASSION" | "MATCHING" | "COMPLETE";
-
 export type UIMission = {
   id: string;
   title: string;
@@ -104,216 +95,140 @@ function calculateInitialTheta(gradeLevel: number): number {
 }
 
 /* ==========================================================================
-   COMPONENT: SAGE AI ONBOARDING CHAT
+   COMPONENT: ASSESSMENT MODULE (Graphical UI)
    ========================================================================== */
-const SageOnboarding: React.FC<{ onComplete: (profile: SageProfile) => void }> = ({ onComplete }) => {
-  const [step, setStep] = useState<OnboardingStep>("INTRO");
-  const [messages, setMessages] = useState<{ sender: "AI" | "USER", text: string, typing?: boolean }[]>([]);
-  const [inputValue, setInputValue] = useState("");
-  const [profile, setProfile] = useState({ name: "", grade: "", passion: "" });
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+function AssessmentModule({ onClose, onComplete }: { onClose: () => void, onComplete: (profile: SageProfile) => void }) {
+  const [step, setStep] = useState<"NAME" | "GRADE" | "PASSION">("NAME");
+  const [name, setName] = useState("");
+  const [grade, setGrade] = useState("");
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const handleComplete = (passion: string) => {
+    const gradeLevel = parseGradeLevel(grade);
+    const archetype = getArchetype(passion);
+    const squad = matchSquad(passion);
 
-  // Add AI message with typing effect
-  const addAIMessage = (text: string, delay: number = 800) => {
-    return new Promise<void>((resolve) => {
-      setIsTyping(true);
-      setTimeout(() => {
-        setMessages(prev => [...prev, { sender: "AI", text }]);
-        setIsTyping(false);
-        resolve();
-      }, delay);
+    onComplete({
+      name,
+      grade,
+      gradeLevel,
+      passion,
+      squad,
+      archetype,
+      genesisPoints: 50,
+      xp: 0,
+      level: 1,
+      skillTheta: calculateInitialTheta(gradeLevel)
     });
   };
 
-  // Initial greeting sequence
-  useEffect(() => {
-    const runIntro = async () => {
-      await addAIMessage("▓▓▓ INITIALIZING NEURAL LINK ▓▓▓", 500);
-      await addAIMessage("...", 400);
-      await addAIMessage("Connection Established.", 600);
-      await addAIMessage("Greetings, future Legend. I am SAGE, the Sovereign Artificial Guardian Engine.", 1000);
-      await addAIMessage("I will calibrate your Neural Profile to unlock the World Engine.", 800);
-      await addAIMessage("First, I need to verify your identity. What should I call you? (Your Codename)", 1000);
-      setStep("NAME");
-    };
-    runIntro();
-  }, []);
-
-  const addMessage = (sender: "AI" | "USER", text: string) => {
-    setMessages(prev => [...prev, { sender, text }]);
-  };
-
-  const handleInput = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && inputValue.trim() && !isTyping) {
-      const val = inputValue.trim();
-      setInputValue("");
-      addMessage("USER", val);
-      processResponse(val);
-    }
-  };
-
-  const processResponse = async (val: string) => {
-    if (step === "NAME") {
-      setProfile(p => ({ ...p, name: val }));
-      await addAIMessage(`Identity CONFIRMED: Codename "${val.toUpperCase()}"`, 800);
-      await addAIMessage("Excellent. Now I need to calibrate your academic parameters.", 700);
-      await addAIMessage("What is your current Academic Level? (e.g., Grade 6, 10th Grade, College Freshman, etc.)", 900);
-      setStep("GRADE");
-    } else if (step === "GRADE") {
-      setProfile(p => ({ ...p, grade: val }));
-      const gradeLevel = parseGradeLevel(val);
-      const gradeLabel = gradeLevel === 0 ? "Kindergarten" :
-        gradeLevel <= 5 ? `Elementary (Grade ${gradeLevel})` :
-          gradeLevel <= 8 ? `Middle School (Grade ${gradeLevel})` :
-            gradeLevel <= 12 ? `High School (Grade ${gradeLevel})` :
-              gradeLevel === 13 ? "College Undergraduate" : "Graduate Level";
-      await addAIMessage(`Academic Level SET: ${gradeLabel}`, 800);
-      await addAIMessage("Your curriculum will be calibrated to NY/CA State Standards for this level.", 700);
-      await addAIMessage("Final calibration: What is your PRIMARY DRIVER?", 800);
-      await addAIMessage("Choose one: [CODING] [CREATIVE] [SCIENCE] [MATH] [LEADERSHIP]", 600);
-      setStep("PASSION");
-    } else if (step === "PASSION") {
-      setProfile(p => ({ ...p, passion: val }));
-      await addAIMessage("Primary Driver LOCKED.", 600);
-      await addAIMessage("Analyzing neural compatibility...", 500);
-      await addAIMessage("Scanning available squads...", 700);
-      setStep("MATCHING");
-
-      // Matching animation
-      await addAIMessage("▓▓▓▓░░░░░░ 40%", 600);
-      await addAIMessage("▓▓▓▓▓▓▓░░░ 70%", 600);
-      await addAIMessage("▓▓▓▓▓▓▓▓▓▓ 100%", 600);
-
-      const squad = matchSquad(val);
-      const archetype = getArchetype(val);
-
-      await addAIMessage(`MATCH FOUND!`, 400);
-      await addAIMessage(`Squad Assignment: "${squad}"`, 700);
-      await addAIMessage(`Archetype Classification: "${archetype}"`, 700);
-      await addAIMessage("", 300);
-      await addAIMessage("╔════════════════════════════════════╗", 200);
-      await addAIMessage("║   🎖️ ACCESS GRANTED. WELCOME TO    ║", 200);
-      await addAIMessage("║      THE WORLD ENGINE, LEGEND.     ║", 200);
-      await addAIMessage("╚════════════════════════════════════╝", 200);
-
-      // Complete after showing success
-      setTimeout(() => {
-        const gradeLevel = parseGradeLevel(profile.grade);
-        onComplete({
-          name: profile.name,
-          grade: profile.grade,
-          gradeLevel,
-          passion: val,
-          squad,
-          archetype,
-          genesisPoints: 50, // Signing Bonus
-          xp: 0,
-          level: 1,
-          skillTheta: calculateInitialTheta(gradeLevel)
-        });
-      }, 2000);
-    }
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-green-400 font-mono p-4">
-      {/* Background glow */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500/5 rounded-full blur-[150px]" />
-      </div>
+    <div className="fixed inset-0 z-[150] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden shadow-2xl">
 
-      <div className="w-full max-w-2xl border border-green-500/30 bg-black/80 backdrop-blur-xl rounded-2xl p-8 h-[70vh] flex flex-col shadow-[0_0_80px_rgba(34,197,94,0.15)] relative z-10">
-        {/* Header */}
-        <div className="flex justify-between items-center border-b border-green-500/20 pb-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]" />
-            <span className="text-sm font-bold tracking-widest">> SAGE_PROTOCOL_V3.0</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-green-600">NEURAL LINK</span>
-            <span className="animate-pulse text-green-400">● ACTIVE</span>
-          </div>
-        </div>
+        {/* Close Button */}
+        <button onClick={onClose} className="absolute top-8 right-8 text-zinc-500 hover:text-white transition-colors">
+          <X size={24} />
+        </button>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-green-500/20 scrollbar-track-transparent">
-          {messages.map((msg, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex ${msg.sender === "USER" ? "justify-end" : "justify-start"}`}
-            >
-              <div className={`max-w-[85%] p-4 rounded-xl ${msg.sender === "USER"
-                  ? "bg-green-500/10 border border-green-500/50 text-white"
-                  : "bg-zinc-900/80 border border-zinc-700 text-green-400"
-                }`}>
-                <span className={`block text-[9px] uppercase tracking-widest mb-2 ${msg.sender === "USER" ? "text-green-400" : "text-green-600"
-                  }`}>
-                  {msg.sender === "USER" ? "YOU" : "SAGE"}
-                </span>
-                <span className="leading-relaxed">{msg.text}</span>
-              </div>
-            </motion.div>
-          ))}
-
-          {/* Typing indicator */}
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="bg-zinc-900/80 border border-zinc-700 p-4 rounded-xl">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-              </div>
+        {/* Progress System */}
+        <div className="flex items-center gap-4 mb-12">
+          {["NAME", "GRADE", "PASSION"].map((s, i) => (
+            <div key={s} className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${(step === s) ? "bg-blue-500 shadow-[0_0_10px_#3b82f6]" :
+                  (["NAME", "GRADE", "PASSION"].indexOf(step) > i) ? "bg-green-500" : "bg-zinc-800"
+                }`} />
+              <span className={`text-[10px] font-black uppercase tracking-widest ${step === s ? "text-white" : "text-zinc-600"}`}>
+                {s}
+              </span>
+              {i < 2 && <div className="w-8 h-px bg-zinc-800" />}
             </div>
-          )}
-          <div ref={messagesEndRef} />
+          ))}
         </div>
 
-        {/* Input */}
-        {step !== "MATCHING" && step !== "COMPLETE" && step !== "INTRO" && !isTyping && (
-          <div className="mt-6 flex gap-3 items-center border-t border-green-500/20 pt-6">
-            <span className="text-green-500 text-xl animate-pulse">></span>
-            <input
-              autoFocus
-              className="flex-1 bg-zinc-900/50 border border-green-500/30 rounded-xl px-4 py-3 outline-none text-white placeholder-zinc-600 focus:border-green-500/60 transition-colors"
-              placeholder="Type your response..."
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-              onKeyDown={handleInput}
-            />
-            <button
-              onClick={() => {
-                if (inputValue.trim()) {
-                  const val = inputValue.trim();
-                  setInputValue("");
-                  addMessage("USER", val);
-                  processResponse(val);
-                }
-              }}
-              className="px-6 py-3 bg-green-500/20 border border-green-500/50 rounded-xl text-green-400 font-bold text-sm hover:bg-green-500/30 transition-colors"
-            >
-              SEND
-            </button>
+        {/* STEP 1: NAME */}
+        {step === "NAME" && (
+          <div className="animate-in fade-in slide-in-from-right duration-500">
+            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4">
+              What's your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Legend Name?</span>
+            </h2>
+            <p className="text-zinc-400 text-lg mb-8 font-medium">This is how you'll be known in the World Engine.</p>
+            <div className="flex gap-4">
+              <input
+                autoFocus
+                type="text"
+                placeholder="Enter Codename..."
+                className="flex-1 bg-black/50 border-2 border-zinc-800 focus:border-blue-500 rounded-2xl px-6 py-4 text-2xl font-bold text-white outline-none transition-all placeholder-zinc-700"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && name && setStep("GRADE")}
+              />
+              <button
+                disabled={!name}
+                onClick={() => setStep("GRADE")}
+                className="px-8 bg-white disabled:opacity-50 disabled:cursor-not-allowed text-black font-black text-xl rounded-2xl hover:bg-blue-400 transition-all uppercase tracking-widest"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Footer branding */}
-      <div className="mt-8 text-center text-zinc-600 text-xs">
-        <span className="font-mono">MYBESTPURPOSE.COM • SAGE IDENTITY PROTOCOL • © 2026</span>
+        {/* STEP 2: GRADE */}
+        {step === "GRADE" && (
+          <div className="animate-in fade-in slide-in-from-right duration-500">
+            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4">
+              Current <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">Power Level?</span>
+            </h2>
+            <p className="text-zinc-400 text-lg mb-8 font-medium">Select your current grade to calibrate missions.</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {["Grade 1-5", "Grade 6-8", "Grade 9-10", "Grade 11-12", "College", "Pro"].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => { setGrade(g); setStep("PASSION"); }}
+                  className="p-6 bg-zinc-800/50 border border-zinc-700 hover:border-green-500 hover:bg-green-500/10 rounded-2xl flex flex-col items-center gap-2 transition-all group"
+                >
+                  <GraduationCap className="text-zinc-500 group-hover:text-green-400" size={32} />
+                  <span className="text-sm font-black text-white uppercase tracking-wider">{g}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: PASSION */}
+        {step === "PASSION" && (
+          <div className="animate-in fade-in slide-in-from-right duration-500">
+            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4">
+              Choose your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Path</span>
+            </h2>
+            <p className="text-zinc-400 text-lg mb-8 font-medium">What kind of missions do you want to solve?</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { label: "Coding & Tech", icon: "💻", color: "blue", desc: "Build apps, secure networks, and write algorithms." },
+                { label: "Creative & Design", icon: "🎨", color: "pink", desc: "Design cities, create art, and visualize data." },
+                { label: "Science & Nature", icon: "🌱", color: "green", desc: "Protect wildlife, solve climate issues, and explore." }
+              ].map((p) => (
+                <button
+                  key={p.label}
+                  onClick={() => handleComplete(p.label)}
+                  className="relative p-8 bg-zinc-800/50 border border-zinc-700 hover:border-white rounded-3xl text-left transition-all hover:-translate-y-1 hover:shadow-2xl group overflow-hidden"
+                >
+                  <div className={`absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-110 transition-transform`}>{p.icon}</div>
+                  <div className="relative z-10">
+                    <div className="text-4xl mb-4">{p.icon}</div>
+                    <h3 className="text-xl font-black text-white uppercase tracking-wide mb-2">{p.label}</h3>
+                    <p className="text-zinc-400 text-sm font-medium leading-relaxed">{p.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
-};
+}
 
 /* ==========================================================================
    COMPONENT: MISSION MODAL
@@ -513,12 +428,12 @@ const App: React.FC = () => {
   });
 
   // View States
+  const [showAssessment, setShowAssessment] = useState(false);
   const [showConnect, setShowConnect] = useState(false);
   const [showLearn, setShowLearn] = useState(false);
   const [showIdentity, setShowIdentity] = useState(false);
   const [activeMission, setActiveMission] = useState<UIMission | null>(null);
   const [activeQuest, setActiveQuest] = useState<UIMission | null>(null);
-  const [showMenu, setShowMenu] = useState(false);
 
   // Simulation States
   const [simulationLog, setSimulationLog] = useState<string[]>([]);
@@ -529,6 +444,12 @@ const App: React.FC = () => {
     setUserProfile(profile);
     localStorage.setItem('mbp_sage_profile', JSON.stringify(profile));
     setHasOnboarded(true);
+    setShowAssessment(false);
+
+    // Auto-scroll to Impact Board to show action
+    setTimeout(() => {
+      handleSolveEarn();
+    }, 500);
   };
 
   const handleLaunchMission = () => {
@@ -550,12 +471,20 @@ const App: React.FC = () => {
     }
   };
 
+  // The main action button handler
   const handleSolveEarn = () => {
+    if (!hasOnboarded) {
+      // If not onboarded, show generic fun assessment
+      setShowAssessment(true);
+      return;
+    }
+
+    // If onboarded, scroll to impact board
     const impactSection = document.getElementById('impact-board');
     if (impactSection) {
       impactSection.scrollIntoView({ behavior: 'smooth' });
     }
-    // Also open mission modal
+    // Also open mission modal example
     setActiveMission({
       id: 'CS.ALG.01',
       title: 'Clean Energy Algorithm',
@@ -582,12 +511,7 @@ const App: React.FC = () => {
     setHasOnboarded(false);
   };
 
-  // IF NOT ONBOARDED, SHOW SAGE AI
-  if (!hasOnboarded) {
-    return <SageOnboarding onComplete={handleOnboardingComplete} />;
-  }
-
-  // IF IN SOLVER WORKSPACE
+  // IF IN SOLVER WORKSPACE (Separate View)
   if (activeQuest) {
     return (
       <div className="min-h-screen bg-black text-white font-mono">
@@ -598,9 +522,14 @@ const App: React.FC = () => {
     );
   }
 
-  // MAIN DASHBOARD
+  // MAIN DASHBOARD (Visible to Everyone, but personalized if onboarded)
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-neon-green selection:text-black relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-neon-green selection:text-black relative overflow-x-hidden animate-fade-in">
+
+      {/* ASSESSMENT OVERLAY (For New Users) */}
+      {showAssessment && (
+        <AssessmentModule onClose={() => setShowAssessment(false)} onComplete={handleOnboardingComplete} />
+      )}
 
       {/* Simulation Window */}
       <AnimatePresence>
