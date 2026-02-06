@@ -24,7 +24,15 @@ dist-ssr
 *.sw?
 
 .vercel
-.env*.local
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Backups and archives
+*.zip
+*.tar.gz
+*.rar
 
 # Temp output files
 build_output*.txt

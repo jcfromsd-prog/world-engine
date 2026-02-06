@@ -67,9 +67,12 @@ archive.glob('**/*', {
         '.git/**',         // 🚫 DO NOT BACKUP (GitHub handles this)
         'dist/**',         // 🚫 DO NOT BACKUP (Build files)
         '*.zip',           // 🚫 Don't zip other zips
-        'backup.js'        // 🚫 Don't zip this script
+        'backup.js',       // 🚫 Don't zip this script
+        '.env*',           // 🚫 DO NOT BACKUP SECRETS!
+        '.vercel/**',      // 🚫 Vercel deployment data
+        'package-lock.json'// 🚫 Optional: can be re-gen
     ],
-    dot: true // ✅ Include .env files (Important for your secrets!)
+    dot: false // 🚫 DO NOT include hidden files! (Prevents secret leaks)
 });
 
 // finalize the archive (ie we are done appending files but streams have to finish yet)
