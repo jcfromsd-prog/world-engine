@@ -505,9 +505,9 @@ function App() {
             {userState ? (
               <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] mb-12 shadow-2xl">
                 <div className="flex items-center gap-6 mb-6">
-                  <div className="w-16 h-16 bg-cyan-500 rounded-2xl flex items-center justify-center text-black font-black text-2xl shadow-xl shadow-cyan-500/20">{userState.displayName[0]}</div>
+                  <div className="w-16 h-16 bg-cyan-500 rounded-2xl flex items-center justify-center text-black font-black text-2xl shadow-xl shadow-cyan-500/20">{userState?.displayName?.[0] || 'L'}</div>
                   <div>
-                    <div className="font-black text-white text-xl tracking-tight">{userState.displayName}</div>
+                    <div className="font-black text-white text-xl tracking-tight">{userState?.displayName || 'Legend'}</div>
                     <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{userState.archetype}</div>
                   </div>
                 </div>

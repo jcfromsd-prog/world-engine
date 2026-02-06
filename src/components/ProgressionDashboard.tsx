@@ -104,10 +104,10 @@ const ProgressionDashboard: React.FC<ProgressionDashboardProps> = ({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-2xl font-black text-white shadow-lg shadow-purple-500/30">
-                            {profile.displayName[0]}
+                            {profile?.displayName?.[0] || 'L'}
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-white">{profile.displayName}</h2>
+                            <h2 className="text-xl font-black text-white">{profile?.displayName || 'Legend'}</h2>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">{profile.archetype}</span>
                                 <span className="text-gray-600">•</span>

@@ -220,7 +220,7 @@ export const getWelcomeBackMessage = (profile: SoulboundProfile): string | null 
     if (!profile.resumePoint) return null;
 
     const { progress } = profile.resumePoint;
-    return `Welcome back, ${profile.displayName}! You were ${progress}% through your last mission. Resume?`;
+    return `Welcome back, ${profile?.displayName || 'Legend'}! You were ${progress}% through your last mission. Resume?`;
 };
 
 // ----------------- NODE COMPLETION -----------------
