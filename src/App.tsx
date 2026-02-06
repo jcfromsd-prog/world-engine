@@ -319,7 +319,7 @@ function App() {
     await SimulationEngine.runSimulation(personaKey, (msg) => {
       setSimulationLog(prev => [...prev, msg]);
     });
-    setTimeout(() => setIsSimulating(false), 3000);
+    // Log stays visible until user closes it - no auto-hide
   };
 
   useEffect(() => {
@@ -361,15 +361,34 @@ function App() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-24 left-6 w-80 max-h-64 overflow-y-auto bg-black/95 border border-blue-500/50 rounded-2xl p-4 font-mono text-[10px] text-blue-300 shadow-2xl z-[120]"
+            className="fixed bottom-24 left-6 w-[500px] max-h-[500px] overflow-y-auto bg-black/95 border border-blue-500/50 rounded-2xl p-6 font-mono text-xs text-blue-300 shadow-2xl z-[120]"
           >
-            <div className="sticky top-0 bg-black/95 pb-2 border-b border-blue-500/20 mb-2 font-bold text-blue-400 flex justify-between">
-              <span>{'>'} NEURAL_PATH_SIM_v1.0</span>
-              <span className="animate-pulse text-red-500">● REC</span>
+            <div className="sticky top-0 bg-black/95 pb-3 border-b border-blue-500/20 mb-3 font-bold text-blue-400 flex justify-between items-center">
+              <span className="flex items-center gap-2">
+                <span className="animate-pulse text-green-500">●</span>
+                {'>'} NEURAL_PATH_SIM_v3.0
+              </span>
+              <button
+                onClick={() => setIsSimulating(false)}
+                className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded text-[10px] uppercase tracking-wider transition-colors"
+              >
+                ✕ Close
+              </button>
             </div>
-            {simulationLog.map((log, i) => <div key={i} className="mb-1 leading-relaxed">
-              <span className="text-zinc-500">[{new Date().toLocaleTimeString()}]</span> {log}
-            </div>)}
+            <div className="space-y-1">
+              {simulationLog.map((log, i) => (
+                <div key={i} className="leading-relaxed whitespace-pre-wrap">
+                  <span className="text-zinc-600 text-[10px]">[{String(i).padStart(2, '0')}]</span>{' '}
+                  <span className={
+                    log.includes('✅') || log.includes('COMPLETE') || log.includes('MASTERED') ? 'text-green-400' :
+                      log.includes('⚠️') || log.includes('Stall') ? 'text-yellow-400' :
+                        log.includes('═') || log.includes('🚀') || log.includes('🏁') ? 'text-white font-bold' :
+                          log.includes('🛡️') || log.includes('👥') || log.includes('🧠') || log.includes('⚡') || log.includes('💰') ? 'text-cyan-400 font-semibold' :
+                            'text-blue-300'
+                  }>{log}</span>
+                </div>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -492,7 +511,23 @@ function App() {
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-cyan-500 animate-pulse font-mono uppercase tracking-[0.5em]">Syncing Neural State...</div>}>
             <div className="animate-in fade-in duration-1000">
               <HeroSection
-                onStart={() => { }}
+                onStart={() => {
+                  // Scroll to Impact Board section
+                  const impactSection = document.getElementById('impact-board');
+                  if (impactSection) {
+                    impactSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                  // Also open the mission modal for the first mission
+                  setActiveMission({
+                    id: 'CS.ALG.01',
+                    title: 'Clean Energy Algorithm',
+                    desc: 'Optimize the load-balancing logic for a decentralized solar grid in East Africa.',
+                    price: '120 GP',
+                    type: 'CODING',
+                    tags: ['GREENTECH', 'ALGORITHM'],
+                    rewards: { xp: 250, gp: 120 }
+                  });
+                }}
                 onOpenConnect={() => setShowConnect(true)}
                 onOpenLearn={() => setShowLearn(true)}
                 onOpenIdentity={() => setShowIdentity(true)}
@@ -620,7 +655,7 @@ function App() {
               </section>
 
               {/* IMPACT BOARD */}
-              <section className="relative py-20 px-4 md:px-10 bg-gradient-to-b from-black/0 to-zinc-900/20 border-t border-white/5">
+              <section id="impact-board" className="relative py-20 px-4 md:px-10 bg-gradient-to-b from-black/0 to-zinc-900/20 border-t border-white/5">
                 <div className="max-w-7xl mx-auto">
                   <div className="flex items-center gap-6 mb-12">
                     <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase italic">Impact Board</h2>
@@ -629,7 +664,18 @@ function App() {
                       EPOCH: 42.1
                     </span>
                   </div>
-                  <ImpactBoard onMissionStart={() => alert("Neural state synchronized. Select mission from Dashboard.")} />
+                  <ImpactBoard onMissionStart={() => {
+                    // Launch the first mission
+                    setActiveMission({
+                      id: 'CS.ALG.01',
+                      title: 'Clean Energy Algorithm',
+                      desc: 'Optimize the load-balancing logic for a decentralized solar grid.',
+                      price: '120 GP',
+                      type: 'CODING',
+                      tags: ['GREENTECH', 'ALGORITHM'],
+                      rewards: { xp: 250, gp: 120 }
+                    });
+                  }} />
                 </div>
               </section>
               <SolverDashboard profile={userState!} onMissionStart={setActiveMission} />
