@@ -491,12 +491,13 @@ function HeroSection({
         </div>
       </div>
 
-      {/* TAGLINE */}
-      <div className="max-w-2xl mx-auto mb-8 px-4 text-center">
-        <p className="text-lg md:text-xl text-zinc-300 font-medium leading-relaxed">
-          The world's first <span className="text-blue-400 font-bold">Impact Engine</span>.
-          <br className="hidden md:block" />
-          <span className="text-zinc-500 text-sm mt-1 block">Solve real-world challenges, earn direct payouts, and build your legend.</span>
+      {/* TAGLINE - Staccato Rhythm to match Power Bar */}
+      <div className="max-w-4xl mx-auto mb-8 px-4 text-center">
+        <p className="text-lg md:text-2xl text-zinc-400 font-medium leading-relaxed tracking-wide">
+          The world's first <span className="text-white font-bold">Impact Engine</span>. <br className="hidden md:block" />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-green-400 to-emerald-400 font-bold mt-2 inline-block">
+            Squad Up. Master Skills. Solve for Impact. Earn Your Legend.
+          </span>
         </p>
       </div>
 
