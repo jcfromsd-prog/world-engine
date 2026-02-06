@@ -1,7 +1,7 @@
 ﻿/* ==========================================================================
    MYBESTPURPOSE: WORLD ENGINE
    ========================================================================== */
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, GraduationCap, LogOut, Activity } from 'lucide-react';
 import { SimulationEngine, getTargetPersonaKey } from "./services/SimulationEngine";
@@ -41,12 +41,55 @@ interface SageProfile {
 }
 
 const IMPACT_MISSIONS = [
-  { id: "CS.ALG.01", title: "Clean Energy Algorithm", desc: "Optimize load-balancing for a decentralized solar grid in East Africa.", category: "CODING", tag: "GREENTECH INITIATIVE", xp: 250, gp: 120, color: "text-green-400" },
-  { id: "SCI.BIO.04", title: "Bio-Diversity Mapper", desc: "Analyze drone footage to identify endangered species in the Amazon basin.", category: "SCIENCE", tag: "WILDLIFE PROTECT", xp: 300, gp: 150, color: "text-emerald-400" },
+  // CODING / TECH
+  { id: "CS.ALG.01", title: "Clean Energy Algorithm", desc: "Optimize load-balancing for a decentralized solar grid in East Africa.", category: "CODING", tag: "GREENTECH", xp: 250, gp: 120, color: "text-green-400" },
+  { id: "CS.SEC.07", title: "Quantum Encryption Override", desc: "Protect medical records in a simulated quantum cyber-attack.", category: "CODING", tag: "HEALTHGUARD", xp: 400, gp: 200, color: "text-rose-400" },
+  { id: "CS.AI.05", title: "Neural Net Debugger", desc: "Fix hallucination errors in a translation AI for disaster relief.", category: "CODING", tag: "AI ETHICS", xp: 350, gp: 180, color: "text-blue-400" },
+  { id: "CS.WEB.03", title: "Accessibility Audit", desc: "Make a nonprofit website accessible for screen reader users.", category: "CODING", tag: "INCLUSION", xp: 200, gp: 100, color: "text-cyan-400" },
+  { id: "CS.DAT.08", title: "Data Pipeline Fix", desc: "Debug a data pipeline for tracking ocean plastic pollution.", category: "CODING", tag: "OCEAN CLEANUP", xp: 300, gp: 150, color: "text-teal-400" },
+  // SCIENCE / NATURE
+  { id: "SCI.BIO.04", title: "Bio-Diversity Mapper", desc: "Analyze drone footage to identify endangered species in the Amazon.", category: "SCIENCE", tag: "WILDLIFE", xp: 300, gp: 150, color: "text-emerald-400" },
+  { id: "SCI.CHEM.02", title: "Water Purification Lab", desc: "Design a filtration system for clean water in rural communities.", category: "SCIENCE", tag: "CLEAN WATER", xp: 280, gp: 140, color: "text-cyan-400" },
+  { id: "SCI.ECO.06", title: "Ecosystem Restoration", desc: "Model a plan to restore a degraded wetland habitat.", category: "SCIENCE", tag: "RESTORATION", xp: 320, gp: 160, color: "text-green-400" },
+  { id: "SCI.CLI.09", title: "Climate Data Analysis", desc: "Analyze 50 years of temperature data to predict local impacts.", category: "SCIENCE", tag: "CLIMATE", xp: 350, gp: 175, color: "text-orange-400" },
+  { id: "SCI.AST.11", title: "Asteroid Trajectory", desc: "Calculate impact probabilities for near-Earth objects.", category: "SCIENCE", tag: "SPACE", xp: 450, gp: 220, color: "text-purple-400" },
+  // CREATIVE / DESIGN / HUMANITIES
+  { id: "HUM.SOC.02", title: "Policy Narrative Design", desc: "Draft a compelling policy proposal for universal connectivity.", category: "CREATIVE", tag: "ADVOCACY", xp: 180, gp: 80, color: "text-purple-400" },
+  { id: "ART.DES.01", title: "UI for the Blind", desc: "Design an accessible interface for visually impaired users.", category: "CREATIVE", tag: "ACCESSIBILITY", xp: 220, gp: 110, color: "text-pink-400" },
+  { id: "HIS.ARC.05", title: "Digital Archive", desc: "Preserve oral histories from indigenous elders before they're lost.", category: "CREATIVE", tag: "PRESERVATION", xp: 300, gp: 150, color: "text-orange-400" },
+  { id: "ART.VID.07", title: "Documentary Storyboard", desc: "Create a visual storyboard for a climate justice documentary.", category: "CREATIVE", tag: "STORYTELLING", xp: 250, gp: 125, color: "text-yellow-400" },
+  { id: "HUM.EDU.03", title: "Curriculum Designer", desc: "Design an engaging lesson plan for teaching fractions.", category: "CREATIVE", tag: "EDUCATION", xp: 200, gp: 100, color: "text-indigo-400" },
+  // MATH / LOGIC
   { id: "MATH.PHY.09", title: "Urban Water Flow Logic", desc: "Calculate pressure distributions for sustainable rainwater systems.", category: "MATH", tag: "SMART CITIES", xp: 200, gp: 90, color: "text-blue-400" },
-  { id: "HUM.SOC.02", title: "Policy Narrative Design", desc: "Draft a compelling policy proposal for universal connectivity.", category: "HUMANITIES", tag: "GLOBAL CONNECT", xp: 180, gp: 80, color: "text-purple-400" },
-  { id: "CS.SEC.07", title: "Quantum Encryption Override", desc: "Protect medical records in a simulated quantum cyber-attack.", category: "CODING", tag: "HEALTHGUARD", xp: 400, gp: 200, color: "text-rose-400" }
+  { id: "MATH.STAT.04", title: "Public Health Stats", desc: "Analyze vaccine distribution data to optimize coverage.", category: "MATH", tag: "HEALTH", xp: 280, gp: 140, color: "text-red-400" },
+  { id: "MATH.OPT.06", title: "Route Optimizer", desc: "Find the most efficient delivery routes for food banks.", category: "MATH", tag: "LOGISTICS", xp: 250, gp: 125, color: "text-amber-400" },
 ];
+
+// Adaptive choice count based on cognitive load research
+function getOptimalChoiceCount(gradeLevel: number): number {
+  if (gradeLevel <= 2) return 2;      // K-2: Simple choice
+  if (gradeLevel <= 8) return 3;      // 3-8: Classic "rule of 3"
+  if (gradeLevel <= 12) return 4;     // 9-12: More agency
+  return 5;                            // College: Full exploration
+}
+
+// Filter missions by passion
+function filterMissionsByPassion(passion: string, count: number) {
+  const p = passion.toLowerCase();
+  let category = "";
+  if (p.includes('code') || p.includes('tech')) category = "CODING";
+  else if (p.includes('sci') || p.includes('nature') || p.includes('bio')) category = "SCIENCE";
+  else if (p.includes('creat') || p.includes('art') || p.includes('design')) category = "CREATIVE";
+  else if (p.includes('math') || p.includes('logic')) category = "MATH";
+
+  const filtered = category
+    ? IMPACT_MISSIONS.filter(m => m.category === category)
+    : IMPACT_MISSIONS;
+
+  // Shuffle and take 'count' missions
+  const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
 
 // Grade level parser
 function parseGradeLevel(gradeStr: string): number {
@@ -135,7 +178,7 @@ function AssessmentModule({ onClose, onComplete }: { onClose: () => void, onComp
           {["NAME", "GRADE", "PASSION"].map((s, i) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${(step === s) ? "bg-blue-500 shadow-[0_0_10px_#3b82f6]" :
-                  (["NAME", "GRADE", "PASSION"].indexOf(step) > i) ? "bg-green-500" : "bg-zinc-800"
+                (["NAME", "GRADE", "PASSION"].indexOf(step) > i) ? "bg-green-500" : "bg-zinc-800"
                 }`} />
               <span className={`text-[10px] font-black uppercase tracking-widest ${step === s ? "text-white" : "text-zinc-600"}`}>
                 {s}
@@ -226,6 +269,111 @@ function AssessmentModule({ onClose, onComplete }: { onClose: () => void, onComp
         )}
 
       </div>
+    </div>
+  );
+}
+
+/* ==========================================================================
+   COMPONENT: CHOICE SELECTION (Autonomy Protocol)
+   Adaptive choice count based on cognitive load research
+   ========================================================================== */
+function ChoiceSelection({
+  passion,
+  gradeLevel,
+  userName,
+  onSelect
+}: {
+  passion: string;
+  gradeLevel: number;
+  userName: string;
+  onSelect: (mission: UIMission) => void;
+}) {
+  const choiceCount = getOptimalChoiceCount(gradeLevel);
+  const recommendations = filterMissionsByPassion(passion, choiceCount);
+
+  return (
+    <div className="fixed inset-0 z-[150] bg-black flex flex-col items-center justify-center p-6 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="text-center mb-10">
+        <div className="inline-block px-4 py-2 bg-zinc-900 rounded-full text-xs font-mono text-green-400 border border-green-500/30 mb-6">
+          ✓ CALIBRATION COMPLETE • {userName.toUpperCase()}
+        </div>
+        <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4 uppercase tracking-tight">
+          Autonomy Protocol
+        </h1>
+        <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+          SAGE detected your passion for <span className="text-white font-bold uppercase">{passion}</span>.
+          <br />Choose your first mission to begin your impact journey.
+        </p>
+        <p className="text-xs text-zinc-600 mt-2 font-mono">
+          {choiceCount} choices optimized for your level
+        </p>
+      </div>
+
+      {/* Mission Cards */}
+      <div className={`grid gap-6 max-w-6xl w-full ${choiceCount <= 2 ? 'grid-cols-1 md:grid-cols-2 max-w-3xl' :
+        choiceCount <= 3 ? 'grid-cols-1 md:grid-cols-3' :
+          'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
+        }`}>
+        {recommendations.map((mission, idx) => (
+          <div
+            key={mission.id}
+            onClick={() => onSelect({
+              id: mission.id,
+              title: mission.title,
+              desc: mission.desc,
+              price: `${mission.gp} GP`,
+              type: mission.category,
+              tags: [mission.tag],
+              rewards: { xp: mission.xp, gp: mission.gp }
+            })}
+            className="group cursor-pointer bg-zinc-900/80 border border-white/10 p-8 rounded-3xl hover:border-white/50 hover:bg-zinc-800 transition-all hover:-translate-y-2 hover:shadow-2xl relative overflow-hidden"
+            style={{ animationDelay: `${idx * 100}ms` }}
+          >
+            {/* Category Badge */}
+            <div className={`text-[10px] font-black tracking-widest mb-4 ${mission.color} bg-white/5 px-3 py-1 rounded-full inline-block`}>
+              {mission.category}
+            </div>
+
+            <h3 className="text-2xl font-black mb-4 group-hover:text-blue-300 transition-colors uppercase tracking-tight">
+              {mission.title}
+            </h3>
+
+            <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
+              {mission.desc}
+            </p>
+
+            <div className="flex justify-between items-center pt-6 border-t border-white/10">
+              <div>
+                <span className="text-yellow-400 font-bold font-mono">{mission.gp} GP</span>
+                <span className="text-zinc-600 mx-2">•</span>
+                <span className="text-purple-400 font-mono text-sm">{mission.xp} XP</span>
+              </div>
+              <div className="px-4 py-2 bg-white text-black text-xs font-black uppercase rounded group-hover:bg-blue-400 transition-colors">
+                Select
+              </div>
+            </div>
+
+            {/* Subtle tag */}
+            <div className="absolute top-4 right-4 text-[9px] font-mono text-zinc-700 uppercase tracking-wider">
+              {mission.tag}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Skip option */}
+      <button
+        onClick={() => onSelect({
+          id: "skip",
+          title: "Explore All",
+          desc: "Browse the full Impact Board",
+          price: "0 GP"
+        })}
+        className="mt-8 text-zinc-600 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
+      >
+        Skip → Explore All Missions
+      </button>
     </div>
   );
 }
@@ -429,6 +577,7 @@ const App: React.FC = () => {
 
   // View States
   const [showAssessment, setShowAssessment] = useState(false);
+  const [showChoiceSelection, setShowChoiceSelection] = useState(false);
   const [showConnect, setShowConnect] = useState(false);
   const [showLearn, setShowLearn] = useState(false);
   const [showIdentity, setShowIdentity] = useState(false);
@@ -445,11 +594,15 @@ const App: React.FC = () => {
     localStorage.setItem('mbp_sage_profile', JSON.stringify(profile));
     setHasOnboarded(true);
     setShowAssessment(false);
+    // Show the Autonomy Protocol choice selection
+    setShowChoiceSelection(true);
+  };
 
-    // Auto-scroll to Impact Board to show action
-    setTimeout(() => {
-      handleSolveEarn();
-    }, 500);
+  const handleChoiceSelected = (mission: UIMission) => {
+    setShowChoiceSelection(false);
+    if (mission.id !== "skip") {
+      setActiveMission(mission);
+    }
   };
 
   const handleLaunchMission = () => {
@@ -529,6 +682,16 @@ const App: React.FC = () => {
       {/* ASSESSMENT OVERLAY (For New Users) */}
       {showAssessment && (
         <AssessmentModule onClose={() => setShowAssessment(false)} onComplete={handleOnboardingComplete} />
+      )}
+
+      {/* AUTONOMY PROTOCOL: Choice Selection (After Onboarding) */}
+      {showChoiceSelection && userProfile && (
+        <ChoiceSelection
+          passion={userProfile.passion}
+          gradeLevel={userProfile.gradeLevel}
+          userName={userProfile.name}
+          onSelect={handleChoiceSelected}
+        />
       )}
 
       {/* Simulation Window */}
