@@ -14,6 +14,9 @@ export interface BountyProps {
     rippleEffect?: string;
     highlight?: boolean;
     locked?: boolean;
+    source?: string;
+    financials?: Record<string, any>;
+    squadRoles?: any[];
     onSolve: () => void;
 }
 

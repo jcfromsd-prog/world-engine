@@ -89,7 +89,7 @@ const PsychometricGraph: React.FC<PsychometricGraphProps> = ({
         const radarLine = d3.lineRadial<{ axis: string, value: number }>()
             .curve(d3.curveLinearClosed)
             .radius(d => rScale(d.value))
-            .angle((d, i) => i * angleSlice);
+            .angle((_, i) => i * angleSlice);
 
         // Gradient for the blob
         const gradient = svg.append("defs")

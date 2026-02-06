@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Shield, Zap, Menu, X, Brain, CheckCircle, CreditCard, GraduationCap, LogOut, ArrowRight, Activity, Users } from 'lucide-react';
 import SolveAndEarnButton from './components/SolveAndEarnButton';
 import type { SoulboundProfile } from './engine/types';
