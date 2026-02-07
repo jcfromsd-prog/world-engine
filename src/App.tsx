@@ -18,11 +18,13 @@ import { GenesisFeed } from "./components/feed/GenesisFeed";
 import { GhostClassRoom } from "./components/dashboard/GhostClassRoom";
 import Header from "./components/Header";
 import { FounderMenu } from "./components/Navigation/FounderMenu";
-import { ImpactEngine } from "./components/engines/ImpactEngine";
+import { ImpactEngine, STARTING_MISSIONS, type ImpactMission } from "./components/engines/ImpactEngine";
+import { ActiveMission } from "./components/engines/ActiveMission";
 import type { LiveMission } from "./lib/missionGenerator";
 
+
 // --- TYPES ---
-type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE";
+type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL";
 type OnboardingStep = "NAME" | "GRADE" | "PASSION" | "MATCHING";
 
 export interface UserProfile {
@@ -257,6 +259,7 @@ const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>("LANDING");
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeMission, setActiveMission] = useState<Mission | LiveMission | null>(null);
+  const [activeImpactMission, setActiveImpactMission] = useState<ImpactMission | null>(null);
   const [systemBalance, setSystemBalance] = useState(SYSTEM_TREASURY.balance);
   const [error, setError] = useState("");
   const [showFounderModal, setShowFounderModal] = useState(false);
@@ -413,10 +416,39 @@ const App: React.FC = () => {
         <ImpactEngine
           onBack={() => setAppState("LANDING")}
           onAccept={(id) => {
-            // Future: Add logic to start specific mission
-            console.log("Accepted mission:", id);
-            // For now, redirect to workspace if appropriate or just show alert
-            alert(`Mission ${id} Accepted! Prepare to deploy.`);
+            const mission = STARTING_MISSIONS.find(m => m.id === id);
+            if (mission) {
+              if (mission.id === 'M1') {
+                setActiveImpactMission(mission);
+                setAppState("MISSION_ACTIVE_NEURAL");
+              } else {
+                alert("🔒 MISSION LOCKED: LOW CLEARANCE LEVEL\n\nComplete 'Neural Calibration' to unlock this contract.");
+              }
+            }
+          }}
+        />
+      )}
+
+      {/* 🟢 ACTIVE MISSION: NEURAL CALIBRATION */}
+      {appState === "MISSION_ACTIVE_NEURAL" && activeImpactMission && (
+        <ActiveMission
+          missionId={activeImpactMission.id}
+          onComplete={(reward) => {
+            // Update Balance
+            setUserProfile(prev => prev ? { ...prev, genesisPoints: prev.genesisPoints + reward } : null);
+            // System pays
+            setSystemBalance(prev => prev - reward);
+
+            alert(`✅ MISSION COMPLETE\n\nREWARD: ${reward} SYS TRANSFERRED TO WALLET.`);
+
+            setAppState("IMPACT_ENGINE");
+            setActiveImpactMission(null);
+          }}
+          onExit={() => {
+            if (confirm("ABORT MISSION? Progress will be lost.")) {
+              setAppState("IMPACT_ENGINE");
+              setActiveImpactMission(null);
+            }
           }}
         />
       )}

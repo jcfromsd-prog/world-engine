@@ -9,7 +9,7 @@ export interface ImpactMission {
     tags: string[];
 }
 
-const STARTING_MISSIONS: ImpactMission[] = [
+export const STARTING_MISSIONS: ImpactMission[] = [
     { id: 'M1', title: 'Neural Calibration', reward: '50 SYS', xp: '100 XP', difficulty: 'Low', tags: ['System', 'Onboarding'] },
     { id: 'M2', title: 'Debug React Component', reward: '200 SYS', xp: '500 XP', difficulty: 'Medium', tags: ['Code', 'Bugfix'] },
     { id: 'M3', title: 'Optimize Squad Algorithm', reward: '1000 SYS', xp: 'Clearance Lvl 3', difficulty: 'High', tags: ['AI', 'Algorithm'] },
