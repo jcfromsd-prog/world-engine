@@ -391,7 +391,7 @@ const App: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-screen bg-gradient-to-b from-blue-900/20 via-black to-black -z-10"></div>
           <div className="max-w-6xl mx-auto pt-16 pb-40 px-6 text-center">
 
-            <h1 className="text-7xl md:text-[120px] font-black tracking-tighter leading-none mb-8 animate-scale-in bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-500 to-purple-600">
+            <h1 className="text-7xl md:text-[120px] font-black tracking-tighter leading-none mb-8 animate-scale-in bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-violet-500 to-amber-400">
               SOLVE & EARN.
             </h1>
             <p className="text-xl md:text-2xl text-slate-400 max-w-4xl mx-auto mt-4 mb-12 font-medium leading-relaxed">
