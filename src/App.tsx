@@ -364,21 +364,16 @@ const App: React.FC = () => {
         <div className="relative">
           <div className="absolute top-0 left-0 w-full h-screen bg-gradient-to-b from-blue-900/20 via-black to-black -z-10"></div>
           <div className="max-w-6xl mx-auto pt-32 pb-40 px-6 text-center">
-            <div className="inline-block px-4 py-1.5 bg-zinc-900 border border-white/10 rounded-full text-xs font-bold tracking-widest text-zinc-400 mb-8 animate-fade-in uppercase">
-              Now Boarding: The Ghost Class 👻
-            </div>
+
             <h1 className="text-7xl md:text-[120px] font-black tracking-tighter leading-none mb-8 animate-scale-in">
-              START YOUR <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-yellow-400">ENGINE.</span>
+              SOLVE & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-yellow-400">EARN.</span>
             </h1>
             <p className="text-xl md:text-2xl text-zinc-500 max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
-              The world's first <span className="text-white italic">Purpose-as-a-Platform</span>. Turn your potential into verified proof.
+              MyBestPurpose is an AI-guided Engine where you transition from a passive student into a <span className="text-white font-bold">Verified Contributor</span>.
             </p>
             <div className="flex flex-wrap justify-center gap-6 mb-24">
               <button onClick={() => setAppState("ONBOARDING")} className="px-12 py-6 bg-white text-black font-black text-xl rounded-2xl hover:bg-blue-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
-                JOIN THE SQUAD
-              </button>
-              <button className="px-12 py-6 bg-zinc-900 text-white font-black text-xl rounded-2xl border border-white/10 hover:border-white/30 transition-all">
-                VIEW BLUEPRINT
+                🚀 START YOUR ENGINE
               </button>
             </div>
 
