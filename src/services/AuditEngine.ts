@@ -20,7 +20,22 @@ export interface AuditResult {
     timestamp: number;
 }
 
+type AuditListener = (results: AuditResult[]) => void;
+
 class AuditService {
+    private listeners: AuditListener[] = [];
+
+    // Subscribe to audit updates
+    subscribe(listener: AuditListener) {
+        this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
+    }
+
+    private notifyListeners(results: AuditResult[]) {
+        this.listeners.forEach(l => l(results));
+    }
 
     // RUN ALL CHECKS
     async runFullAudit(): Promise<AuditResult[]> {
@@ -31,7 +46,9 @@ class AuditService {
         const leoResults = await this.simulateLifecycle(AUDIT_PROFILES.LEO);
         const alexResults = await this.simulateLifecycle(AUDIT_PROFILES.ALEX);
 
-        return [...mayaResults, ...leoResults, ...alexResults];
+        const allResults = [...mayaResults, ...leoResults, ...alexResults];
+        this.notifyListeners(allResults);
+        return allResults;
     }
 
     // SIMULATE A USER JOURNEY (The "Hero's Journey")
@@ -61,10 +78,6 @@ class AuditService {
 
     private async checkUIState(user: any): Promise<AuditResult> {
         // Simulate clicking "Calibrate"
-        // Instead of clicking DOM, we check if the DOM element exists (if running in browser env)
-        // OR we check if the state manager allows the modal to open.
-        // For this prototype, we check logical permission + DOM presence if available.
-
         let domCheck = true;
         if (typeof document !== 'undefined') {
             const btn = document.getElementById('btn-calibrate');
@@ -90,7 +103,6 @@ class AuditService {
 
     private async checkSquadResponse(user: any): Promise<AuditResult> {
         // Simulate sending a help request
-        // Edge Case: Leo sometimes gets ignored in simulation to test resilience
         const mockSquadOnline = user.id === 'LEO' ? Math.random() > 0.05 : true;
 
         return {

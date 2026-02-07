@@ -15,6 +15,7 @@ import { SwarmDashboard } from "./components/admin/SwarmDashboard";
 import { MasterTeacherDashboard } from "./components/admin/MasterTeacherDashboard";
 import { CalibrationModal } from "./components/dashboard/CalibrationModal";
 import { GenesisFeed } from "./components/feed/GenesisFeed";
+import { GhostClassRoom } from "./components/dashboard/GhostClassRoom";
 import type { LiveMission } from "./lib/missionGenerator";
 
 // --- TYPES ---
@@ -69,7 +70,7 @@ const MISSION_DB: Mission[] = [
    COMPONENT: THE 4 ENGINES GRID (Blueprint Visualization)
    ========================================================================== */
 const EnginesGrid = () => (
-  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-6xl mx-auto mb-16 px-4 w-full">
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-6xl mx-auto mb-32 px-4 w-full">
     {/* 🟢 CONNECT */}
     <div className="p-6 bg-zinc-900/50 border border-green-500/20 rounded-2xl hover:bg-zinc-800 transition-all group hover:-translate-y-2">
       <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🟢</div>
@@ -362,7 +363,7 @@ const App: React.FC = () => {
       {appState === "LANDING" && (
         <div className="relative">
           <div className="absolute top-0 left-0 w-full h-screen bg-gradient-to-b from-blue-900/20 via-black to-black -z-10"></div>
-          <div className="max-w-6xl mx-auto pt-32 pb-20 px-6 text-center">
+          <div className="max-w-6xl mx-auto pt-32 pb-40 px-6 text-center">
             <div className="inline-block px-4 py-1.5 bg-zinc-900 border border-white/10 rounded-full text-xs font-bold tracking-widest text-zinc-400 mb-8 animate-fade-in uppercase">
               Now Boarding: The Ghost Class 👻
             </div>
@@ -449,6 +450,9 @@ const App: React.FC = () => {
           onClose={() => setAppState("CHOICE_SELECTION")}
         />
       )}
+
+      {/* GHOST CLASS SWARM (Visual Layer) */}
+      <GhostClassRoom />
 
       {/* FOUNDER BADGE */}
       <div className="fixed bottom-6 right-6 z-[500]">
