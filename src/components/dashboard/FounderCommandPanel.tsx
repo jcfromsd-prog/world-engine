@@ -169,8 +169,8 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[200] p-4 animate-fade-in">
-            <div className="w-full max-w-5xl bg-zinc-950 border border-purple-500/30 rounded-2xl shadow-[0_0_80px_rgba(168,85,247,0.15)] flex flex-col max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[200] pt-32 pb-20 px-4 overflow-y-auto animate-fade-in">
+            <div className="w-full max-w-5xl mx-auto bg-zinc-950 border border-purple-500/30 rounded-2xl shadow-[0_0_80px_rgba(168,85,247,0.15)] flex flex-col">
 
                 {/* HEADER WITH METRICS */}
                 <div className="p-6 border-b border-white/10 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
@@ -230,8 +230,8 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-all ${activeTab === tab
-                                    ? 'text-purple-400 border-b-2 border-purple-500 bg-purple-500/5'
-                                    : 'text-zinc-600 hover:text-zinc-400'
+                                ? 'text-purple-400 border-b-2 border-purple-500 bg-purple-500/5'
+                                : 'text-zinc-600 hover:text-zinc-400'
                                 }`}
                         >
                             {tab === 'COMMAND' && '🎛️ '}{tab === 'SIMULATE' && '👤 '}{tab === 'LOGS' && '📋 '}{tab === 'AUDIT' && '🛡️ '}{tab}
@@ -255,7 +255,7 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
                                         disabled={isRunning}
                                         className="group p-6 bg-gradient-to-br from-purple-900/30 to-purple-800/10 border border-purple-500/30 rounded-xl hover:border-purple-400 hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] transition-all disabled:opacity-50"
                                     >
-                                        <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">🧠</div>
+                                        <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🧠</div>
                                         <h4 className="font-bold text-white mb-1">Launch Master Teacher</h4>
                                         <p className="text-xs text-zinc-500">Run AI swarm simulation & auto-tune algorithms</p>
                                     </button>
@@ -265,7 +265,7 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
                                         onClick={onDeployGhostClass}
                                         className="group p-6 bg-gradient-to-br from-blue-900/30 to-blue-800/10 border border-blue-500/30 rounded-xl hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all"
                                     >
-                                        <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">👻</div>
+                                        <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">👻</div>
                                         <h4 className="font-bold text-white mb-1">Deploy Ghost Class</h4>
                                         <p className="text-xs text-zinc-500">View live virtual agents & engagement metrics</p>
                                     </button>
@@ -275,7 +275,7 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
                                         onClick={handleResetWorld}
                                         className="group p-6 bg-gradient-to-br from-zinc-900/50 to-zinc-800/30 border border-zinc-700/50 rounded-xl hover:border-zinc-500 transition-all"
                                     >
-                                        <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">🔄</div>
+                                        <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🔄</div>
                                         <h4 className="font-bold text-white mb-1">Reset World State</h4>
                                         <p className="text-xs text-zinc-500">Restore algorithm weights to baseline</p>
                                     </button>
@@ -343,7 +343,7 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
                                 <h3 className="text-xs font-bold text-zinc-600 uppercase tracking-widest mb-4">👻 GHOST CLASSROOM ({GHOST_CLASSROOM.length} AGENTS)</h3>
                                 <div className="grid grid-cols-5 gap-3">
                                     {GHOST_CLASSROOM.map(agent => (
-                                        <div key={agent.id} className="p-3 bg-zinc-900/50 border border-white/5 rounded-lg text-center">
+                                        <div key={agent.id} className="p-3 bg-zinc-900/50 border border-white/5 rounded-lg text-center h-full">
                                             <div className="text-xl mb-1">
                                                 {agent.personality === 'GAMER' ? '🎮' : agent.personality === 'INTROVERT' ? '📚' : agent.personality === 'STRUGGLING' ? '😰' : agent.personality === 'PRODIGY' ? '🌟' : '🔍'}
                                             </div>
