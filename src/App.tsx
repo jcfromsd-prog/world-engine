@@ -6,6 +6,7 @@
    4. VIRALITY: CMO Social Share Modal
    5. SWARM-VERIFIED: Smart Fill Logic guarantees 3 choices.
    6. BLUEPRINT: 4 Engines Grid & Parallel Pathway Hero
+   7. ARCHITECTURE: Permanent Breadcrumbs Layer (No Overwriting)
    ========================================================================== */
 import React, { useState } from "react";
 import { FounderCheckModal } from "./components/dashboard/FounderCheckModal";
@@ -76,22 +77,20 @@ const EnginesGrid = () => (
    ========================================================================== */
 const BreadcrumbHeader: React.FC<{ name: string, grade: string, passion: string, step: string }> = ({ name, grade, passion, step }) => {
   return (
-    <div className="absolute top-0 left-0 w-full p-6 z-50 flex justify-center">
-      <div className="flex items-center gap-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/10">
-        <div className={`flex items-center gap-2 ${step === "NAME" ? "text-blue-400" : name ? "text-green-400" : "text-zinc-600"}`}>
-          <span className="text-lg">👤</span>
-          <span className="font-bold text-xs uppercase tracking-wider">{name || "IDENTITY"}</span>
-        </div>
-        <div className="w-4 h-px bg-white/20"></div>
-        <div className={`flex items-center gap-2 ${step === "GRADE" ? "text-blue-400" : grade ? "text-green-400" : "text-zinc-600"}`}>
-          <span className="text-lg">🎓</span>
-          <span className="font-bold text-xs uppercase tracking-wider">{grade ? `GRADE ${grade}` : "LEVEL"}</span>
-        </div>
-        <div className="w-4 h-px bg-white/20"></div>
-        <div className={`flex items-center gap-2 ${step === "PASSION" ? "text-blue-400" : passion ? "text-green-400" : "text-zinc-600"}`}>
-          <span className="text-lg">🔥</span>
-          <span className="font-bold text-xs uppercase tracking-wider">{passion || "PASSION"}</span>
-        </div>
+    <div className="flex items-center gap-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 mx-auto w-fit shadow-2xl">
+      <div className={`flex items-center gap-2 ${step === "NAME" ? "text-blue-400" : name ? "text-green-400" : "text-zinc-600"}`}>
+        <span className="text-lg">👤</span>
+        <span className="font-bold text-xs uppercase tracking-wider">{name || "IDENTITY"}</span>
+      </div>
+      <div className="w-4 h-px bg-white/20"></div>
+      <div className={`flex items-center gap-2 ${step === "GRADE" ? "text-blue-400" : grade ? "text-green-400" : "text-zinc-600"}`}>
+        <span className="text-lg">🎓</span>
+        <span className="font-bold text-xs uppercase tracking-wider">{grade ? `GRADE ${grade}` : "LEVEL"}</span>
+      </div>
+      <div className="w-4 h-px bg-white/20"></div>
+      <div className={`flex items-center gap-2 ${step === "PASSION" ? "text-blue-400" : passion ? "text-green-400" : "text-zinc-600"}`}>
+        <span className="text-lg">🔥</span>
+        <span className="font-bold text-xs uppercase tracking-wider">{passion || "PASSION"}</span>
       </div>
     </div>
   );
@@ -132,7 +131,9 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: any) => void, onCancel:
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in p-6 font-sans">
-      <BreadcrumbHeader name={name} grade={grade} passion={passion} step={step} />
+      <div className="mb-8">
+        <BreadcrumbHeader name={name} grade={grade} passion={passion} step={step} />
+      </div>
       <button onClick={onCancel} className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors">✕ ESC</button>
 
       {step === "MATCHING" && (
@@ -258,7 +259,7 @@ const App: React.FC = () => {
 
   // --- FILTER LOGIC (Swarm Certified) ---
   const getDisplayMissions = () => {
-    if (appState === "LANDING") return MISSION_DB.slice(0, 6);
+    if (appState === "LANDING" || !userProfile) return MISSION_DB.slice(0, 6);
     const gradeNum = parseInt(userProfile?.grade.replace(/\D/g, "") || "5");
     const history = userProfile?.completedMissions || [];
 
@@ -283,7 +284,7 @@ const App: React.FC = () => {
         !history.includes(m.id) &&
         gradeNum >= m.minGrade &&
         gradeNum <= m.maxGrade &&
-        !matches.includes(m)
+        !matches.includes(m) // Don't duplicate matches
       );
       matches = [...matches, ...fillers];
     }
@@ -296,34 +297,84 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden animate-fade-in relative">
 
-      {/* OVERLAYS */}
-      {appState === "ONBOARDING" && <OnboardingWizard onComplete={completeOnboarding} onCancel={() => setAppState("LANDING")} />}
-      {appState === "MISSION_COMPLETE" && <ViralShareModal mission={activeMission} earnings={activeMission.reward * (1 - SYSTEM_TREASURY.platformFee)} onClose={() => setAppState("DASHBOARD")} />}
-      {error && <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 px-6 py-3 rounded-lg font-bold animate-pulse z-[200]">⚠️ {error}</div>}
-
-      {/* NAVBAR */}
+      {/* 1. PERMANENT NAVBAR (Always Visible) */}
+      {/* NAVBAR: FIXED & RESTORED */}
       <nav className="flex justify-between items-center p-6 border-b border-white/10 bg-black/50 backdrop-blur-md fixed w-full z-50">
+        {/* LEFT: LOGO */}
         <div className="flex items-center gap-4">
           <span className="text-xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">MYBESTPURPOSE</span>
           <span className="text-sm font-mono text-gray-500 hidden md:block">// WORLD ENGINE</span>
         </div>
+
+        {/* CENTER: SOLVER/CLIENT TOGGLE (RESTORED) */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-white/10 backdrop-blur-md">
+          <button className="px-6 py-1.5 bg-zinc-700 text-white text-xs font-bold rounded shadow-sm border border-white/10 hover:bg-zinc-600 transition-all">SOLVER</button>
+          <button className="px-6 py-1.5 text-zinc-500 hover:text-white text-xs font-bold transition-colors">CLIENT</button>
+        </div>
+
+        {/* RIGHT: STATS & TREASURY */}
         <div className="flex gap-4 text-xs font-mono">
           <div className="hidden md:block px-3 py-1 bg-zinc-900 border border-green-500/30 text-green-400 rounded">SYS: ${systemBalance.toLocaleString()}</div>
           <div className="px-3 py-1 bg-zinc-900 border border-yellow-500/30 text-yellow-400 rounded">USER: {userProfile?.genesisPoints || 0} GP</div>
-          <button className="px-4 py-1 bg-white text-black font-bold rounded hover:scale-105 transition-all">SOLVER</button>
+          <div className="px-3 py-1 bg-zinc-800 border border-white/10 text-zinc-400 rounded uppercase tracking-wider">{userProfile ? "CONTRIBUTOR" : "GUEST"}</div>
         </div>
       </nav>
 
-      {/* MAIN CONTENT SWITCHER */}
-      {appState === "MISSION_ACTIVE" ? (
+      {/* 2. OVERLAYS */}
+      {appState === "ONBOARDING" && <OnboardingWizard onComplete={completeOnboarding} onCancel={() => setAppState("LANDING")} />}
+      {appState === "MISSION_COMPLETE" && <ViralShareModal mission={activeMission} earnings={activeMission.reward * (1 - SYSTEM_TREASURY.platformFee)} onClose={() => setAppState("DASHBOARD")} />}
+      {error && <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 px-6 py-3 rounded-lg font-bold animate-pulse z-[200]">⚠️ {error}</div>}
+
+      {/* 3. PERMANENT BREADCRUMBS LAYER (The Fix) */}
+      {/* We only hide it on the very first Landing Page so it feels like a clean start */}
+      {appState !== "LANDING" && appState !== "ONBOARDING" && (
+        <div className="fixed top-24 left-0 w-full z-40 pointer-events-none flex justify-center">
+          {/* 'pointer-events-none' lets you click things underneath it */}
+          <BreadcrumbHeader
+            name={userProfile?.name}
+            grade={userProfile?.grade}
+            passion={userProfile?.passion}
+            step="COMPLETE"
+          />
+        </div>
+      )}
+
+      {/* 4. MAIN CONTENT SWITCHER */}
+      {/* This renders the background content */}
+      {appState === "LANDING" ? (
+        /* BLUEPRINT LANDING PAGE HERO */
+        <main className="relative pt-28 pb-10 px-4 flex flex-col items-center justify-center min-h-[70vh] text-center z-10 w-full">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
+          {/* HEADLINE: COLORFUL & PUNCHY */}
+          <div className="mb-4">
+            <h1 className="text-6xl md:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-purple-500 to-orange-500 drop-shadow-2xl">
+              SOLVE & EARN
+            </h1>
+          </div>
+
+          {/* SUBHEAD: BRANDED & BOLD */}
+          <div className="max-w-4xl mx-auto mb-8 px-4">
+            <p className="text-lg md:text-2xl text-zinc-400 font-medium">
+              <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">MyBestPurpose</span> is an <span className="text-white font-bold">AI-guided Engine</span> where you transition from a passive student into a <span className="text-orange-400 font-bold">Verified Contributor</span>.
+            </p>
+          </div>
+          <EnginesGrid />
+          <button onClick={() => setAppState("ONBOARDING")} className="px-16 py-6 bg-white text-black font-black text-xl tracking-widest rounded-full shadow-[0_0_50px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-yellow-400 transition-all flex items-center gap-3 mx-auto uppercase z-10">
+            <span>🚀</span> Start Your Engine
+          </button>
+          <div className="mt-8 text-[10px] font-mono text-zinc-600 uppercase tracking-widest z-10">
+            Powered by Global Innovation Stack • Secured by Sage Identity
+          </div>
+        </main>
+      ) : appState === "MISSION_ACTIVE" ? (
         <div className="fixed inset-0 bg-black z-[100] flex items-center justify-center flex-col">
           <div className="text-6xl mb-6 animate-spin">⚙️</div>
           <h2 className="text-2xl font-bold">EXECUTING {activeMission?.type === "CLIENT_CONTRACT" ? "CLIENT CONTRACT" : "TRAINING MISSION"}...</h2>
           <p className="text-zinc-500 mt-2">Verifying Quality Assurance for {activeMission?.client}...</p>
         </div>
-      ) : appState === "CHOICE_SELECTION" || appState === "DASHBOARD" ? (
-        <div className="pt-32 px-6 pb-20">
-          <BreadcrumbHeader name={userProfile?.name} grade={userProfile?.grade} passion={userProfile?.passion} step="COMPLETE" />
+      ) : (
+        /* DASHBOARD VIEW (Default for CHOICE_SELECTION, DASHBOARD, MISSION_COMPLETE) */
+        <div className="pt-40 px-6 pb-20 animate-fade-in">
           <div className="text-center mb-12 mt-10">
             <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">MISSION CONTROL</h1>
             <p className="text-xl text-zinc-400">Missions optimized for <span className="text-white font-bold">{userProfile?.squad}</span>.</p>
@@ -346,31 +397,6 @@ const App: React.FC = () => {
             )}
           </div>
         </div>
-      ) : (
-        /* BLUEPRINT LANDING PAGE HERO (Blueprint Phase 1 Applied) */
-        <main className="relative pt-32 pb-20 px-4 flex flex-col items-center justify-center min-h-[90vh] text-center z-10 w-full">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
-
-          {/* THE HOOK */}
-          <div className="mb-10 max-w-5xl mx-auto z-10">
-            <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white mb-6 leading-tight">
-              THE <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">PARALLEL PATHWAY</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-zinc-400 font-medium leading-relaxed max-w-3xl mx-auto">
-              MyBestPurpose is an <span className="text-white font-bold">AI-guided Engine</span> where you transition from a passive student into a <span className="text-yellow-400 font-bold">Verified Contributor</span>.
-            </p>
-          </div>
-
-          <EnginesGrid />
-
-          <button onClick={() => setAppState("ONBOARDING")} className="px-16 py-6 bg-white text-black font-black text-xl tracking-widest rounded-full shadow-[0_0_50px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-yellow-400 transition-all flex items-center gap-3 mx-auto uppercase z-10">
-            <span>🚀</span> Start Your Engine
-          </button>
-
-          <div className="mt-8 text-[10px] font-mono text-zinc-600 uppercase tracking-widest z-10">
-            Powered by Global Innovation Stack • Secured by Sage Identity
-          </div>
-        </main>
       )}
 
       {/* FOOTER */}
