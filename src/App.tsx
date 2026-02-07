@@ -386,7 +386,7 @@ const App: React.FC = () => {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 font-bold">MyBestPurpose</span>
               {" is an "}
               <span className="text-cyan-400 font-bold">AI-guided Engine</span>
-              {" where you transition from a passive student into a "}
+              {" where you evolve from a passive student into a "}
               <span className="text-emerald-400 font-bold">Verified Contributor</span>.
             </p>
             <div className="flex flex-wrap justify-center gap-6 mb-24">
@@ -465,7 +465,6 @@ const App: React.FC = () => {
       )}
 
       {/* GHOST CLASS SWARM (Visual Layer) */}
-      <GhostClassRoom />
 
       {/* FOUNDER MENU (Replaces Static Badge) */}
       <div className="fixed bottom-6 right-6 z-[500]">
