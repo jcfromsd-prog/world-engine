@@ -7,6 +7,7 @@ interface MissionWorkspaceProps {
 }
 
 export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onComplete, onCancel }) => {
+    const [activeTab, setActiveTab] = useState<'BRIEFING' | 'WORKBENCH'>('BRIEFING');
     const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [feedback, setFeedback] = useState<string | null>(null);
@@ -54,12 +55,10 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
             if (score < 50) {
                 // COACHING MODE (Pedagogical Feedback)
                 let tip = "Good start! But you need more detail.";
-                if (mission.category === 'CODING') tip = "Did you define your variables? Try adding 'const' or 'let'.";
-                if (mission.category === 'SCIENCE') tip = "Scientific logs need data! What did you measure?";
-                if (mission.category === 'CREATIVE') tip = "Paint a picture with words! Describe the colors and feelings.";
-
-                if (content.length < 20) tip = "Too short! A true professional provides detailed reports. Write at least one full sentence.";
-
+                if (mission.category === 'CODING') tip = "Remember to check your variables!";
+                if (mission.category === 'SCIENCE') tip = "More data needed!";
+                if (mission.category === 'CREATIVE') tip = "Paint with words!";
+                if (content.length < 20) tip = "Too short! Expand your entry.";
                 setFeedback(tip);
             } else {
                 // SUCCESS MODE (Legendary Validation)
@@ -79,103 +78,117 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                     </div>
                     <h2 className="text-xl font-black">{mission.title}</h2>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="text-right hidden md:block">
-                        <div className="text-xs text-zinc-500 uppercase">Reward</div>
-                        <div className="text-yellow-400 font-bold">{mission.reward} GP</div>
+                <div className="flex items-center gap-6">
+                    {/* TABS */}
+                    <div className="flex bg-black rounded-lg p-1 border border-white/10">
+                        <button onClick={() => setActiveTab('BRIEFING')} className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${activeTab === 'BRIEFING' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-white'}`}>MISSION INTEL</button>
+                        <button onClick={() => setActiveTab('WORKBENCH')} className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${activeTab === 'WORKBENCH' ? 'bg-blue-600 text-white' : 'text-zinc-500 hover:text-white'}`}>WORKBENCH</button>
                     </div>
-                    <button
-                        onClick={onCancel}
-                        className="px-4 py-2 border border-zinc-700 text-zinc-400 text-xs rounded hover:text-white hover:border-white transition-all uppercase tracking-wider"
-                    >
-                        Abort
-                    </button>
+
+                    <button onClick={onCancel} className="px-4 py-2 border border-zinc-700 text-zinc-400 text-xs rounded hover:text-white uppercase tracking-wider">Abort</button>
                 </div>
             </div>
 
-            {/* MAIN WORKSPACE */}
-            <div className="flex-1 flex flex-col md:flex-row max-w-7xl mx-auto w-full p-6 gap-6">
+            {/* CONTENT AREA */}
+            <div className="flex-1 overflow-y-auto p-6">
+                <div className="max-w-7xl mx-auto w-full h-full flex flex-col">
 
-                {/* LEFT: INSTRUCTIONS */}
-                <div className="w-full md:w-1/3 space-y-6">
-                    <div className="bg-zinc-900/50 p-6 rounded-2xl border border-white/5">
-                        <h3 className="text-lg font-bold text-white mb-4">Mission Brief</h3>
-                        <p className="text-zinc-400 leading-relaxed mb-6">{mission.desc}</p>
-
-                        <h4 className="text-sm font-bold text-zinc-300 mb-2 uppercase tracking-wide">Objectives:</h4>
-                        <ul className="space-y-2 text-sm text-zinc-500 font-mono">
-                            <li className="flex items-center gap-2"><span className="text-green-500">✓</span> Initialize Workspace</li>
-                            <li className="flex items-center gap-2"><span className={liveScore >= 50 ? "text-green-500" : "text-zinc-600"}>{liveScore >= 50 ? "✓" : "○"}</span> {mission.category === 'CODING' ? 'Write Solution Code' : mission.category === 'CREATIVE' ? 'Create Asset' : 'Complete Observation'}</li>
-                            <li className="flex items-center gap-2"><span className="text-zinc-600">○</span> Submit for Review</li>
-                        </ul>
-                    </div>
-
-                    <div className="bg-blue-900/10 p-4 rounded-xl border border-blue-500/20 text-xs text-blue-200">
-                        <strong className="block mb-1">💡 SAGE TIP:</strong>
-                        {mission.category === 'CODING' && "Remember to handle edge cases in your function."}
-                        {mission.category === 'CREATIVE' && "Focus on emotional impact and color harmony."}
-                        {mission.category === 'SCIENCE' && "Record precise measurements for validation."}
-                    </div>
-                </div>
-
-                {/* RIGHT: EDITOR / CANVAS */}
-                <div className="w-full md:w-2/3 bg-black border border-white/10 rounded-2xl overflow-hidden flex flex-col relative">
-                    <div className="bg-zinc-900 px-4 py-2 border-b border-white/10 flex items-center justify-between">
-                        <span className="text-xs font-mono text-zinc-500">workspace.active</span>
-                        <span className="text-xs font-mono text-green-500 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> ONLINE</span>
-                    </div>
-
-                    {/* INPUT AREA */}
-                    <textarea
-                        value={content}
-                        onChange={(e) => { setContent(e.target.value); setFeedback(null); }}
-                        placeholder={mission.category === 'CODING' ? "// Write your code here..." : "Start creating here..."}
-                        className="flex-1 bg-transparent p-6 text-zinc-300 font-mono focus:outline-none resize-none"
-                        spellCheck="false"
-                    />
-
-                    {/* AI FEEDBACK OVERLAY (Coach's Tip - AMBER for friendly coaching) */}
-                    {feedback && (
-                        <div className="absolute bottom-28 left-6 right-6 bg-amber-900/95 border border-amber-500/50 text-white p-4 rounded-xl backdrop-blur-md shadow-xl">
-                            <div className="flex items-start gap-3">
-                                <span className="text-2xl">💡</span>
-                                <div>
-                                    <h4 className="font-bold text-sm uppercase text-amber-300 mb-1">Coach's Tip:</h4>
-                                    <p className="text-sm text-amber-100">{feedback}</p>
+                    {/* VIEW: BRIEFING (LEARN MODE) */}
+                    {activeTab === 'BRIEFING' && (
+                        <div className="flex flex-col h-full animate-fade-in">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                {/* JIT SYLLABUS CARDS */}
+                                <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
+                                    <div className="text-4xl mb-4">🧠</div>
+                                    <h3 className="font-bold text-lg mb-2">The Concept</h3>
+                                    <p className="text-sm text-zinc-400 leading-relaxed mb-4">Before we start, let's understand the core principle. Watch this 30s primer.</p>
+                                    <div className="w-full h-32 bg-black rounded-lg flex items-center justify-center border border-white/5 text-zinc-600 font-mono text-xs">[VIDEO PLACEHOLDER]</div>
                                 </div>
+                                <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
+                                    <div className="text-4xl mb-4">👁️</div>
+                                    <h3 className="font-bold text-lg mb-2">The Example</h3>
+                                    <p className="text-sm text-zinc-400 leading-relaxed mb-4">Here is what a 10/10 submission looks like. Notice the structure.</p>
+                                    <div className="p-3 bg-zinc-800 rounded font-mono text-xs text-green-400 border-l-2 border-green-500">
+                                        "{mission.category === 'CODING' ? 'function hero() { return "Fly"; }' : 'My hero glows with blue energy...'}"
+                                    </div>
+                                </div>
+                                <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
+                                    <div className="text-4xl mb-4">⚡</div>
+                                    <h3 className="font-bold text-lg mb-2">Your Task</h3>
+                                    <ul className="text-sm text-zinc-400 space-y-2">
+                                        <li>1. Open the Workbench.</li>
+                                        <li>2. {mission.category === 'CODING' ? 'Write the function.' : 'Draft your story.'}</li>
+                                        <li>3. Submit for AI Verification.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="text-center mt-auto mb-10">
+                                <button onClick={() => setActiveTab('WORKBENCH')} className="px-10 py-5 bg-blue-600 text-white font-black text-xl rounded-full hover:scale-105 transition-transform shadow-[0_0_40px_rgba(37,99,235,0.4)]">
+                                    I'M READY TO BUILD 🚀
+                                </button>
                             </div>
                         </div>
                     )}
 
-                    {/* QUALITY METER + ACTION BAR */}
-                    <div className="p-4 border-t border-white/10 bg-zinc-900/50 space-y-3">
-                        {/* LIVE QUALITY METER */}
-                        <div className="flex items-center gap-3">
-                            <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full ${scoreInfo.color} transition-all duration-300`}
-                                    style={{ width: `${liveScore}%` }}
-                                />
+                    {/* VIEW: WORKBENCH (BUILD MODE) */}
+                    {activeTab === 'WORKBENCH' && (
+                        <div className="flex flex-col md:flex-row gap-6 h-full animate-fade-in">
+                            {/* LEFT SIDEBAR (Tasks) */}
+                            <div className="w-full md:w-1/4 space-y-6">
+                                <div className="bg-zinc-900/80 p-6 rounded-2xl border border-white/10">
+                                    <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Mission Checklist</h4>
+                                    <ul className="space-y-4 text-sm font-mono">
+                                        <li className="flex items-center gap-3 text-green-400"><span className="text-lg">✓</span> Intel Reviewed</li>
+                                        <li className="flex items-center gap-3 text-white"><span className="text-lg animate-pulse">○</span> Execute Task</li>
+                                        <li className="flex items-center gap-3 text-zinc-500"><span className="text-lg">○</span> Verify Quality</li>
+                                    </ul>
+                                </div>
+                                <div className="bg-blue-900/20 p-4 rounded-xl border border-blue-500/20 text-xs text-blue-200">
+                                    <strong>💡 SAGE TIP:</strong> check the 'Intel' tab if you get stuck!
+                                </div>
                             </div>
-                            <span className={`text-xs font-mono ${scoreInfo.textColor} min-w-[80px] text-right`}>
-                                {scoreInfo.label}
-                            </span>
-                        </div>
 
-                        {/* SUBMIT BUTTON */}
-                        <div className="flex justify-end">
-                            <button
-                                onClick={handleSubmit}
-                                disabled={isSubmitting || !content.trim()}
-                                className={`px-8 py-3 rounded-xl font-bold uppercase tracking-widest transition-all ${content.trim()
-                                    ? "bg-green-500 text-black hover:bg-green-400 hover:scale-105 shadow-[0_0_20px_rgba(34,197,94,0.3)]"
-                                    : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-                                    }`}
-                            >
-                                {isSubmitting ? "Analyzing..." : "Submit Work"}
-                            </button>
+                            {/* RIGHT EDITOR */}
+                            <div className="flex-1 bg-black border border-white/10 rounded-2xl overflow-hidden flex flex-col relative">
+                                <div className="bg-zinc-900 px-4 py-2 border-b border-white/10 flex items-center justify-between">
+                                    <span className="text-xs font-mono text-zinc-500">editor.main</span>
+                                    <span className="text-xs font-mono text-green-500">ONLINE</span>
+                                </div>
+
+                                <textarea
+                                    value={content}
+                                    onChange={(e) => { setContent(e.target.value); setFeedback(null); }}
+                                    className="flex-1 bg-transparent p-6 text-zinc-300 font-mono focus:outline-none resize-none text-lg leading-relaxed"
+                                    placeholder="// Begin your work here..."
+                                    spellCheck="false"
+                                />
+
+                                {feedback && (
+                                    <div className="absolute bottom-24 left-6 right-6 bg-amber-900/95 border border-amber-500/50 text-white p-4 rounded-xl backdrop-blur-md shadow-xl animate-bounce-in">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-2xl">💡</span>
+                                            <div><h4 className="font-bold text-amber-300 text-xs uppercase">Coach's Tip</h4><p className="text-sm">{feedback}</p></div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="p-4 border-t border-white/10 bg-zinc-900/50 space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                                            <div className={`h-full ${scoreInfo.color} transition-all duration-300`} style={{ width: `${liveScore}%` }} />
+                                        </div>
+                                        <span className={`text-xs font-mono ${scoreInfo.textColor} min-w-[80px] text-right`}>{scoreInfo.label}</span>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button onClick={handleSubmit} disabled={isSubmitting || !content.trim()} className={`px-8 py-3 rounded-xl font-bold uppercase tracking-widest transition-all ${content.trim() ? "bg-green-500 text-black hover:bg-green-400 hover:scale-105" : "bg-zinc-800 text-zinc-500 cursor-not-allowed"}`}>
+                                            {isSubmitting ? "Analyzing..." : "Submit Work"}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -8,9 +8,12 @@
    6. BLUEPRINT: 4 Engines Grid & Parallel Pathway Hero
    7. ARCHITECTURE: Permanent Breadcrumbs Layer (No Overwriting)
    ========================================================================== */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FounderCheckModal } from "./components/dashboard/FounderCheckModal";
 import { MissionWorkspace } from "./components/workspaces/MissionWorkspace";
+import { SwarmDashboard } from "./components/admin/SwarmDashboard";
+import { GenesisFeed } from "./components/feed/GenesisFeed";
+import type { LiveMission } from "./lib/missionGenerator";
 
 // --- TYPES ---
 type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE";
@@ -223,6 +226,19 @@ const App: React.FC = () => {
   const [systemBalance, setSystemBalance] = useState(SYSTEM_TREASURY.balance);
   const [error, setError] = useState("");
   const [showFounderModal, setShowFounderModal] = useState(false);
+  const [showSwarm, setShowSwarm] = useState(false); // GHOST CLASS TOGGLE
+
+  // --- SWARM LISTENER ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's')) {
+        e.preventDefault();
+        setShowSwarm(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // --- HANDLERS ---
   const completeOnboarding = (profile: any) => {
@@ -230,12 +246,19 @@ const App: React.FC = () => {
     setAppState("CHOICE_SELECTION");
   };
 
-  const handleMissionSelect = (missionId: string) => {
-    if (missionId === "LEVEL_UP") return alert("Level Up System coming soon!");
-    const mission = MISSION_DB.find(m => m.id === missionId);
-    if (mission) {
+  // Handle mission selection from Genesis Feed
+  const handleMissionSelect = (mission: LiveMission | string) => {
+    if (mission === "LEVEL_UP") return alert("Level Up System coming soon!");
+    // Support both old static missions and new LiveMission objects
+    if (typeof mission === 'string') {
+      const found = MISSION_DB.find(m => m.id === mission);
+      if (found) {
+        setActiveMission(found);
+        setAppState("MISSION_WORKSPACE");
+      }
+    } else {
       setActiveMission(mission);
-      setAppState("MISSION_WORKSPACE"); // NEW: Go to workspace instead of auto-completing
+      setAppState("MISSION_WORKSPACE");
     }
   };
 
@@ -381,31 +404,15 @@ const App: React.FC = () => {
           <p className="text-zinc-500 mt-2">Verifying Quality Assurance for {activeMission?.client}...</p>
         </div>
       ) : (
-        /* DASHBOARD VIEW (Default for CHOICE_SELECTION, DASHBOARD, MISSION_COMPLETE) */
-        <div className="pt-40 px-6 pb-20 animate-fade-in">
-          <div className="text-center mb-12 mt-10">
-            <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">MISSION CONTROL</h1>
-            <p className="text-xl text-zinc-400">Missions optimized for <span className="text-white font-bold">{userProfile?.squad}</span>.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {displayMissions.map(m => (
-              <button key={m.id} onClick={() => handleMissionSelect(m.id)} className="group relative p-8 bg-zinc-900/40 border border-white/10 hover:border-white/30 text-left rounded-2xl transition-all hover:-translate-y-2">
-                <div className="absolute top-4 right-4 text-xs font-mono text-zinc-600">{m.type === "CLIENT_CONTRACT" ? "🔵 SOLVE" : "🟣 LEARN"}</div>
-                <div className={`text-xs font-bold tracking-widest mb-4 ${m.color}`}>{m.category}</div>
-                <h3 className="text-2xl font-black mb-4 group-hover:text-blue-200">{m.title}</h3>
-                <p className="text-sm text-zinc-400 mb-6">{m.desc}</p>
-                <div className="flex justify-between items-center pt-4 border-t border-white/5">
-                  <span className="text-yellow-400 font-bold">{m.reward} GP</span>
-                  <span className="px-3 py-1 bg-white text-black text-xs font-black rounded uppercase">Accept</span>
-                </div>
-              </button>
-            ))}
-            {displayMissions.length === 0 && (
-              <div className="col-span-3 text-center py-20"><button onClick={() => handleMissionSelect("LEVEL_UP")} className="px-8 py-4 bg-blue-600 text-white font-bold rounded-lg">LEVEL UP TO NEXT GRADE 🚀</button></div>
-            )}
-          </div>
-        </div>
+        /* DASHBOARD VIEW - NOW USING GENESIS FEED */
+        <GenesisFeed
+          onMissionSelect={handleMissionSelect}
+          userGrade={parseInt(userProfile?.grade || '5')}
+        />
       )}
+
+      {/* 5. GHOST CLASS OVERLAY */}
+      {showSwarm && <SwarmDashboard />}
 
       {/* FOOTER */}
       <footer className="fixed bottom-0 w-full p-4 border-t border-white/5 bg-black/80 backdrop-blur-xl flex justify-between items-center z-50">

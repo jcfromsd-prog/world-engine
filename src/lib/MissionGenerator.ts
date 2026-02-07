@@ -1,120 +1,130 @@
+// --- GENESIS FEED: MISSION GENERATOR SERVICE ---
+// Simulates a live job marketplace with dynamic mission drops
 
-export interface Mission {
+export interface LiveMission {
     id: string;
+    type: 'TRAINING' | 'CLIENT_CONTRACT' | 'BOUNTY';
     title: string;
-    price: string;
+    client: string;
+    reward: number;
     desc: string;
-    tags: string[];
-    type: 'PATTERN' | 'MATH_ARRAYS' | 'ALGEBRA' | 'PHYSICS' | 'CODE_FIX'; // Maps to internal game components
-    curriculum: string; // The hidden educational standard
-    locked: boolean;
+    category: 'CODING' | 'CREATIVE' | 'SCIENCE' | 'LEADERSHIP';
+    minGrade: number;
+    maxGrade: number;
+    status: 'LIVE' | 'TRENDING' | 'EXPIRING' | 'CLAIMED';
+    expiresAt: number; // timestamp
+    claimedBy?: string;
 }
 
-// The "Stealth Education" Database
-// Maps User Level (1-10) to "Disguised" Academic Standards
-const CURRICULUM_DATABASE: Record<number, Mission[]> = {
-    // LEVEL 1: KINDERGARTEN (Shapes & Recognition)
-    1: [
-        {
-            id: "m1_1",
-            title: "Security Calibration",
-            price: "$15.00",
-            desc: "Match the cryptographic keys to the correct slots to secure the perimeter.",
-            tags: ["PATTERN", "SEC_OPS"],
-            type: "PATTERN",
-            curriculum: "Kindergarten: Identify Shapes (Square, Circle, Triangle)",
-            locked: false
-        },
-        {
-            id: "m1_2",
-            title: "Visual Anomaly Detection",
-            price: "$20.00",
-            desc: "Identify the irregular shape in the data stream.",
-            tags: ["VISUAL", "DATA_CLEAN"],
-            type: "PATTERN",
-            curriculum: "Kindergarten: Analyze, Compare and Classify Shapes",
-            locked: false
-        },
-        // NEW: Nature / Visual Specific (Forest Ranger)
-        {
-            id: "m1_3_nature",
-            title: "Track Identification",
-            price: "$15.00",
-            desc: "Match the animal footprints to the correct species.",
-            tags: ["NATURE", "BIO_SURVEY"],
-            type: "PATTERN",
-            curriculum: "Kindergarten: Matching & Classification",
-            locked: false
-        }
+// Template pools for generating realistic missions
+const MISSION_TEMPLATES = {
+    CODING: [
+        { title: 'Fix Navbar CSS', desc: 'Dropdown menu misaligned on mobile.', baseReward: 180 },
+        { title: 'Add Dark Mode Toggle', desc: 'Implement theme switcher component.', baseReward: 220 },
+        { title: 'Debug Login Flow', desc: 'Users getting stuck on redirect.', baseReward: 350 },
+        { title: 'Optimize Page Speed', desc: 'Reduce load time by 40%.', baseReward: 420 },
+        { title: 'Build API Endpoint', desc: 'Create REST endpoint for user data.', baseReward: 380 },
+        { title: 'Fix Memory Leak', desc: 'Dashboard crashing after 10 minutes.', baseReward: 500 },
     ],
-
-    // LEVEL 2: 3RD GRADE (Basic Math & Arrays)
-    2: [
-        {
-            id: "m2_1",
-            title: "Supply Chain Optimization",
-            price: "$25.00",
-            desc: "Calculate total units for grid shipments to maximize cargo efficiency.",
-            tags: ["LOGISTICS", "MATH_CORE"],
-            type: "MATH_ARRAYS",
-            curriculum: "Grade 3: Multiplication (Arrays & Area Models)",
-            locked: false
-        }
+    CREATIVE: [
+        { title: 'Design App Icon', desc: 'Modern flat design, 512x512.', baseReward: 200 },
+        { title: 'Create Hero Banner', desc: 'Gradient background with text overlay.', baseReward: 280 },
+        { title: 'Rebrand Logo', desc: 'Refresh existing brand for Gen-Z.', baseReward: 450 },
+        { title: 'Edit Promo Video', desc: '30s social media clip with captions.', baseReward: 320 },
+        { title: 'Design Email Template', desc: 'Clean newsletter layout.', baseReward: 240 },
     ],
-
-    // LEVEL 3: 8TH GRADE (Algebra)
-    3: [
-        {
-            id: "m3_1",
-            title: "Algorithm Variable Fix",
-            price: "$45.00",
-            desc: "Find the missing variable 'X' to balance the server load equations.",
-            tags: ["ALGORITHMS", "DEBUG_L2"],
-            type: "ALGEBRA",
-            curriculum: "Grade 8: Solve Linear Equations in One Variable",
-            locked: true // Locked for L1 users
-        }
+    SCIENCE: [
+        { title: 'Analyze Water Samples', desc: 'Document pH levels from 5 sources.', baseReward: 150 },
+        { title: 'Track Plant Growth', desc: 'Weekly measurements for 4 weeks.', baseReward: 180 },
+        { title: 'Weather Pattern Log', desc: 'Record and analyze local data.', baseReward: 160 },
+        { title: 'Biodiversity Survey', desc: 'Count species in local park.', baseReward: 200 },
     ],
-
-    // LEVEL 4: HIGH SCHOOL (Physics)
-    4: [
-        {
-            id: "m4_1",
-            title: "Drone Pathing Logic",
-            price: "$75.00",
-            desc: "Program the flight velocity and trajectory to avoid sector obstacles.",
-            tags: ["PHYSICS", "AERO_DYNAMICS"],
-            type: "PHYSICS",
-            curriculum: "HS Physics: Velocity, Acceleration, and Vectors",
-            locked: true
-        }
+    LEADERSHIP: [
+        { title: 'Run Team Standup', desc: 'Facilitate 15-min morning sync.', baseReward: 120 },
+        { title: 'Create Project Plan', desc: 'Outline 2-week sprint goals.', baseReward: 260 },
+        { title: 'Mentor New Member', desc: 'Onboard and guide for 1 week.', baseReward: 300 },
+        { title: 'Resolve Team Conflict', desc: 'Mediate disagreement on approach.', baseReward: 350 },
     ],
-
-    // LEVEL 5: COLLEGE (CS 101)
-    5: [
-        {
-            id: "m5_1",
-            title: "Bug Bounty: Infinite Loop",
-            price: "$150.00",
-            desc: "Analyze the source code and terminate the runaway process.",
-            tags: ["CODE", "VULNERABILITY"],
-            type: "CODE_FIX",
-            curriculum: "CS 101: Control Flow & Algorithmic Complexity",
-            locked: true
-        }
-    ]
 };
 
-// HELPER: Generate missions relative to the user's current level
-export function generateMissionsForUser(userLevel: number): Mission[] {
-    // Always fetch missions for the user's CURRENT level
-    const currentMissions = CURRICULUM_DATABASE[userLevel] || [];
+const CLIENT_NAMES = [
+    'TechFlow Inc.', 'StartUp Coffee', 'NeonLabs', 'PixelForge',
+    'DataStream Co.', 'CloudNine', 'MindSpark', 'EcoVentures',
+    'ByteSize', 'InnovateCo', 'FutureBuild', 'Quantum Leap'
+];
 
-    // Fetch ONE "Reach" mission (Next Level) to show progression (Locked)
-    const nextLevel = userLevel + 1;
-    const reachMissions = CURRICULUM_DATABASE[nextLevel] || [];
-    const previewMission = reachMissions.length > 0 ? { ...reachMissions[0], locked: true } : null;
+let missionCounter = 1000;
 
-    // Combine them
-    return previewMission ? [...currentMissions, previewMission] : currentMissions;
+export class MissionGenerator {
+    /**
+     * Generate a single random mission
+     */
+    static generateMission(category?: keyof typeof MISSION_TEMPLATES): LiveMission {
+        const categories = category ? [category] : Object.keys(MISSION_TEMPLATES) as (keyof typeof MISSION_TEMPLATES)[];
+        const selectedCategory = categories[Math.floor(Math.random() * categories.length)];
+        const templates = MISSION_TEMPLATES[selectedCategory];
+        const template = templates[Math.floor(Math.random() * templates.length)];
+        const client = CLIENT_NAMES[Math.floor(Math.random() * CLIENT_NAMES.length)];
+
+        // Randomize reward within +/- 20%
+        const rewardVariance = template.baseReward * (0.8 + Math.random() * 0.4);
+        const reward = Math.round(rewardVariance / 10) * 10; // Round to nearest 10
+
+        // Random expiration (30s to 5min from now)
+        const expiresAt = Date.now() + (30 + Math.random() * 270) * 1000;
+
+        // Random status weighting
+        const statusRoll = Math.random();
+        let status: LiveMission['status'] = 'LIVE';
+        if (statusRoll > 0.85) status = 'TRENDING';
+        else if (statusRoll > 0.7) status = 'EXPIRING';
+
+        missionCounter++;
+
+        return {
+            id: `GEN.${selectedCategory.substring(0, 3)}.${missionCounter}`,
+            type: Math.random() > 0.3 ? 'CLIENT_CONTRACT' : 'BOUNTY',
+            title: template.title,
+            client,
+            reward,
+            desc: template.desc,
+            category: selectedCategory,
+            minGrade: Math.floor(Math.random() * 5),
+            maxGrade: 10 + Math.floor(Math.random() * 10),
+            status,
+            expiresAt,
+        };
+    }
+
+    /**
+     * Generate initial batch of missions
+     */
+    static generateInitialFeed(count: number = 6): LiveMission[] {
+        const missions: LiveMission[] = [];
+        const categories: (keyof typeof MISSION_TEMPLATES)[] = ['CODING', 'CREATIVE', 'SCIENCE', 'LEADERSHIP'];
+
+        // Ensure at least one from each category
+        for (let i = 0; i < Math.min(count, categories.length); i++) {
+            missions.push(this.generateMission(categories[i]));
+        }
+
+        // Fill the rest randomly
+        for (let i = missions.length; i < count; i++) {
+            missions.push(this.generateMission());
+        }
+
+        // Sort by reward (high to low)
+        return missions.sort((a, b) => b.reward - a.reward);
+    }
+
+    /**
+     * Simulate another user claiming a mission
+     */
+    static claimMission(mission: LiveMission): LiveMission {
+        return {
+            ...mission,
+            status: 'CLAIMED',
+            claimedBy: `User${Math.floor(Math.random() * 9000 + 1000)}`,
+        };
+    }
 }
