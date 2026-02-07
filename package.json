@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "swarm": "npx tsx src/scripts/OpenClaw.ts",
+    "test:logic": "npx tsx src/scripts/verify-logic.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:unit": "vitest run",

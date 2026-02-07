@@ -1,5 +1,5 @@
 /* ==========================================================================
-   OPENCLAW PROTOCOL v1.0 // AUTONOMOUS BEHAVIORAL VERIFICATION
+   OPENCLAW PROTOCOL v1.1 // AUTONOMOUS BEHAVIORAL VERIFICATION
    Target System: MyBestPurpose.com (World Engine)
    
    "We don't just test code. We simulate life."
@@ -8,7 +8,8 @@
    ========================================================================== */
 
 import { MISSION_DB } from "../data/MissionDatabase"; // Corrected Import Path
-import { USER_PERSONAS, PersonaKey } from "../services/SimulationEngine";
+import { USER_PERSONAS } from "../services/SimulationEngine";
+import type { PersonaKey } from "../services/SimulationEngine";
 
 // --- TYPES ---
 interface AuditResult {
@@ -46,7 +47,8 @@ class OpenClawAgent {
         this.log(user.name, "SAFETY_CHECK", "PASS", "Grade-level guardrails holding steady.");
 
         // C. Verify "Floor" Content (No Baby Missions for Pros)
-        const hasBabyContent = visibleMissions.some(m => user.gradeLevel > m.maxGrade);
+        // NOTE: We allow "Real World" as an exception if grade is high enough
+        const hasBabyContent = visibleMissions.some(m => user.gradeLevel > m.maxGrade && m.type !== "CLIENT_CONTRACT");
         if (hasBabyContent) {
             this.log(user.name, "DIGNITY_CHECK", "FAIL", `DIGNITY ALERT: Grade ${user.gradeLevel} user offered missions below their level.`);
             return;
@@ -71,19 +73,32 @@ class OpenClawAgent {
 
     // --- INTERNAL SIMULATION LOGIC ---
     private getVisibleMissions(grade: number, passion: string) {
-        // Replicates App.tsx filtering logic to verify consistency
-        return MISSION_DB.filter(m => {
-            const p = passion.toLowerCase();
-            let matchesPassion = false;
-            if (p.includes("cod") || p.includes("tech")) matchesPassion = m.category === "CODING";
-            else if (p.includes("sci") || p.includes("bio")) matchesPassion = m.category === "SCIENCE";
-            else if (p.includes("creat") || p.includes("art")) matchesPassion = m.category === "CREATIVE" || m.category === "HUMANITIES" || m.category === "DESIGN";
-            else if (p.includes("lead") || p.includes("biz")) matchesPassion = m.category === "LEADERSHIP" || m.category === "BUSINESS";
-            else matchesPassion = true; // Fallback for unknown passions
+        // Replicates App.tsx filtering logic (Including Smart Fill)
+        let matches = MISSION_DB.filter(m => {
+            // 1. Check Grade & Type
+            if (m.type === "CLIENT_CONTRACT" && grade >= m.minGrade) return true;
+            if (grade < m.minGrade || grade > m.maxGrade) return false;
 
-            const gradeMatch = grade >= m.minGrade && grade <= m.maxGrade;
-            return matchesPassion && gradeMatch;
+            // 2. Check Passion
+            const p = passion.toLowerCase();
+            if (p.includes("cod") || p.includes("tech")) return m.category === "CODING";
+            if (p.includes("sci") || p.includes("bio")) return m.category === "SCIENCE";
+            if (p.includes("creat") || p.includes("art")) return m.category === "CREATIVE";
+
+            return true; // Fallback
         });
+
+        // SMART FILL LOGIC (Mirroring App.tsx)
+        if (matches.length < 3) {
+            const fillers = MISSION_DB.filter(m =>
+                grade >= m.minGrade &&
+                grade <= m.maxGrade &&
+                !matches.includes(m)
+            );
+            matches = [...matches, ...fillers];
+        }
+
+        return matches.slice(0, 3);
     }
 
     private processTransaction(balance: number, reward: number): number {
