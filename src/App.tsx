@@ -395,11 +395,13 @@ const App: React.FC = () => {
               SOLVE & EARN.
             </h1>
             <p className="text-xl md:text-2xl text-slate-400 max-w-4xl mx-auto mt-4 mb-12 font-medium leading-relaxed">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 font-bold">MyBestPurpose</span>
+              <span className="text-blue-400 font-bold">MyBestPurpose</span>
               {" is an "}
-              <span className="text-cyan-400 font-bold">AI-guided Engine</span>
-              {" where you evolve from a passive student into a "}
-              <span className="text-emerald-400 font-bold">Verified Contributor</span>.
+              <span className="text-white font-bold">AI-guided Engine</span>
+              {" where you "}
+              <span className="text-amber-400 font-bold">evolve</span>
+              {" from a passive student into a "}
+              <span className="text-amber-400 font-bold">Verified Contributor</span>.
             </p>
             <div className="flex flex-wrap justify-center gap-6 mb-24">
               <button onClick={() => setAppState("ONBOARDING")} className="px-12 py-6 bg-white text-black font-black text-xl rounded-2xl hover:bg-blue-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
