@@ -4,7 +4,7 @@
 // Metrics: Engagement, Excitement, Fulfillment
 // =============================================================================
 
-import { MissionGenerator, type LiveMission } from './missionGenerator';
+import { MissionGenerator, type LiveMission } from './MissionGenerator';
 
 // --- AGENT PERSONAS (The Ghost Classroom) ---
 export interface GhostAgent {

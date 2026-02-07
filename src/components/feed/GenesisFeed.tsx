@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MissionGenerator } from '../../lib/missionGenerator';
-import type { LiveMission } from '../../lib/missionGenerator';
+import { MissionGenerator } from '../../lib/MissionGenerator';
+import type { LiveMission } from '../../lib/MissionGenerator';
 
 interface GenesisFeedProps {
     onMissionSelect: (mission: LiveMission) => void;

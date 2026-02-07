@@ -21,7 +21,7 @@ import Header from "./components/Header";
 import { FounderMenu } from "./components/Navigation/FounderMenu";
 import { ImpactEngine, STARTING_MISSIONS, type ImpactMission } from "./components/engines/ImpactEngine";
 import { ActiveMission } from "./components/engines/ActiveMission";
-import type { LiveMission } from "./lib/missionGenerator";
+import type { LiveMission } from "./lib/MissionGenerator";
 
 
 // --- TYPES ---
