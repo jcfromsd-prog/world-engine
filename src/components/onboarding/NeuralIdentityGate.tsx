@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import type { UserProfile } from "../../App";
 
 interface NeuralGateProps {
-    onComplete: (profile: any) => void;
+    onComplete: (profile: Partial<UserProfile>) => void;
     onCancel: () => void;
 }
 

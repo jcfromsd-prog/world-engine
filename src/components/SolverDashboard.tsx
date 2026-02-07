@@ -39,7 +39,7 @@ const SquadMember: React.FC<SquadMemberProps> = ({ name, role, status, isUser })
 
 interface SolverDashboardProps {
     profile: SoulboundProfile;
-    onMissionStart: (mission: any) => void;
+    onMissionStart: (mission: Mission) => void;
 }
 
 const SolverDashboard: React.FC<SolverDashboardProps> = ({ profile, onMissionStart }) => {
@@ -86,13 +86,7 @@ const SolverDashboard: React.FC<SolverDashboardProps> = ({ profile, onMissionSta
         }) : null);
 
         // Pass to App.tsx for the modal/workspace launch
-        onMissionStart({
-            id: mission.id,
-            title: mission.title,
-            price: mission.price,
-            desc: mission.description,
-            tags: [mission.category, mission.standardId]
-        });
+        onMissionStart(mission);
     };
 
     const handleSubmitMission = async (mission: Mission) => {
