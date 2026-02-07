@@ -10,15 +10,7 @@ interface CalibrationModalProps {
 
 export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onClose }) => {
     const [progress, setProgress] = useState(0);
-    const [stage, setStage] = useState('INITIALIZING SCAN');
 
-    // Handle Reset when opening
-    useEffect(() => {
-        if (isOpen) {
-            setProgress(0);
-            setStage('INITIALIZING SCAN');
-        }
-    }, [isOpen]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -29,19 +21,21 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
                     clearInterval(interval);
                     return 100;
                 }
-
-                const next = prev + 1;
-                // Update stage text based on progress
-                if (next === 20) setStage('ANALYZING BIO-RHYTHMS');
-                if (next === 50) setStage('CALIBRATING NEURAL LINK');
-                if (next === 80) setStage('OPTIMIZING MATCH ALGORITHMS');
-
-                return next;
+                return prev + 1;
             });
         }, 30);
 
         return () => clearInterval(interval);
     }, [isOpen]);
+
+    // Derived state for stage text
+    const getStageText = (p: number) => {
+        if (p >= 80) return 'OPTIMIZING MATCH ALGORITHMS';
+        if (p >= 50) return 'CALIBRATING NEURAL LINK';
+        if (p >= 20) return 'ANALYZING BIO-RHYTHMS';
+        return 'INITIALIZING SCAN';
+    };
+    const stage = getStageText(progress);
 
     if (!isOpen) return null;
 

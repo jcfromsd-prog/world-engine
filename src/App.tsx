@@ -323,7 +323,7 @@ const App: React.FC = () => {
 
   // --- CEO SOLVENCY LOGIC ---
   const attemptPayout = (mission: Mission | LiveMission) => {
-    const reward = (mission as any).reward;
+    const reward = mission.reward;
     const platformCut = reward * SYSTEM_TREASURY.platformFee;
     const studentPayout = reward - platformCut;
 
@@ -338,7 +338,7 @@ const App: React.FC = () => {
       return {
         ...prev,
         genesisPoints: prev.genesisPoints + studentPayout,
-        completedMissions: [...prev.completedMissions, (mission as any).id]
+        completedMissions: [...prev.completedMissions, mission.id]
       };
     });
     setAppState("MISSION_COMPLETE");
@@ -379,7 +379,7 @@ const App: React.FC = () => {
       )}
 
       {/* CALIBRATION MODAL */}
-      <CalibrationModal isOpen={showCalibration} onClose={() => setShowCalibration(false)} />
+      {showCalibration && <CalibrationModal isOpen={true} onClose={() => setShowCalibration(false)} />}
 
       {/* ADMIN OVERLAYS */}
       {showSwarm && <SwarmDashboard onClose={() => setShowSwarm(false)} />}
@@ -510,7 +510,7 @@ const App: React.FC = () => {
       {appState === "MISSION_COMPLETE" && activeMission && (
         <ViralShareModal
           mission={activeMission as Mission}
-          earnings={(activeMission as any).reward - ((activeMission as any).reward * SYSTEM_TREASURY.platformFee)}
+          earnings={activeMission.reward - (activeMission.reward * SYSTEM_TREASURY.platformFee)}
           onClose={() => setAppState("CHOICE_SELECTION")}
         />
       )}
