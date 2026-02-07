@@ -10,10 +10,12 @@
    ========================================================================== */
 import React, { useState } from "react";
 import { FounderCheckModal } from "./components/dashboard/FounderCheckModal";
+import { MissionWorkspace } from "./components/workspaces/MissionWorkspace";
 
 // --- TYPES ---
-type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_ACTIVE" | "MISSION_COMPLETE";
+type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE";
 type OnboardingStep = "NAME" | "GRADE" | "PASSION" | "MATCHING";
+
 
 // --- THE TREASURY (CEO Logic) ---
 const SYSTEM_TREASURY = {
@@ -97,7 +99,7 @@ const BreadcrumbHeader: React.FC<{ name: string, grade: string, passion: string,
 };
 
 /* ==========================================================================
-   COMPONENT: ONBOARDING WIZARD (Fun Boxes + AI Squads)
+   COMPONENT: ONBOARDING WIZARD (Visual Choice Cards)
    ========================================================================== */
 const OnboardingWizard: React.FC<{ onComplete: (profile: any) => void, onCancel: () => void }> = ({ onComplete, onCancel }) => {
   const [step, setStep] = useState<OnboardingStep>("NAME");
@@ -146,7 +148,7 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: any) => void, onCancel:
 
       {step === "NAME" && (
         <div className={`text-center w-full max-w-2xl transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tight">What's your <span className="text-yellow-400">Contributor Name</span>?</h1>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tight">What is your <span className="text-yellow-400">Name</span>?</h1>
           <input autoFocus className="relative w-full bg-zinc-900 border border-white/10 rounded-xl px-8 py-6 text-2xl text-center text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 transition-all" placeholder="Type Name & Hit Enter..." value={name} onChange={e => setName(e.target.value)} onKeyDown={handleNameSubmit} />
         </div>
       )}
@@ -233,8 +235,7 @@ const App: React.FC = () => {
     const mission = MISSION_DB.find(m => m.id === missionId);
     if (mission) {
       setActiveMission(mission);
-      setAppState("MISSION_ACTIVE");
-      setTimeout(() => attemptPayout(mission), 3000); // Simulate work & payout
+      setAppState("MISSION_WORKSPACE"); // NEW: Go to workspace instead of auto-completing
     }
   };
 
@@ -299,7 +300,7 @@ const App: React.FC = () => {
 
       {/* 1. PERMANENT NAVBAR (Always Visible) */}
       {/* NAVBAR: FIXED & RESTORED */}
-      <nav className="flex justify-between items-center p-6 border-b border-white/10 bg-black/50 backdrop-blur-md fixed w-full z-50">
+      <nav className="flex justify-between items-center px-6 py-4 border-b border-white/10 bg-black/50 backdrop-blur-md fixed w-full z-50">
         {/* LEFT: LOGO */}
         <div className="flex items-center gap-4">
           <span className="text-xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">MYBESTPURPOSE</span>
@@ -366,6 +367,13 @@ const App: React.FC = () => {
             Powered by Global Innovation Stack • Secured by Sage Identity
           </div>
         </main>
+      ) : appState === "MISSION_WORKSPACE" ? (
+        // THE NEW WORKSPACE LAYER
+        <MissionWorkspace
+          mission={activeMission}
+          onComplete={() => attemptPayout(activeMission)}
+          onCancel={() => setAppState("DASHBOARD")}
+        />
       ) : appState === "MISSION_ACTIVE" ? (
         <div className="fixed inset-0 bg-black z-[100] flex items-center justify-center flex-col">
           <div className="text-6xl mb-6 animate-spin">⚙️</div>
