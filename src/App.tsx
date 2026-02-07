@@ -399,7 +399,7 @@ const App: React.FC = () => {
               {" is an "}
               <span className="text-white font-bold">AI-guided Engine</span>
               {" where you "}
-              <span className="text-amber-400 font-bold">evolve</span>
+              <span className="text-emerald-400 font-bold">evolve</span>
               {" from a passive student into a "}
               <span className="text-amber-400 font-bold">Verified Contributor</span>.
             </p>
