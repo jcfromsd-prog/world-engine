@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { masterTeacher, GHOST_CLASSROOM, type SimulationRun, type BlueprintViolation } from '../../lib/masterTeacher';
 
-export const MasterTeacherDashboard: React.FC = () => {
+export const MasterTeacherDashboard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const [isRunning, setIsRunning] = useState(false);
     const [lastRun, setLastRun] = useState<SimulationRun | null>(null);
     const [report, setReport] = useState<string>('');
@@ -51,14 +51,14 @@ export const MasterTeacherDashboard: React.FC = () => {
                             onClick={runSimulation}
                             disabled={isRunning}
                             className={`px-6 py-3 font-black text-sm uppercase rounded-xl transition-all ${isRunning
-                                    ? 'bg-zinc-800 text-zinc-500 cursor-wait'
-                                    : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:scale-105 shadow-lg shadow-purple-500/30'
+                                ? 'bg-zinc-800 text-zinc-500 cursor-wait'
+                                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:scale-105 shadow-lg shadow-purple-500/30'
                                 }`}
                         >
                             {isRunning ? '⏳ SIMULATING...' : '🚀 RUN SWARM'}
                         </button>
                         <button
-                            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm', ctrlKey: true, shiftKey: true }))}
+                            onClick={onClose}
                             className="px-4 py-3 bg-zinc-800 text-zinc-400 text-sm font-bold rounded-xl hover:bg-zinc-700"
                         >
                             ✕ CLOSE

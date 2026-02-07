@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { GhostClassEngine } from '../../lib/ghostEngine';
 import type { SimulationResult } from '../../lib/ghostEngine';
 
-export const SwarmDashboard: React.FC = () => {
+export const SwarmDashboard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const [results, setResults] = useState<SimulationResult[]>([]);
     const [running, setRunning] = useState(false);
 
@@ -55,7 +55,7 @@ export const SwarmDashboard: React.FC = () => {
                 </div>
             </div>
 
-            <button onClick={() => window.location.reload()} className="mt-8 text-zinc-600 hover:text-white text-xs uppercase underline">Exit Simulation</button>
+            <button onClick={onClose} className="mt-8 text-zinc-600 hover:text-white text-xs uppercase underline">Exit Simulation</button>
         </div>
     );
 };

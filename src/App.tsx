@@ -488,8 +488,7 @@ const App: React.FC = () => {
 
             <div className="flex-1">
               <GenesisFeed
-                track={getUserTrack()}
-                grade={parseInt(userProfile?.grade || "1")}
+                userTrack={getUserTrack()}
                 onMissionSelect={handleMissionSelect}
                 onCalibrate={() => setShowCalibration(true)}
               />
@@ -502,12 +501,8 @@ const App: React.FC = () => {
       {appState === "MISSION_WORKSPACE" && activeMission && (
         <MissionWorkspace
           mission={activeMission}
-          userProfile={{
-            name: userProfile?.name || "Anonymous",
-            grade: userProfile?.grade || "1",
-            passion: userProfile?.passion || "ALL"
-          }}
-          onSolve={() => attemptPayout(activeMission)}
+          onComplete={() => attemptPayout(activeMission)}
+          onCancel={() => setAppState("CHOICE_SELECTION")}
         />
       )}
 

@@ -134,7 +134,6 @@ class AuditService {
 
     private async checkEconomyLogic(user: any): Promise<AuditResult> {
         // Simulate a Mission Payout
-        const startBalance = user.wallet;
         const missionReward = 400; // The 400 GP task mentioned
         const platformFee = missionReward * 0.20; // 20% tax
         const expectedUserGain = missionReward - platformFee;
