@@ -18,10 +18,11 @@ import { GenesisFeed } from "./components/feed/GenesisFeed";
 import { GhostClassRoom } from "./components/dashboard/GhostClassRoom";
 import Header from "./components/Header";
 import { FounderMenu } from "./components/Navigation/FounderMenu";
+import { ImpactEngine } from "./components/engines/ImpactEngine";
 import type { LiveMission } from "./lib/missionGenerator";
 
 // --- TYPES ---
-type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE";
+type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE";
 type OnboardingStep = "NAME" | "GRADE" | "PASSION" | "MATCHING";
 
 export interface UserProfile {
@@ -71,7 +72,7 @@ const MISSION_DB: Mission[] = [
 /* ==========================================================================
    COMPONENT: THE 4 ENGINES GRID (Blueprint Visualization)
    ========================================================================== */
-const EnginesGrid = () => (
+const EnginesGrid = ({ onSolveClick }: { onSolveClick: () => void }) => (
   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-6xl mx-auto mb-32 px-4 w-full">
     {/* 🟢 CONNECT */}
     <div className="p-6 bg-zinc-900/50 border border-green-500/20 rounded-2xl hover:bg-zinc-800 transition-all group hover:-translate-y-2">
@@ -87,11 +88,18 @@ const EnginesGrid = () => (
       <p className="text-xs text-zinc-400 leading-relaxed group-hover:text-white transition-colors">The <strong className="text-white">Acceleration Engine</strong>. AI speed. Download skills and reach flow state instantly.</p>
     </div>
 
-    {/* 🔵 SOLVE */}
-    <div className="p-6 bg-zinc-900/50 border border-blue-500/20 rounded-2xl hover:bg-zinc-800 transition-all group hover:-translate-y-2">
+    {/* 🔵 SOLVE (Interactive) */}
+    <div
+      onClick={onSolveClick}
+      className="p-6 bg-zinc-900/50 border border-blue-500/20 rounded-2xl hover:bg-zinc-800 transition-all group hover:-translate-y-2 cursor-pointer relative overflow-hidden"
+    >
+      <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
       <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🔵</div>
       <h3 className="text-xl font-black text-blue-400 mb-2 tracking-wide">SOLVE</h3>
       <p className="text-xs text-zinc-400 leading-relaxed group-hover:text-white transition-colors">The <strong className="text-white">Impact Engine</strong>. No tests. Just real-world missions that build your portfolio.</p>
+      <div className="absolute bottom-4 right-4 text-[10px] font-black text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
+        Boot Up →
+      </div>
     </div>
 
     {/* 🟡 EARN */}
@@ -395,9 +403,22 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            <EnginesGrid />
+            <EnginesGrid onSolveClick={() => setAppState("IMPACT_ENGINE")} />
           </div>
         </div>
+      )}
+
+      {/* IMPACY (MISSIONS) ENGINE */}
+      {appState === "IMPACT_ENGINE" && (
+        <ImpactEngine
+          onBack={() => setAppState("LANDING")}
+          onAccept={(id) => {
+            // Future: Add logic to start specific mission
+            console.log("Accepted mission:", id);
+            // For now, redirect to workspace if appropriate or just show alert
+            alert(`Mission ${id} Accepted! Prepare to deploy.`);
+          }}
+        />
       )}
 
       {/* 🧬 ONBOARDING */}
@@ -464,7 +485,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* GHOST CLASS SWARM (Visual Layer) */}
+      {/* GHOST CLASS SWARM (Visual Layer) - Removed as per polish step */}
 
       {/* FOUNDER MENU (Replaces Static Badge) */}
       <div className="fixed bottom-6 right-6 z-[500]">
@@ -473,9 +494,10 @@ const App: React.FC = () => {
           onOpenCommand={() => setShowFounderModal(true)}
           onOpenDiscovery={() => setShowCalibration(true)}
           onReset={() => {
-            setAppState("LANDING");
-            setUserProfile(null);
-            setActiveMission(null);
+            if (typeof window !== "undefined") {
+              localStorage.clear();
+              window.location.reload();
+            }
           }}
         />
       </div>
