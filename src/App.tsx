@@ -15,7 +15,8 @@ import { SwarmDashboard } from "./components/admin/SwarmDashboard";
 import { MasterTeacherDashboard } from "./components/admin/MasterTeacherDashboard";
 import { CalibrationModal } from "./components/dashboard/CalibrationModal";
 import { GenesisFeed } from "./components/feed/GenesisFeed";
-import { GhostClassRoom } from "./components/dashboard/GhostClassRoom";
+
+
 import Header from "./components/Header";
 import { FounderMenu } from "./components/Navigation/FounderMenu";
 import { ImpactEngine, STARTING_MISSIONS, type ImpactMission } from "./components/engines/ImpactEngine";
