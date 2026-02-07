@@ -23,7 +23,7 @@ interface ImpactEngineProps {
 export const ImpactEngine: React.FC<ImpactEngineProps> = ({ onBack, onAccept }) => {
     return (
         <div className="fixed inset-0 z-[50] bg-black/95 backdrop-blur-xl animate-fade-in overflow-y-auto">
-            <div className="max-w-7xl mx-auto p-6 md:p-12 pt-24">
+            <div className="pt-32 min-h-screen bg-black max-w-7xl mx-auto p-6 md:p-12">
 
                 {/* Header */}
                 <div className="flex justify-between items-center mb-12">
