@@ -16,6 +16,7 @@ import { MasterTeacherDashboard } from "./components/admin/MasterTeacherDashboar
 import { CalibrationModal } from "./components/dashboard/CalibrationModal";
 import { GenesisFeed } from "./components/feed/GenesisFeed";
 import { GhostClassRoom } from "./components/dashboard/GhostClassRoom";
+import Header from "./components/Header";
 import type { LiveMission } from "./lib/missionGenerator";
 
 // --- TYPES ---
@@ -253,6 +254,7 @@ const App: React.FC = () => {
   const [showSwarm, setShowSwarm] = useState(false); // GHOST CLASS TOGGLE
   const [showMasterTeacher, setShowMasterTeacher] = useState(false); // MASTER TEACHER TOGGLE
   const [showCalibration, setShowCalibration] = useState(false); // CALIBRATION TOGGLE
+  const [viewMode, setViewMode] = useState<'solver' | 'client'>('solver'); // HEADER VIEW MODE
 
   // --- SWARM & MASTER TEACHER LISTENER ---
   useEffect(() => {
@@ -331,6 +333,17 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30 overflow-x-hidden">
+      {/* HEADER NAVIGATION */}
+      <div className="fixed top-0 left-0 w-full z-[1000] bg-black/80 backdrop-blur-md border-b border-white/5">
+        <Header
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          walletBalance={userProfile ? `$${userProfile.genesisPoints}` : undefined}
+          onToggleNeural={() => setShowCalibration(true)}
+          onOpenCommandCenter={() => setShowFounderModal(true)}
+        />
+      </div>
+
       {/* ERROR OVERLAY */}
       {error && (
         <div className="fixed top-0 left-0 w-full h-full bg-red-950/90 z-[1000] flex items-center justify-center p-6 backdrop-blur-md">
@@ -361,15 +374,19 @@ const App: React.FC = () => {
 
       {/* 🚀 LANDING PAGE */}
       {appState === "LANDING" && (
-        <div className="relative">
+        <div className="relative pt-24">
           <div className="absolute top-0 left-0 w-full h-screen bg-gradient-to-b from-blue-900/20 via-black to-black -z-10"></div>
-          <div className="max-w-6xl mx-auto pt-32 pb-40 px-6 text-center">
+          <div className="max-w-6xl mx-auto pt-16 pb-40 px-6 text-center">
 
             <h1 className="text-7xl md:text-[120px] font-black tracking-tighter leading-none mb-8 animate-scale-in">
               SOLVE & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-yellow-400">EARN.</span>
             </h1>
-            <p className="text-xl md:text-2xl text-zinc-500 max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
-              MyBestPurpose is an AI-guided Engine where you transition from a passive student into a <span className="text-white font-bold">Verified Contributor</span>.
+            <p className="text-xl md:text-2xl text-slate-400 max-w-4xl mx-auto mt-4 mb-12 font-medium leading-relaxed">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 font-bold">MyBestPurpose</span>
+              {" is an "}
+              <span className="text-cyan-400 font-bold">AI-guided Engine</span>
+              {" where you transition from a passive student into a "}
+              <span className="text-emerald-400 font-bold">Verified Contributor</span>.
             </p>
             <div className="flex flex-wrap justify-center gap-6 mb-24">
               <button onClick={() => setAppState("ONBOARDING")} className="px-12 py-6 bg-white text-black font-black text-xl rounded-2xl hover:bg-blue-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
@@ -387,10 +404,10 @@ const App: React.FC = () => {
 
       {/* 🛡️ THE HQ (Feed Selection) */}
       {appState === "CHOICE_SELECTION" && (
-        <div className="max-w-7xl mx-auto p-6 md:p-12 animate-fade-in">
+        <div className="max-w-7xl mx-auto p-6 md:p-12 animate-fade-in pt-24">
           <div className="flex flex-col md:flex-row justify-between items-start gap-12">
             <div className="w-full md:w-[400px]">
-              <div className="sticky top-12 p-8 bg-zinc-900/30 border border-white/5 rounded-3xl backdrop-blur-md">
+              <div className="sticky top-24 p-8 bg-zinc-900/30 border border-white/5 rounded-3xl backdrop-blur-md">
                 <div className="text-4xl mb-4">🛡️</div>
                 <h2 className="text-3xl font-black mb-2 italic">THE SQUAD HQ</h2>
                 <div className="space-y-6 mt-8">

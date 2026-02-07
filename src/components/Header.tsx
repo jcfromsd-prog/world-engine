@@ -174,8 +174,8 @@ const Header: React.FC<HeaderProps> = ({
                             <CreditBalance balance={clientCredits} onClick={() => onOpenCapitalModal?.()} />
                         </>
                     ) : (
-                        /* DISCOVERY ARCHETYPE Button */
-                        !walletBalance && !isAdmin && (
+                        /* ADMIN TOOLS HIDDEN (Discover Archetype) */
+                        false && !walletBalance && !isAdmin && (
                             <button
                                 onClick={onOpenDiscovery}
                                 className="hidden md:flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-black rounded-full transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:scale-105 active:scale-95"
@@ -185,20 +185,22 @@ const Header: React.FC<HeaderProps> = ({
                         )
                     )}
 
-                    {/* Command Center Trigger (Always Visible) */}
-                    <button
-                        onClick={onOpenCommandCenter}
-                        className={`hidden md:flex relative px-4 h-10 items-center gap-2 rounded-lg border-2 transition-all group overflow-hidden ${isAdmin
-                            ? 'bg-red-950/50 border-red-500 text-red-500 hover:bg-red-900 hover:text-white'
-                            : 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-cyan-500/50 hover:text-cyan-400'
-                            }`}
-                        title="Open Command Center"
-                    >
-                        <svg className="w-5 h-5 relative z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 011-1h1a2 2 0 100-4H7a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011-1V4z" />
-                        </svg>
-                        <span className="text-[10px] font-black uppercase tracking-widest relative z-10">Command</span>
-                    </button>
+                    {/* ADMIN TOOLS HIDDEN (Command Center) */}
+                    {false && (
+                        <button
+                            onClick={onOpenCommandCenter}
+                            className={`hidden md:flex relative px-4 h-10 items-center gap-2 rounded-lg border-2 transition-all group overflow-hidden ${isAdmin
+                                ? 'bg-red-950/50 border-red-500 text-red-500 hover:bg-red-900 hover:text-white'
+                                : 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-cyan-500/50 hover:text-cyan-400'
+                                }`}
+                            title="Open Command Center"
+                        >
+                            <svg className="w-5 h-5 relative z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 011-1h1a2 2 0 100-4H7a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011-1V4z" />
+                            </svg>
+                            <span className="text-[10px] font-black uppercase tracking-widest relative z-10">Command</span>
+                        </button>
+                    )}
 
                     {/* MOBILE HAMBURGER */}
                     <button
