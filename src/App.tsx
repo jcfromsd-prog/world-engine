@@ -9,7 +9,7 @@
    7. ARCHITECTURE: Permanent Breadcrumbs Layer (No Overwriting)
    ========================================================================== */
 import React, { useState, useEffect } from "react";
-import { FounderCommandPanel, FounderBadge } from "./components/dashboard/FounderCommandPanel";
+import { FounderCommandPanel } from "./components/dashboard/FounderCommandPanel";
 import { MissionWorkspace } from "./components/workspaces/MissionWorkspace";
 import { SwarmDashboard } from "./components/admin/SwarmDashboard";
 import { MasterTeacherDashboard } from "./components/admin/MasterTeacherDashboard";
@@ -17,6 +17,7 @@ import { CalibrationModal } from "./components/dashboard/CalibrationModal";
 import { GenesisFeed } from "./components/feed/GenesisFeed";
 import { GhostClassRoom } from "./components/dashboard/GhostClassRoom";
 import Header from "./components/Header";
+import { FounderMenu } from "./components/Navigation/FounderMenu";
 import type { LiveMission } from "./lib/missionGenerator";
 
 // --- TYPES ---
@@ -466,9 +467,18 @@ const App: React.FC = () => {
       {/* GHOST CLASS SWARM (Visual Layer) */}
       <GhostClassRoom />
 
-      {/* FOUNDER BADGE */}
+      {/* FOUNDER MENU (Replaces Static Badge) */}
       <div className="fixed bottom-6 right-6 z-[500]">
-        <FounderBadge systemHealth={Math.round(systemBalance / 50000 * 100)} onClick={() => setShowFounderModal(true)} />
+        <FounderMenu
+          systemHealth={Math.round(systemBalance / 50000 * 100)}
+          onOpenCommand={() => setShowFounderModal(true)}
+          onOpenDiscovery={() => setShowCalibration(true)}
+          onReset={() => {
+            setAppState("LANDING");
+            setUserProfile(null);
+            setActiveMission(null);
+          }}
+        />
       </div>
     </div>
   );
