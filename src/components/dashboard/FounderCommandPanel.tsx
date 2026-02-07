@@ -6,6 +6,7 @@ import React, { useState, useMemo } from 'react';
 import { SimulationEngine } from '../../services/SimulationEngine';
 import { masterTeacher, GHOST_CLASSROOM } from '../../lib/masterTeacher';
 import { auditEngine, AUDIT_PROFILES } from '../../services/AuditEngine';
+import type { AuditResult } from '../../services/AuditEngine';
 
 interface FounderCommandPanelProps {
     isOpen: boolean;
@@ -16,6 +17,11 @@ interface FounderCommandPanelProps {
 
 type AuditStep = 'UI' | 'SOCIAL' | 'GROWTH' | 'ECONOMY';
 type AuditStatus = 'PENDING' | 'RUNNING' | 'PASS' | 'FAIL';
+
+interface StepState {
+    status: AuditStatus;
+    msg?: string;
+}
 
 export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
     isOpen,
@@ -29,7 +35,7 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
     const [activeTab, setActiveTab] = useState<'COMMAND' | 'SIMULATE' | 'LOGS' | 'AUDIT'>('COMMAND');
 
     // Audit State
-    const [auditState, setAuditState] = useState<Record<string, Record<AuditStep, { status: AuditStatus; msg?: string }>>>({});
+    const [auditState, setAuditState] = useState<Record<string, Record<AuditStep, StepState>>>({});
 
     // Calculate overall system health for the badge
     const systemHealth = useMemo(() => {
@@ -113,7 +119,7 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
         setIsRunning(true);
 
         // Initialize State: Set all to RUNNING
-        const initialAudit: any = {};
+        const initialAudit: Record<string, Record<AuditStep, StepState>> = {};
         Object.values(AUDIT_PROFILES).forEach(p => {
             initialAudit[p.id] = {
                 UI: { status: 'RUNNING' },
@@ -128,7 +134,7 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
         // Add artificial delay for visualization effect (0.8s)
         await new Promise(r => setTimeout(r, 800));
 
-        const results = await auditEngine.runFullAudit();
+        const results: AuditResult[] = await auditEngine.runFullAudit();
 
         // Process Results
         const newAuditState = { ...initialAudit };
@@ -136,7 +142,12 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
 
         results.forEach(res => {
             // Map result to state
-            if (!newAuditState[res.profile]) newAuditState[res.profile] = {};
+            if (!newAuditState[res.profile]) newAuditState[res.profile] = {
+                UI: { status: 'PENDING' },
+                SOCIAL: { status: 'PENDING' },
+                GROWTH: { status: 'PENDING' },
+                ECONOMY: { status: 'PENDING' }
+            };
 
             newAuditState[res.profile][res.category] = {
                 status: res.status,
@@ -432,7 +443,7 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
                             {/* AGENT CHECKLIST */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {Object.values(AUDIT_PROFILES).map(persona => {
-                                    const status = auditState[persona.id] || {
+                                    const personaStatus = auditState[persona.id] || {
                                         UI: { status: 'PENDING' },
                                         SOCIAL: { status: 'PENDING' },
                                         GROWTH: { status: 'PENDING' },
@@ -457,21 +468,21 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
                                                 {(['UI', 'SOCIAL', 'GROWTH', 'ECONOMY'] as AuditStep[]).map(step => (
                                                     <div key={step} className="flex flex-col gap-1">
                                                         <div className="flex items-center justify-between text-xs font-mono">
-                                                            <span className={status[step].status === 'PENDING' ? 'text-zinc-600' : 'text-zinc-300'}>{step}_CHECK</span>
+                                                            <span className={personaStatus[step].status === 'PENDING' ? 'text-zinc-600' : 'text-zinc-300'}>{step}_CHECK</span>
 
-                                                            {status[step].status === 'PENDING' && <span className="text-zinc-700">...</span>}
-                                                            {status[step].status === 'RUNNING' && <span className="text-yellow-500 animate-pulse">Running...</span>}
-                                                            {status[step].status === 'PASS' && <span className="text-green-500 font-bold">✅ PASS</span>}
-                                                            {status[step].status === 'FAIL' && <span className="text-red-500 font-bold animate-pulse">❌ FAIL</span>}
+                                                            {personaStatus[step].status === 'PENDING' && <span className="text-zinc-700">...</span>}
+                                                            {personaStatus[step].status === 'RUNNING' && <span className="text-yellow-500 animate-pulse">Running...</span>}
+                                                            {personaStatus[step].status === 'PASS' && <span className="text-green-500 font-bold">✅ PASS</span>}
+                                                            {personaStatus[step].status === 'FAIL' && <span className="text-red-500 font-bold animate-pulse">❌ FAIL</span>}
                                                         </div>
-                                                        {status[step].status === 'FAIL' && status[step].msg && (
+                                                        {status === 'FAIL' && personaStatus[step].msg && (
                                                             <div className="text-[9px] text-red-400 bg-red-900/10 p-1 rounded font-mono border-l-2 border-red-500">
-                                                                {status[step].msg}
+                                                                {personaStatus[step].msg}
                                                             </div>
                                                         )}
-                                                        {status[step].status === 'PASS' && status[step].msg && (
+                                                        {personaStatus[step].status === 'PASS' && personaStatus[step].msg && (
                                                             <div className="text-[9px] text-zinc-600 font-mono pl-1">
-                                                                ↳ {status[step].msg}
+                                                                ↳ {personaStatus[step].msg}
                                                             </div>
                                                         )}
                                                     </div>
@@ -481,8 +492,8 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
                                             {/* STATUS BAR */}
                                             <div className="absolute bottom-0 left-0 h-1 bg-zinc-800 w-full">
                                                 <div
-                                                    className={`h-full transition-all duration-300 ${Object.values(status).some(s => s.status === 'FAIL') ? 'bg-red-500' : 'bg-green-500'}`}
-                                                    style={{ width: `${(Object.values(status).filter(s => s.status === 'PASS').length / 4) * 100}%` }}
+                                                    className={`h-full transition-all duration-300 ${Object.values(personaStatus).some(s => s.status === 'FAIL') ? 'bg-red-500' : 'bg-green-500'}`}
+                                                    style={{ width: `${(Object.values(personaStatus).filter(s => s.status === 'PASS').length / 4) * 100}%` }}
                                                 />
                                             </div>
                                         </div>

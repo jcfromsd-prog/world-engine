@@ -12,12 +12,16 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
     const [progress, setProgress] = useState(0);
     const [stage, setStage] = useState('INITIALIZING SCAN');
 
+    // Handle Reset when opening
     useEffect(() => {
-        if (!isOpen) {
+        if (isOpen) {
             setProgress(0);
             setStage('INITIALIZING SCAN');
-            return;
         }
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
 
         const interval = setInterval(() => {
             setProgress(prev => {
@@ -26,12 +30,13 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
                     return 100;
                 }
 
+                const next = prev + 1;
                 // Update stage text based on progress
-                if (prev === 20) setStage('ANALYZING BIO-RHYTHMS');
-                if (prev === 50) setStage('CALIBRATING NEURAL LINK');
-                if (prev === 80) setStage('OPTIMIZING MATCH ALGORITHMS');
+                if (next === 20) setStage('ANALYZING BIO-RHYTHMS');
+                if (next === 50) setStage('CALIBRATING NEURAL LINK');
+                if (next === 80) setStage('OPTIMIZING MATCH ALGORITHMS');
 
-                return prev + 1;
+                return next;
             });
         }, 30);
 

@@ -21,6 +21,27 @@ import type { LiveMission } from "./lib/missionGenerator";
 type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE";
 type OnboardingStep = "NAME" | "GRADE" | "PASSION" | "MATCHING";
 
+export interface UserProfile {
+  name: string;
+  grade: string;
+  passion: string;
+  squad: string;
+  genesisPoints: number;
+  completedMissions: string[];
+}
+
+export interface Mission {
+  id: string;
+  title: string;
+  client: string;
+  reward: number;
+  desc: string;
+  category: string;
+  minGrade: number;
+  maxGrade: number;
+  color: string;
+  type: "TRAINING" | "CLIENT_CONTRACT";
+}
 
 // --- THE TREASURY (CEO Logic) ---
 const SYSTEM_TREASURY = {
@@ -29,7 +50,7 @@ const SYSTEM_TREASURY = {
 };
 
 // --- MISSION DATABASE (Training + Real World) ---
-const MISSION_DB = [
+const MISSION_DB: Mission[] = [
   // K-5 FOUNDATIONS
   { id: "SCI.K5.01", type: "TRAINING", title: "Backyard Bio-Blitz", client: "Academy", reward: 100, desc: "Find/draw 3 bugs.", category: "SCIENCE", minGrade: 0, maxGrade: 5, color: "text-emerald-400" },
   { id: "COD.K5.01", type: "TRAINING", title: "Robot Logic Maze", client: "Academy", reward: 100, desc: "Guide the mouse.", category: "CODING", minGrade: 0, maxGrade: 5, color: "text-blue-400" },
@@ -106,7 +127,7 @@ const BreadcrumbHeader: React.FC<{ name: string, grade: string, passion: string,
 /* ==========================================================================
    COMPONENT: ONBOARDING WIZARD (Visual Choice Cards)
    ========================================================================== */
-const OnboardingWizard: React.FC<{ onComplete: (profile: any) => void, onCancel: () => void }> = ({ onComplete, onCancel }) => {
+const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) => void, onCancel: () => void }> = ({ onComplete, onCancel }) => {
   const [step, setStep] = useState<OnboardingStep>("NAME");
   const [name, setName] = useState("");
   const [grade, setGrade] = useState("");
@@ -196,7 +217,7 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: any) => void, onCancel:
 /* ==========================================================================
    COMPONENT: VIRAL SHARE MODAL (CMO Logic)
    ========================================================================== */
-const ViralShareModal: React.FC<{ mission: any, earnings: number, onClose: () => void }> = ({ mission, earnings, onClose }) => {
+const ViralShareModal: React.FC<{ mission: Mission, earnings: number, onClose: () => void }> = ({ mission, earnings, onClose }) => {
   const shareText = `I just earned ${earnings} GP as a Verified Contributor for ${mission.client} on @MyBestPurpose! 🚀 #VerifiedContributor`;
   return (
     <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl animate-scale-in p-6">
@@ -223,8 +244,8 @@ const ViralShareModal: React.FC<{ mission: any, earnings: number, onClose: () =>
    ========================================================================== */
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>("LANDING");
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [activeMission, setActiveMission] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [activeMission, setActiveMission] = useState<Mission | LiveMission | null>(null);
   const [systemBalance, setSystemBalance] = useState(SYSTEM_TREASURY.balance);
   const [error, setError] = useState("");
   const [showFounderModal, setShowFounderModal] = useState(false);
@@ -249,7 +270,6 @@ const App: React.FC = () => {
   }, []);
 
   // --- HANDLERS ---
-  // Helper to get track string for Genesis Feed
   const getUserTrack = () => {
     const p = (userProfile?.passion || "").toLowerCase();
     if (p.includes("code") || p.includes("tech")) return 'CODING';
@@ -259,15 +279,20 @@ const App: React.FC = () => {
     return 'ALL';
   };
 
-  const completeOnboarding = (profile: any) => {
-    setUserProfile({ ...profile, genesisPoints: 0, completedMissions: [] });
+  const completeOnboarding = (profile: Partial<UserProfile>) => {
+    setUserProfile({
+      name: profile.name || "Anonymous",
+      grade: profile.grade || "1",
+      passion: profile.passion || "ALL",
+      squad: profile.squad || "Alpha",
+      genesisPoints: 0,
+      completedMissions: []
+    });
     setAppState("CHOICE_SELECTION");
   };
 
-  // Handle mission selection from Genesis Feed
   const handleMissionSelect = (mission: LiveMission | string) => {
     if (mission === "LEVEL_UP") return alert("Level Up System coming soon!");
-    // Support both old static missions and new LiveMission objects
     if (typeof mission === 'string') {
       const found = MISSION_DB.find(m => m.id === mission);
       if (found) {
@@ -281,9 +306,10 @@ const App: React.FC = () => {
   };
 
   // --- CEO SOLVENCY LOGIC ---
-  const attemptPayout = (mission: any) => {
-    const platformCut = mission.reward * SYSTEM_TREASURY.platformFee;
-    const studentPayout = mission.reward - platformCut;
+  const attemptPayout = (mission: Mission | LiveMission) => {
+    const reward = (mission as any).reward;
+    const platformCut = reward * SYSTEM_TREASURY.platformFee;
+    const studentPayout = reward - platformCut;
 
     if (systemBalance < studentPayout) {
       setError("CRITICAL: SYSTEM TREASURY LOW. PAYMENT PAUSED.");
@@ -291,136 +317,143 @@ const App: React.FC = () => {
     }
 
     setSystemBalance(prev => prev - studentPayout);
-    setUserProfile((prev: any) => ({
-      ...prev,
-      genesisPoints: prev.genesisPoints + studentPayout,
-      completedMissions: [...prev.completedMissions, mission.id]
-    }));
+    setUserProfile((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        genesisPoints: prev.genesisPoints + studentPayout,
+        completedMissions: [...prev.completedMissions, (mission as any).id]
+      };
+    });
     setAppState("MISSION_COMPLETE");
   };
 
-  // --- FILTER LOGIC (Swarm Certified) ---
-
-
-
-
   return (
-    <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden animate-fade-in relative">
-
-      {/* 1. PERMANENT NAVBAR (Always Visible) */}
-      {/* NAVBAR: FIXED & RESTORED */}
-      <nav className="flex justify-between items-center px-6 py-4 border-b border-white/10 bg-black/50 backdrop-blur-md fixed w-full z-50">
-        {/* LEFT: LOGO */}
-        <div className="flex items-center gap-4">
-          <span className="text-xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">MYBESTPURPOSE</span>
-          <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-            <span className="text-[10px] font-bold text-blue-300 tracking-widest">CO-PILOT: HELIX ONLINE</span>
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30 overflow-x-hidden">
+      {/* ERROR OVERLAY */}
+      {error && (
+        <div className="fixed top-0 left-0 w-full h-full bg-red-950/90 z-[1000] flex items-center justify-center p-6 backdrop-blur-md">
+          <div className="text-center max-w-xl">
+            <h2 className="text-6xl font-black mb-4 animate-pulse">🛑 BANKRUPTCY ALERT</h2>
+            <p className="text-xl font-mono mb-8">{error}</p>
+            <button onClick={() => setError("")} className="px-8 py-4 bg-white text-black font-black uppercase rounded-xl">Override System</button>
           </div>
-        </div>
-
-        {/* CENTER: SOLVER/CLIENT TOGGLE (RESTORED) */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-white/10 backdrop-blur-md">
-          <button className="px-6 py-1.5 bg-zinc-700 text-white text-xs font-bold rounded shadow-sm border border-white/10 hover:bg-zinc-600 transition-all">SOLVER</button>
-          <button className="px-6 py-1.5 text-zinc-500 hover:text-white text-xs font-bold transition-colors">CLIENT</button>
-        </div>
-
-        {/* RIGHT: STATS & TREASURY */}
-        <div className="flex gap-4 text-xs font-mono">
-          <div className="hidden md:block px-3 py-1 bg-zinc-900 border border-green-500/30 text-green-400 rounded">SYS: ${systemBalance.toLocaleString()}</div>
-          <div className="px-3 py-1 bg-zinc-900 border border-yellow-500/30 text-yellow-400 rounded">USER: {userProfile?.genesisPoints || 0} GP</div>
-          <div className="px-3 py-1 bg-zinc-800 border border-white/10 text-zinc-400 rounded uppercase tracking-wider">{userProfile ? "CONTRIBUTOR" : "GUEST"}</div>
-        </div>
-      </nav>
-
-      {/* 2. OVERLAYS */}
-      {appState === "ONBOARDING" && <OnboardingWizard onComplete={completeOnboarding} onCancel={() => setAppState("LANDING")} />}
-      {appState === "MISSION_COMPLETE" && <ViralShareModal mission={activeMission} earnings={activeMission.reward * (1 - SYSTEM_TREASURY.platformFee)} onClose={() => setAppState("DASHBOARD")} />}
-      {error && <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 px-6 py-3 rounded-lg font-bold animate-pulse z-[200]">⚠️ {error}</div>}
-
-      {/* 3. PERMANENT BREADCRUMBS LAYER (The Fix) */}
-      {/* We only hide it on the very first Landing Page so it feels like a clean start */}
-      {appState !== "LANDING" && appState !== "ONBOARDING" && (
-        <div className="fixed top-24 left-0 w-full z-40 pointer-events-none flex justify-center">
-          {/* 'pointer-events-none' lets you click things underneath it */}
-          <BreadcrumbHeader
-            name={userProfile?.name}
-            grade={userProfile?.grade}
-            passion={userProfile?.passion}
-            step="COMPLETE"
-          />
         </div>
       )}
 
-      {/* 4. MAIN CONTENT SWITCHER */}
-      {/* This renders the background content */}
-      {appState === "LANDING" ? (
-        /* BLUEPRINT LANDING PAGE HERO */
-        <main className="relative pt-28 pb-10 px-4 flex flex-col items-center justify-center min-h-[70vh] text-center z-10 w-full">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
-          {/* HEADLINE: COLORFUL & PUNCHY */}
-          <div className="mb-4">
-            <h1 className="text-6xl md:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-purple-500 to-orange-500 drop-shadow-2xl">
-              SOLVE & EARN
-            </h1>
-          </div>
-
-          {/* SUBHEAD: BRANDED & BOLD */}
-          <div className="max-w-4xl mx-auto mb-8 px-4">
-            <p className="text-lg md:text-2xl text-zinc-400 font-medium">
-              <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">MyBestPurpose</span> is an <span className="text-white font-bold">AI-guided Engine</span> where you transition from a passive student into a <span className="text-orange-400 font-bold">Verified Contributor</span>.
-            </p>
-          </div>
-          <EnginesGrid />
-          <button onClick={() => setAppState("ONBOARDING")} className="px-16 py-6 bg-white text-black font-black text-xl tracking-widest rounded-full shadow-[0_0_50px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-yellow-400 transition-all flex items-center gap-3 mx-auto uppercase z-10">
-            <span>🚀</span> Start Your Engine
-          </button>
-          <div className="mt-8 text-[10px] font-mono text-zinc-600 uppercase tracking-widest z-10">
-            Powered by Global Innovation Stack • Secured by Sage Identity
-          </div>
-        </main>
-      ) : appState === "MISSION_WORKSPACE" ? (
-        // THE NEW WORKSPACE LAYER
-        <MissionWorkspace
-          mission={activeMission}
-          onComplete={() => attemptPayout(activeMission)}
-          onCancel={() => setAppState("DASHBOARD")}
-        />
-      ) : appState === "MISSION_ACTIVE" ? (
-        <div className="fixed inset-0 bg-black z-[100] flex items-center justify-center flex-col">
-          <div className="text-6xl mb-6 animate-spin">⚙️</div>
-          <h2 className="text-2xl font-bold">EXECUTING {activeMission?.type === "CLIENT_CONTRACT" ? "CLIENT CONTRACT" : "TRAINING MISSION"}...</h2>
-          <p className="text-zinc-500 mt-2">Verifying Quality Assurance for {activeMission?.client}...</p>
-        </div>
-      ) : (
-        /* DASHBOARD VIEW - NOW USING GENESIS FEED */
-        <GenesisFeed
-          onMissionSelect={handleMissionSelect}
-          userTrack={getUserTrack()}
-          onCalibrate={() => setShowCalibration(true)}
+      {/* FOUNDER DASHBOARD MODAL */}
+      {showFounderModal && (
+        <FounderCommandPanel
+          isOpen={showFounderModal}
+          onClose={() => setShowFounderModal(false)}
+          onLaunchMasterTeacher={() => { setShowMasterTeacher(true); setShowFounderModal(false); }}
+          onDeployGhostClass={() => { setShowSwarm(true); setShowFounderModal(false); }}
         />
       )}
 
-      {/* 5. GHOST CLASS OVERLAY */}
-      {showSwarm && <SwarmDashboard />}
-
-      {/* 6. MASTER TEACHER OVERLAY */}
-      {showMasterTeacher && <MasterTeacherDashboard />}
-
-      {/* 7. CALIBRATION OVERLAY */}
+      {/* CALIBRATION MODAL */}
       <CalibrationModal isOpen={showCalibration} onClose={() => setShowCalibration(false)} />
 
-      {/* FOOTER - UPGRADED WITH FOUNDER BADGE */}
-      <footer className="fixed bottom-0 w-full p-4 border-t border-white/5 bg-black/80 backdrop-blur-xl flex justify-between items-center z-50">
-        <div className="flex items-center gap-3 text-[10px] font-mono text-zinc-600"><div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />SECURED BY SAGE IDENTITY PROTOCOL © 2026</div>
-        <FounderBadge systemHealth={67} onClick={() => setShowFounderModal(true)} />
-      </footer>
-      <FounderCommandPanel
-        isOpen={showFounderModal}
-        onClose={() => setShowFounderModal(false)}
-        onLaunchMasterTeacher={() => { setShowFounderModal(false); setShowMasterTeacher(true); }}
-        onDeployGhostClass={() => { setShowFounderModal(false); setShowSwarm(true); }}
-      />
+      {/* ADMIN OVERLAYS */}
+      {showSwarm && <SwarmDashboard onClose={() => setShowSwarm(false)} />}
+      {showMasterTeacher && <MasterTeacherDashboard onClose={() => setShowMasterTeacher(false)} />}
+
+      {/* 🚀 LANDING PAGE */}
+      {appState === "LANDING" && (
+        <div className="relative">
+          <div className="absolute top-0 left-0 w-full h-screen bg-gradient-to-b from-blue-900/20 via-black to-black -z-10"></div>
+          <div className="max-w-6xl mx-auto pt-32 pb-20 px-6 text-center">
+            <div className="inline-block px-4 py-1.5 bg-zinc-900 border border-white/10 rounded-full text-xs font-bold tracking-widest text-zinc-400 mb-8 animate-fade-in uppercase">
+              Now Boarding: The Ghost Class 👻
+            </div>
+            <h1 className="text-7xl md:text-[120px] font-black tracking-tighter leading-none mb-8 animate-scale-in">
+              START YOUR <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-yellow-400">ENGINE.</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-zinc-500 max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
+              The world's first <span className="text-white italic">Purpose-as-a-Platform</span>. Turn your potential into verified proof.
+            </p>
+            <div className="flex flex-wrap justify-center gap-6 mb-24">
+              <button onClick={() => setAppState("ONBOARDING")} className="px-12 py-6 bg-white text-black font-black text-xl rounded-2xl hover:bg-blue-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+                JOIN THE SQUAD
+              </button>
+              <button className="px-12 py-6 bg-zinc-900 text-white font-black text-xl rounded-2xl border border-white/10 hover:border-white/30 transition-all">
+                VIEW BLUEPRINT
+              </button>
+            </div>
+
+            <EnginesGrid />
+          </div>
+        </div>
+      )}
+
+      {/* 🧬 ONBOARDING */}
+      {appState === "ONBOARDING" && <OnboardingWizard onComplete={completeOnboarding} onCancel={() => setAppState("LANDING")} />}
+
+      {/* 🛡️ THE HQ (Feed Selection) */}
+      {appState === "CHOICE_SELECTION" && (
+        <div className="max-w-7xl mx-auto p-6 md:p-12 animate-fade-in">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-12">
+            <div className="w-full md:w-[400px]">
+              <div className="sticky top-12 p-8 bg-zinc-900/30 border border-white/5 rounded-3xl backdrop-blur-md">
+                <div className="text-4xl mb-4">🛡️</div>
+                <h2 className="text-3xl font-black mb-2 italic">THE SQUAD HQ</h2>
+                <div className="space-y-6 mt-8">
+                  <div>
+                    <div className="text-[10px] text-zinc-600 font-black uppercase tracking-widest mb-1">Authenticated Contributor</div>
+                    <div className="text-xl font-bold text-white">{userProfile?.name}</div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex-1 p-4 bg-black/40 rounded-2xl border border-white/5">
+                      <div className="text-[10px] text-zinc-600 font-bold mb-1">SOLVENCY</div>
+                      <div className="text-xl font-black text-yellow-400">{userProfile?.genesisPoints} GP</div>
+                    </div>
+                    <div className="flex-1 p-4 bg-black/40 rounded-2xl border border-white/5">
+                      <div className="text-[10px] text-zinc-600 font-bold mb-1">RANK</div>
+                      <div className="text-xl font-black text-white">LVL {userProfile?.grade}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1">
+              <GenesisFeed
+                track={getUserTrack()}
+                grade={parseInt(userProfile?.grade || "1")}
+                onMissionSelect={handleMissionSelect}
+                onCalibrate={() => setShowCalibration(true)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🎮 MISSION WORKSPACE */}
+      {appState === "MISSION_WORKSPACE" && activeMission && (
+        <MissionWorkspace
+          mission={activeMission}
+          userProfile={{
+            name: userProfile?.name || "Anonymous",
+            grade: userProfile?.grade || "1",
+            passion: userProfile?.passion || "ALL"
+          }}
+          onSolve={() => attemptPayout(activeMission)}
+        />
+      )}
+
+      {/* 🎊 COMPLETE MODAL */}
+      {appState === "MISSION_COMPLETE" && activeMission && (
+        <ViralShareModal
+          mission={activeMission as Mission}
+          earnings={(activeMission as any).reward - ((activeMission as any).reward * SYSTEM_TREASURY.platformFee)}
+          onClose={() => setAppState("CHOICE_SELECTION")}
+        />
+      )}
+
+      {/* FOUNDER BADGE */}
+      <div className="fixed bottom-6 right-6 z-[500]">
+        <FounderBadge systemHealth={Math.round(systemBalance / 50000 * 100)} onClick={() => setShowFounderModal(true)} />
+      </div>
     </div>
   );
 };
