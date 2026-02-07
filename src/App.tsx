@@ -9,9 +9,11 @@
    7. ARCHITECTURE: Permanent Breadcrumbs Layer (No Overwriting)
    ========================================================================== */
 import React, { useState, useEffect } from "react";
-import { FounderCheckModal } from "./components/dashboard/FounderCheckModal";
+import { FounderCommandPanel, FounderBadge } from "./components/dashboard/FounderCommandPanel";
 import { MissionWorkspace } from "./components/workspaces/MissionWorkspace";
 import { SwarmDashboard } from "./components/admin/SwarmDashboard";
+import { MasterTeacherDashboard } from "./components/admin/MasterTeacherDashboard";
+import { CalibrationModal } from "./components/dashboard/CalibrationModal";
 import { GenesisFeed } from "./components/feed/GenesisFeed";
 import type { LiveMission } from "./lib/missionGenerator";
 
@@ -227,13 +229,19 @@ const App: React.FC = () => {
   const [error, setError] = useState("");
   const [showFounderModal, setShowFounderModal] = useState(false);
   const [showSwarm, setShowSwarm] = useState(false); // GHOST CLASS TOGGLE
+  const [showMasterTeacher, setShowMasterTeacher] = useState(false); // MASTER TEACHER TOGGLE
+  const [showCalibration, setShowCalibration] = useState(false); // CALIBRATION TOGGLE
 
-  // --- SWARM LISTENER ---
+  // --- SWARM & MASTER TEACHER LISTENER ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's')) {
         e.preventDefault();
         setShowSwarm(prev => !prev);
+      }
+      if (e.ctrlKey && e.shiftKey && (e.key === 'M' || e.key === 'm')) {
+        e.preventDefault();
+        setShowMasterTeacher(prev => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -241,6 +249,16 @@ const App: React.FC = () => {
   }, []);
 
   // --- HANDLERS ---
+  // Helper to get track string for Genesis Feed
+  const getUserTrack = () => {
+    const p = (userProfile?.passion || "").toLowerCase();
+    if (p.includes("code") || p.includes("tech")) return 'CODING';
+    if (p.includes("art") || p.includes("design") || p.includes("creat")) return 'CREATIVE';
+    if (p.includes("sci") || p.includes("bio")) return 'SCIENCE';
+    if (p.includes("lead") || p.includes("bus")) return 'LEADERSHIP';
+    return 'ALL';
+  };
+
   const completeOnboarding = (profile: any) => {
     setUserProfile({ ...profile, genesisPoints: 0, completedMissions: [] });
     setAppState("CHOICE_SELECTION");
@@ -282,41 +300,9 @@ const App: React.FC = () => {
   };
 
   // --- FILTER LOGIC (Swarm Certified) ---
-  const getDisplayMissions = () => {
-    if (appState === "LANDING" || !userProfile) return MISSION_DB.slice(0, 6);
-    const gradeNum = parseInt(userProfile?.grade.replace(/\D/g, "") || "5");
-    const history = userProfile?.completedMissions || [];
 
-    // 1. Get Passion Matches
-    let matches = MISSION_DB.filter(m => {
-      if (history.includes(m.id)) return false;
-      // REAL WORLD contracts allowed for high grade irrespective of passion
-      if (m.type === "CLIENT_CONTRACT" && gradeNum >= m.minGrade) return true;
-      if (gradeNum < m.minGrade || gradeNum > m.maxGrade) return false;
 
-      const p = userProfile.passion.toLowerCase();
-      if (p.includes("cod") || p.includes("tech")) return m.category === "CODING";
-      if (p.includes("sci") || p.includes("bio")) return m.category === "SCIENCE";
-      if (p.includes("creat") || p.includes("art")) return m.category === "CREATIVE";
 
-      return true;
-    });
-
-    // 2. Smart Fill Logic (Guarantees 3 Choices for Swarm Success)
-    if (matches.length < 3) {
-      const fillers = MISSION_DB.filter(m =>
-        !history.includes(m.id) &&
-        gradeNum >= m.minGrade &&
-        gradeNum <= m.maxGrade &&
-        !matches.includes(m) // Don't duplicate matches
-      );
-      matches = [...matches, ...fillers];
-    }
-
-    return matches.slice(0, 3);
-  };
-
-  const displayMissions = getDisplayMissions();
 
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden animate-fade-in relative">
@@ -327,7 +313,10 @@ const App: React.FC = () => {
         {/* LEFT: LOGO */}
         <div className="flex items-center gap-4">
           <span className="text-xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">MYBESTPURPOSE</span>
-          <span className="text-sm font-mono text-gray-500 hidden md:block">// WORLD ENGINE</span>
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+            <span className="text-[10px] font-bold text-blue-300 tracking-widest">CO-PILOT: HELIX ONLINE</span>
+          </div>
         </div>
 
         {/* CENTER: SOLVER/CLIENT TOGGLE (RESTORED) */}
@@ -407,19 +396,31 @@ const App: React.FC = () => {
         /* DASHBOARD VIEW - NOW USING GENESIS FEED */
         <GenesisFeed
           onMissionSelect={handleMissionSelect}
-          userGrade={parseInt(userProfile?.grade || '5')}
+          userTrack={getUserTrack()}
+          onCalibrate={() => setShowCalibration(true)}
         />
       )}
 
       {/* 5. GHOST CLASS OVERLAY */}
       {showSwarm && <SwarmDashboard />}
 
-      {/* FOOTER */}
+      {/* 6. MASTER TEACHER OVERLAY */}
+      {showMasterTeacher && <MasterTeacherDashboard />}
+
+      {/* 7. CALIBRATION OVERLAY */}
+      <CalibrationModal isOpen={showCalibration} onClose={() => setShowCalibration(false)} />
+
+      {/* FOOTER - UPGRADED WITH FOUNDER BADGE */}
       <footer className="fixed bottom-0 w-full p-4 border-t border-white/5 bg-black/80 backdrop-blur-xl flex justify-between items-center z-50">
         <div className="flex items-center gap-3 text-[10px] font-mono text-zinc-600"><div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />SECURED BY SAGE IDENTITY PROTOCOL © 2026</div>
-        <button onClick={() => setShowFounderModal(true)} className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-[10px] font-bold text-white uppercase rounded hover:bg-zinc-800">Founder Check</button>
+        <FounderBadge systemHealth={67} onClick={() => setShowFounderModal(true)} />
       </footer>
-      <FounderCheckModal isOpen={showFounderModal} onClose={() => setShowFounderModal(false)} />
+      <FounderCommandPanel
+        isOpen={showFounderModal}
+        onClose={() => setShowFounderModal(false)}
+        onLaunchMasterTeacher={() => { setShowFounderModal(false); setShowMasterTeacher(true); }}
+        onDeployGhostClass={() => { setShowFounderModal(false); setShowSwarm(true); }}
+      />
     </div>
   );
 };

@@ -4,26 +4,41 @@ import type { LiveMission } from '../../lib/missionGenerator';
 
 interface GenesisFeedProps {
     onMissionSelect: (mission: LiveMission) => void;
-    userGrade: number;
+    userTrack: string; // CHANGED: Replaced grade with track (e.g. 'CODING')
+    onCalibrate: () => void;
 }
 
 type CategoryFilter = 'ALL' | 'CODING' | 'CREATIVE' | 'SCIENCE' | 'LEADERSHIP';
 
-export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userGrade: _userGrade }) => {
+export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userTrack, onCalibrate }) => {
     const [missions, setMissions] = useState<LiveMission[]>([]);
     const [filter, setFilter] = useState<CategoryFilter>('ALL');
     const [isLoading, setIsLoading] = useState(true);
     const [currentTime, setCurrentTime] = useState(() => Date.now());
 
+    // Helper: Sort missions by Relevance (Track Match) then Reward (High->Low)
+    const sortMissions = useCallback((list: LiveMission[]) => {
+        return [...list].sort((a, b) => {
+            // 1. Relevance: User's Track gets priority
+            const aMatch = a.category === userTrack ? 1 : 0;
+            const bMatch = b.category === userTrack ? 1 : 0;
+            if (aMatch !== bMatch) return bMatch - aMatch;
+
+            // 2. Reward: High to Low
+            return b.reward - a.reward;
+        });
+    }, [userTrack]);
+
     // Initialize feed
     useEffect(() => {
         setTimeout(() => {
-            setMissions(MissionGenerator.generateInitialFeed(8));
+            const initial = MissionGenerator.generateInitialFeed(8);
+            setMissions(sortMissions(initial));
             setIsLoading(false);
         }, 800);
-    }, []);
+    }, [sortMissions]);
 
-    // Update currentTime every second for countdown display
+    // Update currentTime every second
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
         return () => clearInterval(timer);
@@ -33,30 +48,32 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userG
     useEffect(() => {
         const interval = setInterval(() => {
             setMissions(prev => {
-                // Remove expired or randomly claimed missions
                 const now = Date.now();
                 let updated = prev.map(m => {
                     if (m.status === 'CLAIMED') return m;
                     if (m.expiresAt < now) return MissionGenerator.claimMission(m);
-                    // Random chance another user claims it (1% per tick)
                     if (Math.random() < 0.01) return MissionGenerator.claimMission(m);
                     return m;
                 });
 
-                // Add new mission occasionally (20% chance per tick)
+                // Add new mission
                 if (Math.random() < 0.2 && updated.filter(m => m.status !== 'CLAIMED').length < 10) {
                     updated = [...updated, MissionGenerator.generateMission()];
                 }
 
-                // Remove old claimed missions (keep last 3)
+                // Remove old claimed
                 const claimed = updated.filter(m => m.status === 'CLAIMED');
                 const active = updated.filter(m => m.status !== 'CLAIMED');
-                return [...active.sort((a, b) => b.reward - a.reward), ...claimed.slice(-3)];
+
+                // Sort active by RELEVANCE
+                const sortedActive = sortMissions(active);
+
+                return [...sortedActive, ...claimed.slice(-3)];
             });
         }, 3000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [sortMissions]);
 
     const filteredMissions = missions.filter(m =>
         (filter === 'ALL' || m.category === filter) && m.status !== 'CLAIMED'
@@ -121,6 +138,29 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userG
                 </div>
             )}
 
+            {/* CTA: COMPLETE PROFILE (Priority: Critical) */}
+            {!isLoading && (
+                <div className="max-w-6xl mx-auto mb-8 animate-slide-up">
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/30 rounded-xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-1 bg-blue-500 h-full"></div>
+                        <div className="flex items-center gap-4 relative z-10">
+                            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-xl">🧬</div>
+                            <div>
+                                <h3 className="text-sm font-bold text-white">Complete Your Profile</h3>
+                                <p className="text-xs text-blue-200">Confidence: 15% • Take the refined skills check for better matches.</p>
+                            </div>
+                        </div>
+                        <button
+                            id="btn-calibrate"
+                            onClick={onCalibrate}
+                            className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-blue-500/20"
+                        >
+                            CALIBRATE
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* MISSION FEED */}
             {!isLoading && (
                 <div className="max-w-6xl mx-auto space-y-4">
@@ -142,7 +182,13 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userG
                                     <div className="flex items-center gap-3 mb-1">
                                         <h3 className="font-bold text-white group-hover:text-blue-200 transition-colors">{mission.title}</h3>
                                         {getStatusBadge(mission)}
-                                        {idx === 0 && <span className="text-[10px] text-yellow-400 font-bold">⭐ TOP REWARD</span>}
+                                        {/* RECOMMENDATION BADGE */}
+                                        {mission.category === userTrack && (
+                                            <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] animate-pulse">
+                                                ✨ RECOMMENDED
+                                            </span>
+                                        )}
+                                        {idx === 0 && mission.category !== userTrack && <span className="text-[10px] text-yellow-400 font-bold">⭐ TOP REWARD</span>}
                                     </div>
                                     <p className="text-xs text-zinc-500">{mission.client} • {mission.desc}</p>
                                 </div>
