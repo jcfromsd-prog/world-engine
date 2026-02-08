@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import type { LiveMission } from '../../lib/MissionGenerator';
 
 interface MissionWorkspaceProps {
-    mission: LiveMission;
+    mission: any;
     onComplete: () => void;
     onCancel: () => void;
 }

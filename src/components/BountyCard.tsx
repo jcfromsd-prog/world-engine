@@ -7,7 +7,7 @@ export interface BountyProps {
     title: string;
     reward: string;
     cause: string;
-    desc?: string; // Standardized desc
+    desc?: string;
     tags?: string[];
     time?: string;
     difficulty?: string;
@@ -15,12 +15,8 @@ export interface BountyProps {
     highlight?: boolean;
     locked?: boolean;
     source?: string;
-    financials?: {
-        platformFee: number;
-        userGain: number;
-        totalValue: number;
-    };
-    squadRoles?: string[];
+    financials?: Record<string, any>;
+    squadRoles?: any[];
     onSolve: () => void;
 }
 
@@ -143,4 +139,3 @@ const BountyCard: React.FC<BountyProps> = ({
 };
 
 export default BountyCard;
-
