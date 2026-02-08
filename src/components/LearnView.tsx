@@ -91,7 +91,7 @@ const LearnView: React.FC<LearnViewProps> = ({ onBack }) => {
 
                         {/* Category */}
                         <div className="text-purple-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">
-                            {currentNode.category} // Core Module
+                            {currentNode.category} <span className="text-zinc-700">/</span> Core Module
                         </div>
 
                         <h2 className="text-4xl font-black text-white mb-6 uppercase tracking-tighter leading-none">

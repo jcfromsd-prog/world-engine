@@ -89,7 +89,7 @@ const RemixInterface = () => {
                 </div>
 
                 <div className="bg-gray-900 text-green-400 p-6 rounded-xl font-mono text-sm mb-8 text-left shadow-inner">
-                    <p className="mb-2 text-gray-500">// Your Custom Logic</p>
+                    <p className="mb-2 text-gray-500">{'// Your Custom Logic'}</p>
                     <p>ROLE: Senior Lead Qualifier</p>
                     <p>MISSION: Analyze plumbing inquiries.</p>
                     <p>IF "Leak" OR "Flood" -{'>'} PRIORITY: URGENT</p>
