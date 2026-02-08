@@ -15,6 +15,7 @@ import { SwarmDashboard } from "./components/admin/SwarmDashboard";
 import { MasterTeacherDashboard } from "./components/admin/MasterTeacherDashboard";
 import { CalibrationModal } from "./components/dashboard/CalibrationModal";
 import { GenesisFeed } from "./components/feed/GenesisFeed";
+import { SagePrep } from "./components/learning/SagePrep";
 
 
 import Header from "./components/Header";
@@ -502,43 +503,12 @@ const App: React.FC = () => {
 
       {/* 🧠 SAGE PREP (Micro-Syllabus) */}
       {appState === "SAGE_PREP" && (
-        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in">
-          <div className="max-w-2xl w-full bg-zinc-900 border border-purple-500/30 rounded-3xl p-8 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-blue-500 to-green-500 animate-pulse" />
-
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-full bg-purple-900/50 flex items-center justify-center border border-purple-500">
-                <span className="text-2xl">🧠</span>
-              </div>
-              <div>
-                <h2 className="text-2xl font-black text-white">SAGE PREP MODULE</h2>
-                <p className="text-purple-400 font-mono text-xs uppercase tracking-widest">Just-in-Time Learning Injection</p>
-              </div>
-            </div>
-
-            <div className="bg-black/50 rounded-xl p-6 border border-white/10 mb-8">
-              <h3 className="text-xl font-bold text-white mb-2">{sagePrepContent?.node.title || "Foundational Concept"}</h3>
-              <p className="text-zinc-300 leading-relaxed mb-4">
-                {sagePrepContent?.node.content || "Before you start, remember: Great architects measure twice and cut once. Review the core principles of this mission type."}
-              </p>
-              <div className="flex gap-2">
-                <span className="px-3 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full font-bold">
-                  {sagePrepContent?.reason || "Recommended for You"}
-                </span>
-                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full font-bold">
-                  {Math.round((sagePrepContent?.successProbability || 0.8) * 100)}% Success Rate
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setAppState("MISSION_WORKSPACE")}
-              className="w-full py-4 bg-white text-black font-black uppercase tracking-widest rounded-xl hover:bg-purple-400 transition-colors shadow-lg hover:shadow-purple-500/20"
-            >
-              I Am Ready (Proceed to Mission)
-            </button>
-          </div>
-        </div>
+        <SagePrep
+          mission={activeMission}
+          sageContent={sagePrepContent}
+          onComplete={() => setAppState("MISSION_WORKSPACE")}
+          onCancel={() => setAppState("CHOICE_SELECTION")}
+        />
       )}
 
       {/* 🛡️ THE HQ (Feed Selection) */}
