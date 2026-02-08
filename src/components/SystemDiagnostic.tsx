@@ -1,7 +1,8 @@
-
 import React, { useState } from 'react';
 import { Activity, CheckCircle, XCircle, AlertTriangle, Zap, Users, Terminal, ChevronRight } from 'lucide-react';
 import QualityControlDeck from './QualityControlDeck';
+import { auditEngine } from '../services/AuditEngine';
+import { SimulationEngine } from '../services/SimulationEngine';
 
 // ----------------- TYPES -----------------
 interface SimulationResult {
@@ -174,7 +175,10 @@ const SystemDiagnostic: React.FC = () => {
             <div className="fixed bottom-4 right-4 z-[90] flex flex-col gap-2 items-end">
                 {/* 1. QUALITY CONTROL COCKPIT */}
                 <button
-                    onClick={() => setIsQualityOpen(true)}
+                    onClick={() => {
+                        setIsQualityOpen(true);
+                        auditEngine.runFullAudit(); // Run real-time audit on click
+                    }}
                     className="group bg-indigo-900/80 border border-indigo-500/50 hover:bg-indigo-600 text-white px-4 py-3 text-xs font-mono uppercase rounded-lg flex items-center gap-2 transition-all shadow-lg hover:shadow-indigo-500/30 backdrop-blur-sm"
                 >
                     <Users size={14} />
@@ -183,7 +187,12 @@ const SystemDiagnostic: React.FC = () => {
 
                 {/* 2. PATH SIMULATION */}
                 <button
-                    onClick={runSimulation}
+                    onClick={async () => {
+                        setIsRunning(true);
+                        // Run both real simulation and UI simulation
+                        await SimulationEngine.runSimulation();
+                        runSimulation();
+                    }}
                     disabled={isRunning}
                     className="group bg-zinc-900 border border-gray-700 hover:border-green-500 text-gray-400 hover:text-green-400 px-4 py-3 text-xs font-mono uppercase rounded-lg flex items-center gap-2 transition-all shadow-lg hover:shadow-green-500/20"
                 >
@@ -283,7 +292,7 @@ const SystemDiagnostic: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="font-mono text-sm">
-                                        {results.map((r, i) => (
+                                        {results.map((r: SimulationResult, i: number) => (
                                             <tr key={i} className="border-b border-gray-900 hover:bg-zinc-800/50 transition-colors">
                                                 <td className={`px-4 py-3 font-bold ${archetypeColor[r.archetype]}`}>
                                                     {r.archetype}
