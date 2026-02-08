@@ -15,8 +15,12 @@ export interface BountyProps {
     highlight?: boolean;
     locked?: boolean;
     source?: string;
-    financials?: Record<string, any>;
-    squadRoles?: any[];
+    financials?: {
+        platformFee: number;
+        userGain: number;
+        totalValue: number;
+    };
+    squadRoles?: string[];
     onSolve: () => void;
 }
 

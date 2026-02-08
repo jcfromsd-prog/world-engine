@@ -6,7 +6,16 @@
  */
 
 // 1. The Test Profiles (The "Soul" of the test)
-export const AUDIT_PROFILES = {
+export interface AuditProfile {
+    id: string;
+    role: string;
+    track: string;
+    grade: number;
+    wallet: number;
+    xp: number;
+}
+
+export const AUDIT_PROFILES: Record<string, AuditProfile> = {
     MAYA: { id: 'MAYA', role: 'STUDENT', track: 'SCIENCE', grade: 10, wallet: 100, xp: 1200 },
     LEO: { id: 'LEO', role: 'STUDENT', track: 'NOVICE', grade: 3, wallet: 0, xp: 300 },
     ALEX: { id: 'ALEX', role: 'ALUMNI', track: 'LEGEND', grade: 14, wallet: 5000, xp: 8500 }
@@ -52,7 +61,7 @@ class AuditService {
     }
 
     // SIMULATE A USER JOURNEY (The "Hero's Journey")
-    private async simulateLifecycle(user: any): Promise<AuditResult[]> {
+    private async simulateLifecycle(user: AuditProfile): Promise<AuditResult[]> {
         const report: AuditResult[] = [];
 
         // 1. UI STATE CHECK (Not visual, but logical)
@@ -76,7 +85,7 @@ class AuditService {
 
     // --- INDIVIDUAL LOGIC CHECKS ---
 
-    private async checkUIState(user: any): Promise<AuditResult> {
+    private async checkUIState(user: AuditProfile): Promise<AuditResult> {
         // Simulate clicking "Calibrate"
         let domCheck = true;
         if (typeof document !== 'undefined') {
@@ -101,7 +110,7 @@ class AuditService {
         };
     }
 
-    private async checkSquadResponse(user: any): Promise<AuditResult> {
+    private async checkSquadResponse(user: AuditProfile): Promise<AuditResult> {
         // Simulate sending a help request
         const mockSquadOnline = user.id === 'LEO' ? Math.random() > 0.05 : true;
 
@@ -114,7 +123,7 @@ class AuditService {
         };
     }
 
-    private async checkGrowthLogic(user: any): Promise<AuditResult> {
+    private async checkGrowthLogic(user: AuditProfile): Promise<AuditResult> {
         // Simulate task completion
         const startXP = user.xp;
         const taskReward = 50;
@@ -132,7 +141,7 @@ class AuditService {
         };
     }
 
-    private async checkEconomyLogic(user: any): Promise<AuditResult> {
+    private async checkEconomyLogic(user: AuditProfile): Promise<AuditResult> {
         // Simulate a Mission Payout
         const missionReward = 400; // The 400 GP task mentioned
         const platformFee = missionReward * 0.20; // 20% tax

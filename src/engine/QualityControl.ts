@@ -125,7 +125,7 @@ export const PERSONA_BOTS: PersonaProfile[] = [
 export const runSimulation = (persona: PersonaProfile, mission: Mission): SimulationLog => {
     // 1. Analyze Complexity vs Persona Capabilities
     // Adaptive fallback if mission properties are missing (e.g. mock data)
-    const description = mission.description || (mission as any).desc || "";
+    const description = mission.description || (mission as Mission & { desc?: string }).desc || "";
     const wordCount = description.split(" ").length;
     const estReadingTime = (wordCount / persona.attributes.readingSpeed) * 60;
 
@@ -196,7 +196,7 @@ export const auditMission = (mission: Mission): AuditReport => {
 
     // Detect Subject via Tags
     // Fallback to tags if educationalTags is missing
-    const tagsArr = mission.educationalTags || (mission as any).tags || [];
+    const tagsArr = mission.educationalTags || (mission as Mission & { tags?: string[] }).tags || [];
     const tags = tagsArr.join(" ").toUpperCase();
 
     if (tags.includes("MATH")) {
@@ -214,7 +214,7 @@ export const auditMission = (mission: Mission): AuditReport => {
     }
 
     // Check Description Length & Clarity
-    const description = mission.description || (mission as any).desc || "";
+    const description = mission.description || (mission as Mission & { desc?: string }).desc || "";
     if (description.length > 20 && description.length < 150) {
         score += 20;
         strengths.push("Clear, concise instructions");
