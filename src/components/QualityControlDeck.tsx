@@ -23,33 +23,72 @@ import type { Mission } from '../engine/types';
 
 // Mock missions for demo purposes if none provided
 // Extended to match Mission type partially
-const DEFAULT_MISSIONS: any[] = [
+const DEFAULT_MISSIONS: Mission[] = [
     {
         id: 'm1',
         title: 'Leaf Pattern Match',
         description: 'Find the matching leaf patterns in the forest floor. Photosynthesis check required.',
         educationalTags: ['NATURE', 'SCIENCE'],
         difficulty: 'easy',
-        // Mocking extra fields to satisfy type if needed by consumers, though we cast
+        type: 'simulation',
+        requirements: {
+            minLevel: 1,
+            requiredSkills: {},
+            squadRequired: false,
+            verifiedBadgeRequired: false
+        },
+        rewards: {
+            xp: { logic: 0, creativity: 0, engineering: 0, leadership: 0, nature: 100, social: 0 },
+            genesisPoints: 50
+        },
+        estimatedTime: 10,
+        checkpoints: 1
     },
     {
         id: 'm2',
         title: 'Binary Logic Gate',
         description: 'Complete the circuit using AND/OR gates. Requires boolean logic mastery.',
         educationalTags: ['TECH', 'LOGIC', 'MATH'],
-        difficulty: 'hard'
+        difficulty: 'hard',
+        type: 'simulation',
+        requirements: {
+            minLevel: 5,
+            requiredSkills: { logic: 20 },
+            squadRequired: false,
+            verifiedBadgeRequired: false
+        },
+        rewards: {
+            xp: { logic: 250, creativity: 0, engineering: 0, leadership: 0, nature: 0, social: 0 },
+            genesisPoints: 120
+        },
+        estimatedTime: 25,
+        checkpoints: 2
     },
     {
         id: 'm3',
         title: 'Team Resource Split',
         description: 'Divide 100 apples among 3 team members fairly. Explain your remainder strategy.',
         educationalTags: ['PEOPLE', 'MATH'],
-        difficulty: 'medium'
+        difficulty: 'medium',
+        type: 'simulation',
+        requirements: {
+            minLevel: 3,
+            requiredSkills: { social: 10 },
+            squadRequired: true,
+            minSquadSize: 2,
+            verifiedBadgeRequired: false
+        },
+        rewards: {
+            xp: { logic: 0, creativity: 0, engineering: 0, leadership: 0, nature: 0, social: 150 },
+            genesisPoints: 80
+        },
+        estimatedTime: 15,
+        checkpoints: 1
     }
 ];
 
 interface QualityControlDeckProps {
-    missions?: any[]; // Using any to be flexible with UI vs Engine types for this diagnostic view
+    missions?: Mission[]; // Fixed: replaced any[] with Mission[]
     onClose?: () => void;
 }
 

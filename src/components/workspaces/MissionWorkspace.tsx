@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import type { LiveMission } from '../../lib/MissionGenerator';
 
 interface MissionWorkspaceProps {
-    mission: any;
+    mission: LiveMission;
     onComplete: () => void;
     onCancel: () => void;
 }
@@ -13,7 +14,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
     const [feedback, setFeedback] = useState<string | null>(null);
 
     // SIMULATED AI GRADER (The Brain)
-    const calculateQuality = (input: string) => {
+    const calculateQuality = useCallback((input: string) => {
         let score = 0;
         // 1. Length Check
         if (input.length > 20) score += 30;
@@ -26,10 +27,10 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
         if (mission.category === 'CREATIVE' && (lower.includes('feel') || lower.includes('color') || lower.includes('story') || lower.includes('create'))) score += 40;
 
         return Math.min(score, 100); // Cap at 100
-    };
+    }, [mission.category]);
 
     // LIVE QUALITY SCORE (Updates as user types)
-    const liveScore = useMemo(() => calculateQuality(content), [content, mission.category]);
+    const liveScore = useMemo(() => calculateQuality(content), [content, calculateQuality]);
 
     // Get color and label based on score
     const getScoreInfo = (score: number) => {

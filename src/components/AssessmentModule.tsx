@@ -52,7 +52,7 @@ const AssessmentModule: React.FC<AssessmentModuleProps> = ({ onClose, onComplete
         const { passion, style, grade } = answers;
 
         // Base templates based on passion
-        const templates: Record<string, any> = {
+        const templates: Record<string, Partial<PathOption>> = {
             'Coding': {
                 role: 'Code Breaker',
                 focus: 'Algorithmic Impact',
@@ -131,9 +131,11 @@ const AssessmentModule: React.FC<AssessmentModuleProps> = ({ onClose, onComplete
 
         return {
             ...result,
-            pay: `${grade * 50} GP + Legend XP`, // Calibration based on grade
-            desc: result.mission // For backward compatibility
-        };
+            role: result.role || 'Initiate',
+            focus: result.focus || 'Generalist',
+            pay: `${grade * 50} GP + Legend XP`,
+            desc: result.mission || 'Begin your journey.'
+        } as PathOption;
     };
 
     const sessionId = React.useId().replace(/:/g, '');
@@ -252,7 +254,7 @@ const AssessmentModule: React.FC<AssessmentModuleProps> = ({ onClose, onComplete
                                         className="p-6 bg-zinc-900/50 backdrop-blur-md border-2 border-zinc-800 hover:border-white rounded-3xl flex flex-col items-center gap-4 transition-all group"
                                     >
                                         <div className={`p-4 rounded-2xl bg-zinc-950 border border-zinc-800 group-hover:scale-110 group-hover:border-white transition-all text-zinc-400 group-hover:text-white`}>
-                                            {React.cloneElement(p.icon as React.ReactElement<any>, { size: 32 })}
+                                            {React.cloneElement(p.icon as React.ReactElement<{ size: number }>, { size: 32 })}
                                         </div>
                                         <div className="text-lg font-black text-white uppercase tracking-wider">{p.name}</div>
                                     </button>
@@ -282,7 +284,7 @@ const AssessmentModule: React.FC<AssessmentModuleProps> = ({ onClose, onComplete
                                         className="p-6 bg-zinc-900/50 backdrop-blur-md border-2 border-zinc-800 hover:border-cyan-400 rounded-3xl flex items-center gap-6 group transition-all text-left"
                                     >
                                         <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 group-hover:border-cyan-400/50 group-hover:text-cyan-400 transition-all text-zinc-500">
-                                            {React.cloneElement(s.icon as React.ReactElement<any>, { size: 32 })}
+                                            {React.cloneElement(s.icon as React.ReactElement<{ size: number }>, { size: 32 })}
                                         </div>
                                         <div>
                                             <div className="text-xl font-black text-white uppercase tracking-widest mb-1">{s.title}</div>

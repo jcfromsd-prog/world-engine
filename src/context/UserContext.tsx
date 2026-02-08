@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import { KNOWLEDGE_BASE, type SkillNode } from '../data/KnowledgeBase';
 import { Neo4jService } from '../services/Neo4jService';
@@ -37,6 +38,14 @@ export interface Psychometrics {
     relatedness: number;
 }
 
+export interface Intervention {
+    id: string;
+    title: string;
+    description: string;
+    reward: number;
+    type: string;
+}
+
 interface UserContextType {
     userProfile: UserProfile | null;
     heroPath: HeroPath | null;
@@ -45,7 +54,7 @@ interface UserContextType {
     knowledge: SkillNode[];
     synapseCount: number;
     psychometrics: Psychometrics;
-    interventions: any[];
+    interventions: Intervention[];
     setUser: (profile: UserProfile, path: HeroPath) => void;
     setHeroPath: React.Dispatch<React.SetStateAction<HeroPath | null>>;
     updateXP: (amount: number) => void;
@@ -71,7 +80,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         competence: 10,
         relatedness: 10
     });
-    const [interventions, setInterventions] = useState<any[]>([]);
+    const [interventions, setInterventions] = useState<Intervention[]>([]);
 
     const synapseCount = useMemo(() => {
         return knowledge.reduce((sum, node) => sum + node.mastery, 0);
