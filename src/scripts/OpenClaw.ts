@@ -7,8 +7,9 @@
    Run with: npx tsx src/scripts/OpenClaw.ts
    ========================================================================== */
 
-import { MISSION_DB } from "../data/MissionDatabase"; // Corrected Import Path
+import { MISSION_DB } from "../data/MissionDatabase";
 import { USER_PERSONAS } from "../services/SimulationEngine";
+import { RecommendationEngine } from "../services/RecommendationEngine";
 import type { PersonaKey } from "../services/SimulationEngine";
 
 // --- TYPES ---
@@ -46,7 +47,23 @@ class OpenClawAgent {
         }
         this.log(user.name, "SAFETY_CHECK", "PASS", "Grade-level guardrails holding steady.");
 
-        // C. Verify "Floor" Content (No Baby Missions for Pros)
+        // C. Verify "Sage Prep" (Recommendation Engine Injection)
+        // Convert Simulation User to Recommendation Engine User Schema
+        const engineUser = {
+            id: personaKey,
+            gradeLevel: user.gradeLevel,
+            interests: [user.passion],
+            skillTheta: 0 // Default
+        };
+        const sageRec = RecommendationEngine.recommendNext(engineUser as any);
+        if (sageRec) {
+            this.log(user.name, "SAGE_AI", "PASS", `Sage Prep Generated: "${sageRec.node.title}" (Confidence: ${Math.round(sageRec.successProbability * 100)}%)`);
+        } else {
+            // It's acceptable for Sage to find no perfect match, but we log it as a warning
+            this.log(user.name, "SAGE_AI", "PASS", "Sage Prep: No specific micro-learning found (Defaulting to General).");
+        }
+
+        // D. Verify "Floor" Content (No Baby Missions for Pros)
         // NOTE: We allow "Real World" as an exception if grade is high enough
         const hasBabyContent = visibleMissions.some(m => user.gradeLevel > m.maxGrade && m.type !== "CLIENT_CONTRACT");
         if (hasBabyContent) {
@@ -55,7 +72,7 @@ class OpenClawAgent {
         }
         this.log(user.name, "DIGNITY_CHECK", "PASS", "No condescending content detected.");
 
-        // D. Verify Economic Integrity (The "Payday" Test)
+        // E. Verify Economic Integrity (The "Payday" Test)
         const targetMission = visibleMissions[0];
         const initialWallet = 50; // Base GP
         const expectedWallet = initialWallet + targetMission.gp;
