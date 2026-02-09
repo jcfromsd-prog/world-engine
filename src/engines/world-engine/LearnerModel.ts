@@ -51,6 +51,12 @@ export interface LearnerProfile {
     learningStyle: 'visual' | 'verbal' | 'kinesthetic' | 'mixed';
     goals: string[];          // e.g., "Become an Astronaut"
 
+    // Calibrated Identity
+    isCalibrated: boolean;
+    confidence: number;       // 0-100 (Trust score)
+    unlockedTasks: string[];   // Specific contract/bounty IDs unlocked
+    version: number;          // For optimistic locking
+
     // Progress Tracking
     completedMissions: string[];
     genesisPoints: number;

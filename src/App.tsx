@@ -13,7 +13,7 @@ import { FounderCommandPanel } from "./components/dashboard/FounderCommandPanel"
 import { MissionWorkspace } from "./components/workspaces/MissionWorkspace";
 import { SwarmDashboard } from "./components/admin/SwarmDashboard";
 import { MasterTeacherDashboard } from "./components/admin/MasterTeacherDashboard";
-import { CalibrationModal } from "./components/dashboard/CalibrationModal";
+import { CalibrationModal } from "./components/modals/CalibrationModal";
 import { GenesisFeed } from "./components/feed/GenesisFeed";
 import { SagePrep } from "./components/learning/SagePrep";
 import AssessmentModule from "./components/AssessmentModule";
@@ -43,6 +43,10 @@ const APP_LEARNER_PROFILE: LearnerProfile = {
   interests: ["General"],
   learningStyle: 'visual',
   goals: ["Explore the World"],
+  isCalibrated: false,
+  confidence: 15,
+  unlockedTasks: [],
+  version: 1,
   completedMissions: [],
   genesisPoints: 0
 };
@@ -328,6 +332,13 @@ const App: React.FC = () => {
   const [showMasterTeacher, setShowMasterTeacher] = useState(false); // MASTER TEACHER TOGGLE
   const [showCalibration, setShowCalibration] = useState(false); // CALIBRATION TOGGLE
   const [viewMode, setViewMode] = useState<'solver' | 'client'>('solver'); // HEADER VIEW MODE
+  const [learnerProfile, setLearnerProfile] = useState<LearnerProfile>(worldEngine.getProfile());
+
+  const handleCalibrationComplete = (traceId: string) => {
+    console.log(`[APP] Identity Calibrated. Trace: ${traceId}`);
+    setLearnerProfile({ ...worldEngine.getProfile() }); // Trigger re-render
+    setShowCalibration(false);
+  };
 
   // --- SWARM & MASTER TEACHER LISTENER ---
   useEffect(() => {
@@ -453,7 +464,14 @@ const App: React.FC = () => {
       )}
 
       {/* CALIBRATION MODAL */}
-      {showCalibration && <CalibrationModal isOpen={true} onClose={() => setShowCalibration(false)} />}
+      {showCalibration && (
+        <CalibrationModal
+          isOpen={true}
+          onClose={() => setShowCalibration(false)}
+          profile={worldEngine.getProfile()}
+          onComplete={handleCalibrationComplete}
+        />
+      )}
 
       {/* ADMIN OVERLAYS */}
       {showSwarm && <SwarmDashboard onClose={() => setShowSwarm(false)} />}
@@ -614,6 +632,7 @@ const App: React.FC = () => {
                 userTrack={getUserTrack()}
                 onMissionSelect={handleMissionSelect}
                 onCalibrate={() => setShowCalibration(true)}
+                profile={learnerProfile}
               />
             </div>
           </div>

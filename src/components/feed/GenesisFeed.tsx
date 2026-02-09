@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MissionGenerator } from '../../lib/MissionGenerator';
 import type { LiveMission } from '../../lib/MissionGenerator';
+import type { LearnerProfile } from '../../engines/world-engine/LearnerModel';
 
 interface GenesisFeedProps {
     onMissionSelect: (mission: LiveMission) => void;
-    userTrack: string; // CHANGED: Replaced grade with track (e.g. 'CODING')
+    userTrack: string;
     onCalibrate: () => void;
+    profile: LearnerProfile;
 }
 
 type CategoryFilter = 'ALL' | 'CODING' | 'CREATIVE' | 'SCIENCE' | 'LEADERSHIP';
 
-export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userTrack, onCalibrate }) => {
+export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userTrack, onCalibrate, profile }) => {
     const [missions, setMissions] = useState<LiveMission[]>([]);
     const [filter, setFilter] = useState<CategoryFilter>('ALL');
     const [isLoading, setIsLoading] = useState(true);
@@ -139,7 +141,7 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userT
             )}
 
             {/* CTA: COMPLETE PROFILE (Priority: Critical) */}
-            {!isLoading && (
+            {!isLoading && !profile.isCalibrated && (
                 <div className="max-w-6xl mx-auto mb-8 animate-slide-up">
                     <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/30 rounded-xl relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-1 bg-blue-500 h-full"></div>
@@ -147,7 +149,7 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userT
                             <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-xl">🧬</div>
                             <div>
                                 <h3 className="text-sm font-bold text-white">Complete Your Profile</h3>
-                                <p className="text-xs text-blue-200">Confidence: 15% • Take the refined skills check for better matches.</p>
+                                <p className="text-xs text-blue-200">Confidence: {profile.confidence}% • Take the refined skills check for better matches.</p>
                             </div>
                         </div>
                         <button
