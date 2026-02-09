@@ -18,6 +18,7 @@ export const WorldEngineDevConsole: React.FC<{
     const [tick, setTick] = useState(0);
     const [logs, setLogs] = useState<string[]>(["System Initialized."]);
     const [isClawRunning, setIsClawRunning] = useState(false);
+    const [targetGrade, setTargetGrade] = useState<number>(5); // Default to Grade 5
 
     const addLog = React.useCallback((msg: string) => {
         setLogs(prev => [msg, ...prev].slice(0, 20));
@@ -101,23 +102,62 @@ export const WorldEngineDevConsole: React.FC<{
 
                         {/* ⚠️ RESET / SEED BUTTON */}
                         {process.env.NODE_ENV !== 'production' && (
-                            <div className="flex items-center ml-4 pl-4 border-l border-white/10">
+                            <div className="flex items-center ml-4 pl-4 border-l border-white/10 gap-2">
+                                <span className="text-red-400 text-[10px] font-bold">RESEED:</span>
+                                {/* Grade Selector */}
+                                <select
+                                    className="bg-red-900/10 border border-red-500/30 text-red-400 text-xs rounded px-1 py-0.5 focus:outline-none focus:border-red-500"
+                                    value={targetGrade}
+                                    onChange={(e) => setTargetGrade(Number(e.target.value))}
+                                >
+                                    {[1, 2, 3, 4, 5, 8, 10, 12].map(g => (
+                                        <option key={g} value={g}>Grade {g}</option>
+                                    ))}
+                                </select>
+
+                                {/* Typed Confirmation Input */}
+                                <input
+                                    type="text"
+                                    placeholder={`Type "RESET GRADE ${targetGrade}"`}
+                                    className="bg-black border border-red-500/30 text-red-400 text-xs rounded px-2 py-0.5 w-32 focus:outline-none focus:border-red-500 uppercase"
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        // Simple validation logic
+                                        if (val === `RESET GRADE ${targetGrade}`) {
+                                            e.target.classList.add('border-green-500', 'text-green-400');
+                                            e.target.classList.remove('border-red-500/30', 'text-red-400');
+                                        } else {
+                                            e.target.classList.remove('border-green-500', 'text-green-400');
+                                            e.target.classList.add('border-red-500/30', 'text-red-400');
+                                        }
+                                    }}
+                                    id="confirm-reset-input"
+                                />
+
                                 <button
+                                    id="btn-execute-reset"
                                     aria-label="Reset curriculum and reseed data"
                                     onClick={async () => {
-                                        if (!window.confirm("Hard Reset & Reseed Curriculum? This cannot be undone.")) return;
+                                        const input = document.getElementById('confirm-reset-input') as HTMLInputElement;
+                                        if (input.value !== `RESET GRADE ${targetGrade}`) {
+                                            alert("Please type the confirmation phrase exactly.");
+                                            return;
+                                        }
+
                                         try {
-                                            addLog(`[SYSTEM] ⚠️ Initiating Reset...`);
-                                            engine.resetProgress();
-                                            addLog(`[SYSTEM] ✅ Curriculum Reseeded. Ready to Swarm.`);
-                                            setTick(t => t + 1); // Force re-render
+                                            const traceId = crypto.randomUUID().slice(0, 8);
+                                            addLog(`[SYSTEM] ⚠️ Initiating Reseed (Trace: ${traceId})...`);
+                                            engine.resetProgress(targetGrade);
+                                            addLog(`[SYSTEM] ✅ Curriculum Reseeded (Depth: 2).`);
+                                            setTick(t => t + 1);
+                                            input.value = ""; // Clear input
                                         } catch (error: any) {
                                             addLog(`[SYSTEM] ❌ Reset Failed: ${error.message}`);
                                         }
                                     }}
-                                    className="px-3 py-1 text-xs font-mono font-bold border rounded transition-all text-red-400 bg-red-500/10 border-red-500/50 hover:bg-red-500/20 cursor-pointer"
+                                    className="px-3 py-1 text-xs font-mono font-bold border rounded transition-all text-red-500 bg-black border-red-500 hover:bg-red-500 hover:text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    [ ⚠️ RESET DATA ]
+                                    [ EXECUTE PROTOCOL ]
                                 </button>
                             </div>
                         )}
