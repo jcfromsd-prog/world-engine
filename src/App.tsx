@@ -16,6 +16,9 @@ import { MasterTeacherDashboard } from "./components/admin/MasterTeacherDashboar
 import { CalibrationModal } from "./components/dashboard/CalibrationModal";
 import { GenesisFeed } from "./components/feed/GenesisFeed";
 import { SagePrep } from "./components/learning/SagePrep";
+import AssessmentModule from "./components/AssessmentModule";
+import { LearnerMap } from "./components/learner/LearnerMap";
+import { WorldEngineDevConsole } from "./components/WorldEngine/DevConsole";
 
 
 import Header from "./components/Header";
@@ -25,10 +28,28 @@ import { ActiveMission } from "./components/engines/ActiveMission";
 import type { LiveMission } from "./lib/MissionGenerator";
 import { supabase } from "./lib/supabase";
 import { RecommendationEngine } from "./services/RecommendationEngine";
+import { WorldEngine } from "./engines/world-engine/WorldEngine";
+import { SEED_GRAPH } from "./engines/world-engine/KnowledgeGraph";
+import type { LearnerProfile } from "./engines/world-engine/LearnerModel";
+
+// --- MOCK PROFILE FOR APP-LEVEL ENGINE ---
+const APP_LEARNER_PROFILE: LearnerProfile = {
+  id: "learner-app-root",
+  name: "Explorer Root",
+  currentGrade: 5, // Default to Grade 5
+  masteryMap: new Map(),
+  domainLevels: { literacy: 1.0, numeracy: 1.0, science: 1.0, social: 1.0, sel: 1.0, career: 1.0 },
+  cognitiveState: { focusLevel: 100, frustrationLevel: 0, energyLevel: 100, currentZPD: 0.2 },
+  interests: ["General"],
+  learningStyle: 'visual',
+  goals: ["Explore the World"],
+  completedMissions: [],
+  genesisPoints: 0
+};
 
 
 // --- TYPES ---
-type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP";
+type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP";
 type OnboardingStep = "NAME" | "GRADE" | "PASSION" | "MATCHING";
 
 export interface UserProfile {
@@ -78,7 +99,7 @@ const MISSION_DB: Mission[] = [
 /* ==========================================================================
    COMPONENT: THE 4 ENGINES GRID (Blueprint Visualization)
    ========================================================================== */
-const EnginesGrid = ({ onSolveClick }: { onSolveClick: () => void }) => (
+const EnginesGrid = ({ onSolveClick, onLearnClick }: { onSolveClick: () => void, onLearnClick: () => void }) => (
   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-6xl mx-auto mb-32 px-4 w-full">
     {/* 🟢 CONNECT */}
     <div className="p-6 bg-zinc-900/50 border border-green-500/20 rounded-2xl hover:bg-zinc-800 transition-all group hover:-translate-y-2">
@@ -88,10 +109,16 @@ const EnginesGrid = ({ onSolveClick }: { onSolveClick: () => void }) => (
     </div>
 
     {/* 🟣 LEARN */}
-    <div className="p-6 bg-zinc-900/50 border border-purple-500/20 rounded-2xl hover:bg-zinc-800 transition-all group hover:-translate-y-2">
+    <div
+      onClick={onLearnClick}
+      className="p-6 bg-zinc-900/50 border border-purple-500/20 rounded-2xl hover:bg-zinc-800 transition-all group hover:-translate-y-2 cursor-pointer relative overflow-hidden"
+    >
       <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🟣</div>
       <h3 className="text-xl font-black text-purple-400 mb-2 tracking-wide">LEARN</h3>
       <p className="text-xs text-zinc-400 leading-relaxed group-hover:text-white transition-colors">The <strong className="text-white">Acceleration Engine</strong>. AI speed. Download skills and reach flow state instantly.</p>
+      <div className="absolute bottom-4 right-4 text-[10px] font-black text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
+        Initialize →
+      </div>
     </div>
 
     {/* 🔵 SOLVE (Interactive) */}
@@ -262,6 +289,11 @@ const ViralShareModal: React.FC<{ mission: Mission, earnings: number, onClose: (
 const App: React.FC = () => {
   // 1. Injected Sage Prep State Logic
   const [appState, setAppState] = useState<AppState>("LANDING");
+
+  // --- WORLD ENGINE INSTANCE ---
+  const worldEngine = React.useMemo(() => new WorldEngine(APP_LEARNER_PROFILE, SEED_GRAPH), []);
+
+
   const [sagePrepContent, setSagePrepContent] = useState<any>(null); // Using any to reuse RecommendationResult structure loosely
 
   const startSagePrep = (mission: LiveMission | Mission) => {
@@ -449,9 +481,23 @@ const App: React.FC = () => {
               <button onClick={() => setAppState("ONBOARDING")} className="px-12 py-6 bg-white text-black font-black text-xl rounded-2xl hover:bg-blue-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
                 🚀 START YOUR ENGINE
               </button>
+
+              <button
+                onClick={() => setAppState("WORLD_ENGINE_DEV")}
+                className="px-6 py-6 bg-zinc-900 border border-green-500/30 text-green-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
+              >
+                🛠️ DEV: WORLD ENGINE
+              </button>
             </div>
 
-            <EnginesGrid onSolveClick={() => setAppState("IMPACT_ENGINE")} />
+            <EnginesGrid
+              onSolveClick={() => setAppState("IMPACT_ENGINE")}
+              onLearnClick={() => {
+                // LOGIC: Check if calibrated. For now, we assume uncalibrated to force the flow as requested in Scenario A.
+                // In a real scenario, check userProfile.completedMissions or similar.
+                setAppState("ASSESSMENT");
+              }}
+            />
           </div>
         </div>
       )}
@@ -510,6 +556,31 @@ const App: React.FC = () => {
           onCancel={() => setAppState("CHOICE_SELECTION")}
         />
       )}
+
+      {/* 🧪 ASSESSMENT MODULE (The Missing Link) */}
+      {appState === "ASSESSMENT" && (
+        <AssessmentModule
+          onClose={() => setAppState("LANDING")}
+          onComplete={(data, path) => {
+            console.log("Assessment Complete:", data, path);
+
+            // 1. Update Profile Logic (Simulated)
+            completeOnboarding({ ...data, grade: data.grade.toString(), passion: path.focus });
+
+            // 2. Conditional Routing (The Fix)
+            // K-5 => Learner Map
+            // 6+ => Squad HQ / Choice Selection
+            if (data.grade <= 5) {
+              setAppState("LEARNER_MAP");
+            } else {
+              setAppState("CHOICE_SELECTION");
+            }
+          }}
+        />
+      )}
+
+      {/* 🚀 LEARNER MAP (K-5 Environment) */}
+      {appState === "LEARNER_MAP" && <LearnerMap />}
 
       {/* 🛡️ THE HQ (Feed Selection) */}
       {appState === "CHOICE_SELECTION" && (
@@ -583,6 +654,14 @@ const App: React.FC = () => {
           }}
         />
       </div>
+
+      {/* 🛠️ WORLD ENGINE DEV CONSOLE */}
+      {appState === "WORLD_ENGINE_DEV" && (
+        <WorldEngineDevConsole
+          onExit={() => setAppState("LANDING")}
+          engine={worldEngine}
+        />
+      )}
     </div>
   );
 };
