@@ -617,7 +617,12 @@ const App: React.FC = () => {
                 <h2 className="text-3xl font-black mb-2 italic">THE SQUAD HQ</h2>
                 <div className="space-y-6 mt-8">
                   <div>
-                    <div className="text-[10px] text-zinc-600 font-black uppercase tracking-widest mb-1">Authenticated Contributor</div>
+                    <div className="text-[10px] text-zinc-600 font-black uppercase tracking-widest mb-1">
+                      {Number(userProfile?.grade) <= 5 ? "Authenticated Contributor" : ""}
+                      {Number(userProfile?.grade) >= 6 && Number(userProfile?.grade) <= 8 ? "TRAILBLAZER (Tier 2)" : ""}
+                      {Number(userProfile?.grade) >= 9 && Number(userProfile?.grade) <= 12 ? "EXPLORER (Tier 3)" : ""}
+                      {Number(userProfile?.grade) >= 13 ? "VOYAGER (High Command)" : ""}
+                    </div>
                     <div className="text-xl font-bold text-white">{userProfile?.name}</div>
                   </div>
                   <div className="flex gap-4">
