@@ -12,14 +12,14 @@ import type { LearnerProfile } from '../../engines/world-engine/LearnerModel';
 // --- MOCK PROFILE FOR LEARNER MAP ---
 const LEARNER_PROFILE: LearnerProfile = {
     id: "learner-1128",
-    name: "Explorer One",
-    currentGrade: 1,
+    name: "Builder One",
+    currentGrade: 4,
     masteryMap: new Map(),
-    domainLevels: { literacy: 1.0, numeracy: 1.0, science: 1.0, social: 1.0, sel: 1.0, career: 1.0 },
-    cognitiveState: { focusLevel: 100, frustrationLevel: 0, energyLevel: 100, currentZPD: 0.2 },
-    interests: ["Space", "Dinosaurs"],
-    learningStyle: 'visual',
-    goals: ["Master the Galaxy"],
+    domainLevels: { literacy: 3.0, numeracy: 3.0, science: 3.0, social: 3.0, sel: 3.0, career: 3.0 },
+    cognitiveState: { focusLevel: 100, frustrationLevel: 0, energyLevel: 100, currentZPD: 0.5 },
+    interests: ["Engineering", "Robotics"],
+    learningStyle: 'kinesthetic',
+    goals: ["Build a Robot"],
     completedMissions: [],
     genesisPoints: 0
 };
@@ -81,17 +81,17 @@ export const LearnerMap: React.FC = () => {
                 <div className="flex-1 space-y-12">
                     <div className="text-center space-y-8">
                         <div className="inline-block px-4 py-2 bg-purple-500/10 text-purple-400 rounded-full border border-purple-500/20 text-xs font-black uppercase tracking-widest animate-pulse">
-                            Daily Calibration
+                            Builder Mission Control
                         </div>
 
                         <h1 className="text-5xl md:text-7xl font-black tracking-tighter">
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
-                                LEARNER MAP
+                                BUILDER MAP
                             </span>
                         </h1>
 
                         <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
-                            Welcome to your personalized growth engine. Your daily missions will appear here based on your World Engine profile.
+                            Ready to build your skills, Builder? Your daily missions are prepped and ready for assembly.
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12 text-left">
