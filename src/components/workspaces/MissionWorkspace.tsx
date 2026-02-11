@@ -125,7 +125,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
 
                             <div className="text-center mt-auto mb-10">
                                 <button onClick={() => setActiveTab('WORKBENCH')} className="px-10 py-5 bg-blue-600 text-white font-black text-xl rounded-full hover:scale-105 transition-transform shadow-[0_0_40px_rgba(37,99,235,0.4)]">
-                                    I'M READY TO BUILD 🚀
+                                    LAUNCH WORKSPACE 🚀
                                 </button>
                             </div>
                         </div>
@@ -168,7 +168,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                                     <div className="absolute bottom-24 left-6 right-6 bg-amber-900/95 border border-amber-500/50 text-white p-4 rounded-xl backdrop-blur-md shadow-xl animate-bounce-in">
                                         <div className="flex items-center gap-3">
                                             <span className="text-2xl">💡</span>
-                                            <div><h4 className="font-bold text-amber-300 text-xs uppercase">Power-Up Hint</h4><p className="text-sm">{feedback}</p></div>
+                                            <div><h4 className="font-bold text-amber-300 text-xs uppercase">Coach's Feedback</h4><p className="text-sm">{feedback}</p></div>
                                         </div>
                                     </div>
                                 )}
@@ -182,7 +182,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                                     </div>
                                     <div className="flex justify-end">
                                         <button onClick={handleSubmit} disabled={isSubmitting || !content.trim()} className={`px-8 py-3 rounded-xl font-bold uppercase tracking-widest transition-all ${content.trim() ? "bg-green-500 text-black hover:bg-green-400 hover:scale-105" : "bg-zinc-800 text-zinc-500 cursor-not-allowed"}`}>
-                                            {isSubmitting ? "Checking Your Work..." : "Submit & Earn Reward 🏆"}
+                                            {isSubmitting ? "Verifying Output..." : "Submit for Verification"}
                                         </button>
                                     </div>
                                 </div>
