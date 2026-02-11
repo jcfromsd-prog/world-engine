@@ -8,15 +8,14 @@ interface NeuralGateProps {
 }
 
 const ARCHETYPES = {
-    BUILDER: { title: "Construct", icon: "🛠️", color: "text-blue-400", border: "border-blue-500" },
-    EXPLORER: { title: "Discover", icon: "🔭", color: "text-purple-400", border: "border-purple-500" },
-    FIXER: { title: "Repair", icon: "🔧", color: "text-green-400", border: "border-green-500" },
-    LEADER: { title: "Guide", icon: "👑", color: "text-yellow-400", border: "border-yellow-500" },
+    BUILDER: { title: "Builder", icon: "🛠️", color: "text-blue-400", border: "border-blue-500" },
+    HEALER: { title: "Healer", icon: "🌿", color: "text-green-400", border: "border-green-500" },
+    STRATEGIST: { title: "Strategist", icon: "🧠", color: "text-purple-400", border: "border-purple-500" },
 };
 
 const SCRIPT = [
+    "Hey Legend, ready to fix the world?",
     "I am Sage. I have been waiting for a mind like yours.",
-    "The world is full of noise. We are here to find the signal.",
     "Tell me, what is the one problem you see in the world that you desperately want to fix?"
 ];
 
@@ -46,12 +45,10 @@ export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCa
         const lower = input.toLowerCase();
         if (lower.includes("build") || lower.includes("create") || lower.includes("make") || lower.includes("code")) {
             setArchetype("BUILDER");
-        } else if (lower.includes("find") || lower.includes("search") || lower.includes("learn") || lower.includes("why")) {
-            setArchetype("EXPLORER");
-        } else if (lower.includes("fix") || lower.includes("help") || lower.includes("people") || lower.includes("world")) {
-            setArchetype("FIXER");
+        } else if (lower.includes("help") || lower.includes("people") || lower.includes("world") || lower.includes("nature")) {
+            setArchetype("HEALER");
         } else {
-            setArchetype("LEADER");
+            setArchetype("STRATEGIST");
         }
     };
 

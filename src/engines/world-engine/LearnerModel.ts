@@ -36,6 +36,8 @@ export interface LearnerProfile {
     id: string;
     name: string;
     currentGrade: GradeLevel;
+    archetype?: 'Builder' | 'Healer' | 'Strategist';
+    cognitiveStage?: string; // e.g. "Level 1" or "Grade 5"
 
     // The "Knowledge Map" - granular tracking of every concept
     masteryMap: Map<string, MasteryRecord>;
@@ -60,6 +62,7 @@ export interface LearnerProfile {
     // Progress Tracking
     completedMissions: string[];
     genesisPoints: number;
+    impactCredits: number; // Sovereign Reputation Asset
 }
 
 export class LearnerModel {

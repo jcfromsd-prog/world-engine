@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { MissionGenerator } from '../../lib/MissionGenerator';
 import type { LiveMission } from '../../lib/MissionGenerator';
@@ -141,23 +142,36 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userT
             )}
 
             {/* CTA: COMPLETE PROFILE (Priority: Critical) */}
-            {!isLoading && !profile.isCalibrated && (
+            {!isLoading && (
                 <div className="max-w-6xl mx-auto mb-8 animate-slide-up">
-                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/30 rounded-xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-1 bg-blue-500 h-full"></div>
+                    <div className={`flex items-center justify-between p-4 rounded-xl relative overflow-hidden border ${profile.isCalibrated
+                            ? 'bg-zinc-900/50 border-zinc-800'
+                            : 'bg-gradient-to-r from-blue-900/40 to-purple-900/40 border-blue-500/30'
+                        }`}>
+                        <div className={`absolute top-0 left-0 w-1 h-full ${profile.isCalibrated ? 'bg-zinc-700' : 'bg-blue-500'}`}></div>
                         <div className="flex items-center gap-4 relative z-10">
-                            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-xl">🧬</div>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${profile.isCalibrated ? 'bg-zinc-800/50' : 'bg-blue-500/20'
+                                }`}>
+                                {profile.isCalibrated ? '✅' : '🧬'}
+                            </div>
                             <div>
-                                <h3 className="text-sm font-bold text-white">Complete Your Profile</h3>
-                                <p className="text-xs text-blue-200">Confidence: {profile.confidence}% • Take the refined skills check for better matches.</p>
+                                <h3 className="text-sm font-bold text-white">
+                                    {profile.isCalibrated ? 'Profile Verified' : 'Complete Your Profile'}
+                                </h3>
+                                <p className={`text-xs ${profile.isCalibrated ? 'text-zinc-500' : 'text-blue-200'}`}>
+                                    Confidence: {profile.confidence}% • {profile.isCalibrated ? 'Identity calibrated for Tier 0 missions.' : 'Take the refined skills check for better matches.'}
+                                </p>
                             </div>
                         </div>
                         <button
                             id="btn-calibrate"
                             onClick={onCalibrate}
-                            className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-blue-500/20"
+                            className={`px-4 py-2 font-bold rounded-lg transition-all text-xs ${profile.isCalibrated
+                                    ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white border border-zinc-700'
+                                    : 'bg-blue-500 hover:bg-blue-400 text-white shadow-lg shadow-blue-500/20'
+                                }`}
                         >
-                            CALIBRATE
+                            {profile.isCalibrated ? 'RECALIBRATE' : 'CALIBRATE'}
                         </button>
                     </div>
                 </div>

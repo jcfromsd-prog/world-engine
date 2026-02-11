@@ -13,6 +13,7 @@ export interface LiveMission {
     maxGrade: number;
     status: 'LIVE' | 'TRENDING' | 'EXPIRING' | 'CLAIMED';
     expiresAt: number; // timestamp
+    difficulty: 'Low' | 'Medium' | 'High';
     claimedBy?: string;
 }
 
@@ -79,11 +80,29 @@ export class MissionGenerator {
         if (statusRoll > 0.85) status = 'TRENDING';
         else if (statusRoll > 0.7) status = 'EXPIRING';
 
+        // TIERING LOGIC: If uncalibrated, enforce Tier 0 (Training) only.
+        const isCalibrated = typeof (window as any).isCalibrated !== 'undefined' ? (window as any).isCalibrated : true; // Fallback for headless
+        const confidence = typeof (window as any).confidence !== 'undefined' ? (window as any).confidence : 85;
+
+        const isUnverified = !isCalibrated || confidence < 80;
+
+        let type: LiveMission['type'] = Math.random() > 0.3 ? 'CLIENT_CONTRACT' : 'BOUNTY';
+
+        // SOLVENCY GATE: Force Tier 0 for unverified users
+        if (isUnverified) {
+            type = 'TRAINING';
+        }
+
         missionCounter++;
+
+        // Determine difficulty based on reward
+        let difficulty: 'Low' | 'Medium' | 'High' = 'Low';
+        if (reward > 400) difficulty = 'High';
+        else if (reward > 250) difficulty = 'Medium';
 
         return {
             id: `GEN.${selectedCategory.substring(0, 3)}.${missionCounter}`,
-            type: Math.random() > 0.3 ? 'CLIENT_CONTRACT' : 'BOUNTY',
+            type,
             title: template.title,
             client,
             reward,
@@ -93,6 +112,7 @@ export class MissionGenerator {
             maxGrade: 10 + Math.floor(Math.random() * 10),
             status,
             expiresAt,
+            difficulty,
         };
     }
 

@@ -47,36 +47,50 @@ export const SquadMatcher = {
         const squads: Squad[] = [];
         const unmatched = [...pool];
 
-        while (unmatched.length >= 2) {
-            const leader = unmatched.pop()!;
-            let bestMatch: UserVector | null = null;
-            let bestScore = -1;
-            let bestMatchIndex = -1;
+        // SYNAPTIC STRATEGY: 1 Leader (High Theta) + 2 Members (Complementary Roles)
+        while (unmatched.length >= 3) {
+            unmatched.sort((a, b) => b.skillTheta - a.skillTheta);
+            const leader = unmatched.shift()!;
 
-            for (let i = 0; i < unmatched.length; i++) {
-                const candidate = unmatched[i];
-                const interestScore = this.calculateTagSimilarity(leader, candidate);
-                const skillScore = this.calculateSkillComplement(leader, candidate);
-                const totalScore = (interestScore * 0.6) + (skillScore * 0.4);
+            // Find 2 best complementary members
+            const selectedMembers: UserVector[] = [leader];
 
-                if (totalScore > bestScore) {
-                    bestScore = totalScore;
-                    bestMatch = candidate;
-                    bestMatchIndex = i;
+            for (let j = 0; j < 2; j++) {
+                let bestScore = -1;
+                let bestMatchIndex = -1;
+
+                for (let i = 0; i < unmatched.length; i++) {
+                    const candidate = unmatched[i];
+
+                    // Diversity Check: Prefer different archetypes
+                    const roleDiversity = candidate.archetype !== leader.archetype ? 1.2 : 0.8;
+                    const interestScore = this.calculateTagSimilarity(leader, candidate);
+                    const skillScore = this.calculateSkillComplement(leader, candidate);
+
+                    const totalScore = ((interestScore * 0.5) + (skillScore * 0.5)) * roleDiversity;
+
+                    if (totalScore > bestScore) {
+                        bestScore = totalScore;
+                        bestMatchIndex = i;
+                    }
+                }
+
+                if (bestMatchIndex !== -1) {
+                    selectedMembers.push(unmatched.splice(bestMatchIndex, 1)[0]);
                 }
             }
 
-            if (bestMatch && bestScore > 0.3) {
-                unmatched.splice(bestMatchIndex, 1);
+            if (selectedMembers.length === 3) {
                 squads.push({
-                    id: `sq_${Date.now()}_${squads.length}`,
-                    name: `${leader.archetype} + ${bestMatch.archetype} Squad`,
-                    members: [leader, bestMatch],
-                    compatibilityScore: parseFloat(bestScore.toFixed(2)),
-                    reason: `Matched on ${leader.interestTags[0]} with Skill Gap ${Math.abs(leader.skillTheta - bestMatch.skillTheta).toFixed(1)}`
+                    id: `syn-${crypto.randomUUID().substring(0, 8)}`,
+                    name: `Synaptic Squad: ${leader.archetype} Core`,
+                    members: selectedMembers,
+                    compatibilityScore: 0.85, // Simulation baseline
+                    reason: `Role-balanced team formed around ${leader.archetype} leadership.`
                 });
             } else {
-                unmatched.unshift(leader);
+                // If we couldn't find 3, return remaining to pool
+                unmatched.push(...selectedMembers);
                 break;
             }
         }
