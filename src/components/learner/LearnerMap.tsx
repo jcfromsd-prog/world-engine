@@ -19,7 +19,9 @@ const LEARNER_PROFILE: LearnerProfile = {
     cognitiveState: { focusLevel: 100, frustrationLevel: 0, energyLevel: 100, currentZPD: 0.2 },
     interests: ["Space", "Dinosaurs"],
     learningStyle: 'visual',
-    goals: ["Master the Galaxy"]
+    goals: ["Master the Galaxy"],
+    completedMissions: [],
+    genesisPoints: 0
 };
 
 export const LearnerMap: React.FC = () => {

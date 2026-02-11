@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface LogEntry {
@@ -91,8 +91,8 @@ export const SwarmDashboard: React.FC<{ onClose: () => void }> = ({ onClose }) =
                             onClick={runSimulation}
                             disabled={isRunning}
                             className={`px-8 py-4 font-black uppercase tracking-widest rounded-xl transition-all duration-300 transform active:scale-95 ${isRunning
-                                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed border border-white/5"
-                                    : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_30px_rgba(37,99,235,0.3)] hover:shadow-[0_0_50px_rgba(37,99,235,0.5)] border border-blue-400/20"
+                                ? "bg-zinc-800 text-zinc-600 cursor-not-allowed border border-white/5"
+                                : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_30px_rgba(37,99,235,0.3)] hover:shadow-[0_0_50px_rgba(37,99,235,0.5)] border border-blue-400/20"
                                 }`}
                         >
                             {isRunning ? 'Engaging...' : 'Deploy Swarm'}

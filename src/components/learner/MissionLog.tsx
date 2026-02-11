@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 
 // --- TYPES & MOCK DATA ---
 interface MissionEntry {
@@ -17,7 +17,7 @@ const MOCK_HISTORY: MissionEntry[] = [
 ];
 
 export const MissionLog: React.FC = () => {
-    const [history, setHistory] = useState<MissionEntry[]>(MOCK_HISTORY);
+    const history = MOCK_HISTORY;
 
     const handleReplay = (id: string) => {
         console.log(`[MissionLog] Replay requested for mission: ${id}`);
