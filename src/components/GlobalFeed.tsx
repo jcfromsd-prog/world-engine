@@ -294,7 +294,7 @@ const GlobalFeed: React.FC<GlobalFeedProps> = ({
                                         cause={quest.cause}
                                         time={quest.time}
                                         difficulty={quest.difficulty}
-                                        squadRoles={quest.squadRoles}
+                                        squadRoles={quest.squadRoles as any}
                                         // External Props
                                         source={quest.source}
                                         financials={quest.financials as Record<string, unknown>}
