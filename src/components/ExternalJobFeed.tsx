@@ -93,7 +93,12 @@ const ExternalJobFeed: React.FC<ExternalJobFeedProps> = ({ selectedRole }) => {
                                 time="2 Days"
                                 difficulty="Medium"
                                 source="Adzuna API"
-                                financials={quest.financials}
+                                financials={{
+                                    ...quest.financials,
+                                    platformFee: quest.financials.founderLevy + quest.financials.aiCompute,
+                                    userGain: quest.financials.leadSolver,
+                                    totalValue: quest.reward
+                                }}
                                 onSolve={() => window.open(quest.originalDescription || '#', '_blank')} // Link to original job
                             />
                         </div>

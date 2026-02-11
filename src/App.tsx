@@ -72,6 +72,8 @@ export interface Mission {
   maxGrade: number;
   color: string;
   type: "TRAINING" | "CLIENT_CONTRACT";
+  status: "LIVE" | "TRENDING" | "EXPIRING" | "CLAIMED";
+  expiresAt: number;
 }
 
 // --- THE TREASURY (CEO Logic) ---
@@ -83,17 +85,38 @@ const SYSTEM_TREASURY = {
 // --- MISSION DATABASE (Training + Real World) ---
 const MISSION_DB: Mission[] = [
   // K-5 FOUNDATIONS
-  { id: "SCI.K5.01", type: "TRAINING", title: "Backyard Bio-Blitz", client: "Academy", reward: 100, desc: "Find/draw 3 bugs.", category: "SCIENCE", minGrade: 0, maxGrade: 5, color: "text-emerald-400" },
-  { id: "COD.K5.01", type: "TRAINING", title: "Robot Logic Maze", client: "Academy", reward: 100, desc: "Guide the mouse.", category: "CODING", minGrade: 0, maxGrade: 5, color: "text-blue-400" },
-  { id: "CRE.K5.01", type: "TRAINING", title: "My Hero Story", client: "Academy", reward: 100, desc: "Draw a hero.", category: "CREATIVE", minGrade: 0, maxGrade: 5, color: "text-yellow-400" },
+  {
+    id: "SCI.K5.01", type: "TRAINING", title: "Backyard Bio-Blitz", client: "Academy", reward: 100, desc: "Find/draw 3 bugs.", category: "SCIENCE", minGrade: 0, maxGrade: 5, color: "text-emerald-400",
+    status: "LIVE", expiresAt: Date.now() + 86400000
+  },
+  {
+    id: "COD.K5.01", type: "TRAINING", title: "Robot Logic Maze", client: "Academy", reward: 100, desc: "Guide the mouse.", category: "CODING", minGrade: 0, maxGrade: 5, color: "text-blue-400",
+    status: "LIVE", expiresAt: Date.now() + 86400000
+  },
+  {
+    id: "CRE.K5.01", type: "TRAINING", title: "My Hero Story", client: "Academy", reward: 100, desc: "Draw a hero.", category: "CREATIVE", minGrade: 0, maxGrade: 5, color: "text-yellow-400",
+    status: "LIVE", expiresAt: Date.now() + 86400000
+  },
 
   // 6-12 SKILLS
-  { id: "CS.WEB.03", type: "TRAINING", title: "Portfolio Site", client: "Academy", reward: 260, desc: "Code your own site.", category: "CODING", minGrade: 6, maxGrade: 16, color: "text-indigo-400" },
-  { id: "CRE.MED.08", type: "TRAINING", title: "Viral Impact Doc", client: "Academy", reward: 240, desc: "Edit a 60s doc.", category: "CREATIVE", minGrade: 6, maxGrade: 16, color: "text-pink-500" },
+  {
+    id: "CS.WEB.03", type: "TRAINING", title: "Portfolio Site", client: "Academy", reward: 260, desc: "Code your own site.", category: "CODING", minGrade: 6, maxGrade: 16, color: "text-indigo-400",
+    status: "LIVE", expiresAt: Date.now() + 86400000
+  },
+  {
+    id: "CRE.MED.08", type: "TRAINING", title: "Viral Impact Doc", client: "Academy", reward: 240, desc: "Edit a 60s doc.", category: "CREATIVE", minGrade: 6, maxGrade: 16, color: "text-pink-500",
+    status: "LIVE", expiresAt: Date.now() + 86400000
+  },
 
   // REAL WORLD CONTRACTS (High Grade)
-  { id: "RW.01", type: "CLIENT_CONTRACT", title: "Debug Shopify Store", client: "TechFlow Inc.", reward: 500, desc: "Fix CSS layout bug.", category: "CODING", minGrade: 10, maxGrade: 20, color: "text-white" },
-  { id: "RW.02", type: "CLIENT_CONTRACT", title: "Logo Redesign", client: "StartUp Coffee", reward: 450, desc: "Vector logo assets.", category: "CREATIVE", minGrade: 8, maxGrade: 20, color: "text-white" },
+  {
+    id: "RW.01", type: "CLIENT_CONTRACT", title: "Debug Shopify Store", client: "TechFlow Inc.", reward: 500, desc: "Fix CSS layout bug.", category: "CODING", minGrade: 10, maxGrade: 20, color: "text-white",
+    status: "LIVE", expiresAt: Date.now() + 86400000
+  },
+  {
+    id: "RW.02", type: "CLIENT_CONTRACT", title: "Logo Redesign", client: "StartUp Coffee", reward: 450, desc: "Vector logo assets.", category: "CREATIVE", minGrade: 8, maxGrade: 20, color: "text-white",
+    status: "LIVE", expiresAt: Date.now() + 86400000
+  },
 ];
 
 /* ==========================================================================
@@ -226,8 +249,8 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
       {step === "GRADE" && (
         <div className={`w-full max-w-5xl transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
           <h1 className="text-4xl font-black text-white text-center mb-10">Calibrate Your <span className="text-purple-400">Engine</span></h1>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {["3|Explorer|K-5|🎒", "7|Builder|6-8|🛠️", "10|Legend|HS|🚀", "14|Pro|College|👔"].map(g => {
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {["2|Sprouts|K-2|🌱", "5|Builders|3-5|🛠️", "8|Trailblazers|6-8|🌲", "12|Explorers|9-12|🧭", "16|Voyagers|College+|🚀"].map(g => {
               const [val, title, sub, icon] = g.split("|");
               return (
                 <button key={val} onClick={() => handleSelection("GRADE", val)} className="group p-8 bg-zinc-900/50 border border-white/10 rounded-3xl hover:bg-zinc-800 hover:border-blue-500 hover:-translate-y-2 transition-all">
