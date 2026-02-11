@@ -222,8 +222,8 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
       {step === "GRADE" && (
         <div className={`w-full max-w-5xl transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
           <h1 className="text-4xl font-black text-white text-center mb-10">Calibrate Your <span className="text-purple-400">Engine</span></h1>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {["3|Explorer|K-5|🎒", "7|Builder|6-8|🛠️", "10|Legend|HS|🚀", "14|Pro|College|👔"].map(g => {
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {["2|Sprouts|K-2|🌱", "5|Builders|3-5|🛠️", "8|Trailblazers|6-8|🌲", "12|Explorers|9-12|🧭", "16|Voyagers|College+|🚀"].map(g => {
               const [val, title, sub, icon] = g.split("|");
               return (
                 <button key={val} onClick={() => handleSelection("GRADE", val)} className="group p-8 bg-zinc-900/50 border border-white/10 rounded-3xl hover:bg-zinc-800 hover:border-blue-500 hover:-translate-y-2 transition-all">
