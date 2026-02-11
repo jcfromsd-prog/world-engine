@@ -66,8 +66,15 @@ const SproutsLanding: React.FC<SproutsLandingProps> = ({ onStart }) => {
                 </button>
 
                 {/* Visual Audio Cue */}
-                <button className="mt-6 p-4 bg-blue-100 rounded-full text-blue-500 hover:scale-110 transition-transform" aria-label="Listen to instructions">
-                    🔊 Listen
+                <button
+                    onClick={() => {
+                        const audio = new Audio('/assets/audio/welcome_sprouts.mp3');
+                        audio.play().catch(console.error);
+                    }}
+                    className="mt-6 p-4 bg-blue-100 rounded-full text-blue-500 hover:scale-110 transition-transform flex items-center gap-2 mx-auto font-bold"
+                    aria-label="Listen to welcome message"
+                >
+                    <span>🔊</span> Listen to Welcome
                 </button>
             </motion.div>
 
