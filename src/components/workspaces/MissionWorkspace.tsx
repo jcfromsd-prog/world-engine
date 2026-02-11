@@ -74,7 +74,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className={`w-2 h-2 rounded-full ${mission.type === 'TRAINING' ? 'bg-purple-500' : 'bg-blue-500'}`}></span>
-                        <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">{mission.type} PROTOCOL</span>
+                        <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">{mission.type} MISSION</span>
                     </div>
                     <h2 className="text-xl font-black">{mission.title}</h2>
                 </div>
@@ -85,7 +85,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                         <button onClick={() => setActiveTab('WORKBENCH')} className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${activeTab === 'WORKBENCH' ? 'bg-blue-600 text-white' : 'text-zinc-500 hover:text-white'}`}>WORKBENCH</button>
                     </div>
 
-                    <button onClick={onCancel} className="px-4 py-2 border border-zinc-700 text-zinc-400 text-xs rounded hover:text-white uppercase tracking-wider">Abort</button>
+                    <button onClick={onCancel} className="px-4 py-2 border border-zinc-700 text-zinc-400 text-xs rounded hover:text-white uppercase tracking-wider">Exit Mission</button>
                 </div>
             </div>
 
@@ -168,7 +168,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                                     <div className="absolute bottom-24 left-6 right-6 bg-amber-900/95 border border-amber-500/50 text-white p-4 rounded-xl backdrop-blur-md shadow-xl animate-bounce-in">
                                         <div className="flex items-center gap-3">
                                             <span className="text-2xl">💡</span>
-                                            <div><h4 className="font-bold text-amber-300 text-xs uppercase">Coach's Tip</h4><p className="text-sm">{feedback}</p></div>
+                                            <div><h4 className="font-bold text-amber-300 text-xs uppercase">Power-Up Hint</h4><p className="text-sm">{feedback}</p></div>
                                         </div>
                                     </div>
                                 )}
@@ -182,7 +182,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                                     </div>
                                     <div className="flex justify-end">
                                         <button onClick={handleSubmit} disabled={isSubmitting || !content.trim()} className={`px-8 py-3 rounded-xl font-bold uppercase tracking-widest transition-all ${content.trim() ? "bg-green-500 text-black hover:bg-green-400 hover:scale-105" : "bg-zinc-800 text-zinc-500 cursor-not-allowed"}`}>
-                                            {isSubmitting ? "Analyzing..." : "Submit Work"}
+                                            {isSubmitting ? "Checking Your Work..." : "Submit & Earn Reward 🏆"}
                                         </button>
                                     </div>
                                 </div>
