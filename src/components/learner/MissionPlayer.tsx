@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bot, CheckCircle, X, ChevronRight, Play } from 'lucide-react'; // Using existing project icons
+import { Bot, CheckCircle, X, Play } from 'lucide-react'; // Using existing project icons
 
 // --- STRICT INTERFACES ---
 export interface Mission {
