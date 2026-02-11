@@ -505,12 +505,14 @@ const App: React.FC = () => {
                 🚀 START YOUR ENGINE
               </button>
 
-              <button
-                onClick={() => setAppState("WORLD_ENGINE_DEV")}
-                className="px-6 py-6 bg-zinc-900 border border-green-500/30 text-green-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
-              >
-                🛠️ DEV: WORLD ENGINE
-              </button>
+              {import.meta.env.DEV && (
+                <button
+                  onClick={() => setAppState("WORLD_ENGINE_DEV")}
+                  className="px-6 py-6 bg-zinc-900 border border-green-500/30 text-green-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
+                >
+                  🛠️ DEV: WORLD ENGINE
+                </button>
+              )}
             </div>
 
             <EnginesGrid
