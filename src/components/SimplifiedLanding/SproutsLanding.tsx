@@ -50,11 +50,11 @@ const SproutsLanding: React.FC<SproutsLandingProps> = ({ onStart }) => {
                 <div className="text-6xl mb-4 animate-bounce">👋</div>
 
                 <h1 className="text-4xl font-black text-blue-500 mb-2 font-comic">
-                    Welcome, Legend!
+                    Welcome, Sprout!
                 </h1>
 
                 <p className="text-2xl text-slate-600 mb-8 font-medium">
-                    Ready to help the world today?
+                    Ready to grow your brain?
                 </p>
 
                 <button
@@ -72,9 +72,9 @@ const SproutsLanding: React.FC<SproutsLandingProps> = ({ onStart }) => {
                         audio.play().catch(console.error);
                     }}
                     className="mt-6 p-4 bg-blue-100 rounded-full text-blue-500 hover:scale-110 transition-transform flex items-center gap-2 mx-auto font-bold"
-                    aria-label="Listen to welcome message"
+                    aria-label="Play welcome message"
                 >
-                    <span>🔊</span> Listen to Welcome
+                    <span>🔊</span> Tap to Listen
                 </button>
             </motion.div>
 
