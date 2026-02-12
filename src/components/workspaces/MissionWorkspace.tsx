@@ -41,6 +41,14 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
 
     const scoreInfo = getScoreInfo(liveScore);
 
+    const uplinkData = (data: string) => {
+        setContent(prev => {
+            const separator = prev.trim() ? '\n' : '';
+            return `${prev}${separator}▸ ${data}`;
+        });
+        setActiveTab('WORKBENCH');
+    };
+
     const handleSubmit = () => {
         if (!content.trim()) return;
 
@@ -108,11 +116,41 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                                         {mission.category === 'CREATIVE' && 'Study the narrative prompt and character constraints. Your draft must address the core theme.'}
                                         {!['CODING', 'SCIENCE', 'CREATIVE'].includes(mission.category) && 'Review the source material below. Your submission must reference these key points.'}
                                     </p>
-                                    <div className="p-3 bg-black/50 rounded border-l-2 border-cyan-500 text-xs text-cyan-300 font-mono space-y-1">
-                                        {mission.category === 'CODING' && <><div>▸ Input: Array of integers</div><div>▸ Output: Sorted result</div><div>▸ Edge: Empty array returns []</div></>}
-                                        {mission.category === 'SCIENCE' && <><div>▸ Soil pH: 5.2 (acidic)</div><div>▸ Water level: -2.4 in. from baseline</div><div>▸ Flora: 3 invasive species detected</div></>}
-                                        {mission.category === 'CREATIVE' && <><div>▸ Theme: Resilience under pressure</div><div>▸ Setting: Near-future urban</div><div>▸ Constraint: 500 words max</div></>}
-                                        {!['CODING', 'SCIENCE', 'CREATIVE'].includes(mission.category) && <><div>▸ Refer to mission briefing</div><div>▸ Follow submission format</div><div>▸ Cite your sources</div></>}
+                                    <div className="flex flex-col gap-2">
+                                        {mission.category === 'CODING' && <>
+                                            <button onClick={() => uplinkData('Input: Array of integers')} className="text-left p-2 bg-black/50 border border-cyan-500/30 text-xs text-cyan-300 font-mono hover:bg-cyan-900/30 hover:border-cyan-400 transition-colors rounded group flex items-center justify-between">
+                                                <span>▸ Input: Array of integers</span><span className="opacity-0 group-hover:opacity-100 text-[10px] uppercase tracking-widest text-cyan-500">Uplink ⚡</span>
+                                            </button>
+                                            <button onClick={() => uplinkData('Output: Sorted result')} className="text-left p-2 bg-black/50 border border-cyan-500/30 text-xs text-cyan-300 font-mono hover:bg-cyan-900/30 hover:border-cyan-400 transition-colors rounded group flex items-center justify-between">
+                                                <span>▸ Output: Sorted result</span><span className="opacity-0 group-hover:opacity-100 text-[10px] uppercase tracking-widest text-cyan-500">Uplink ⚡</span>
+                                            </button>
+                                            <button onClick={() => uplinkData('Edge: Empty array returns []')} className="text-left p-2 bg-black/50 border border-cyan-500/30 text-xs text-cyan-300 font-mono hover:bg-cyan-900/30 hover:border-cyan-400 transition-colors rounded group flex items-center justify-between">
+                                                <span>▸ Edge: Empty array returns []</span><span className="opacity-0 group-hover:opacity-100 text-[10px] uppercase tracking-widest text-cyan-500">Uplink ⚡</span>
+                                            </button>
+                                        </>}
+
+                                        {mission.category === 'SCIENCE' && <>
+                                            <button onClick={() => uplinkData('Soil pH: 5.2 (acidic)')} className="text-left p-2 bg-black/50 border border-cyan-500/30 text-xs text-cyan-300 font-mono hover:bg-cyan-900/30 hover:border-cyan-400 transition-colors rounded group flex items-center justify-between">
+                                                <span>▸ Soil pH: 5.2 (acidic)</span><span className="opacity-0 group-hover:opacity-100 text-[10px] uppercase tracking-widest text-cyan-500">Uplink ⚡</span>
+                                            </button>
+                                            <button onClick={() => uplinkData('Water level: -2.4 in. from baseline')} className="text-left p-2 bg-black/50 border border-cyan-500/30 text-xs text-cyan-300 font-mono hover:bg-cyan-900/30 hover:border-cyan-400 transition-colors rounded group flex items-center justify-between">
+                                                <span>▸ Water level: -2.4 in.</span><span className="opacity-0 group-hover:opacity-100 text-[10px] uppercase tracking-widest text-cyan-500">Uplink ⚡</span>
+                                            </button>
+                                            <button onClick={() => uplinkData('Flora: 3 invasive species detected')} className="text-left p-2 bg-black/50 border border-cyan-500/30 text-xs text-cyan-300 font-mono hover:bg-cyan-900/30 hover:border-cyan-400 transition-colors rounded group flex items-center justify-between">
+                                                <span>▸ Flora: 3 invasive species</span><span className="opacity-0 group-hover:opacity-100 text-[10px] uppercase tracking-widest text-cyan-500">Uplink ⚡</span>
+                                            </button>
+                                        </>}
+
+                                        {mission.category === 'CREATIVE' && <>
+                                            <button onClick={() => uplinkData('Theme: Resilience under pressure')} className="text-left p-2 bg-black/50 border border-cyan-500/30 text-xs text-cyan-300 font-mono hover:bg-cyan-900/30 hover:border-cyan-400 transition-colors rounded group flex items-center justify-between">
+                                                <span>▸ Theme: Resilience</span><span className="opacity-0 group-hover:opacity-100 text-[10px] uppercase tracking-widest text-cyan-500">Uplink ⚡</span>
+                                            </button>
+                                            <button onClick={() => uplinkData('Setting: Near-future urban')} className="text-left p-2 bg-black/50 border border-cyan-500/30 text-xs text-cyan-300 font-mono hover:bg-cyan-900/30 hover:border-cyan-400 transition-colors rounded group flex items-center justify-between">
+                                                <span>▸ Setting: Urban Future</span><span className="opacity-0 group-hover:opacity-100 text-[10px] uppercase tracking-widest text-cyan-500">Uplink ⚡</span>
+                                            </button>
+                                        </>}
+
+                                        {!['CODING', 'SCIENCE', 'CREATIVE'].includes(mission.category) && <div className="p-2 text-xs text-zinc-500 italic">No uplink data available for this mission type.</div>}
                                     </div>
                                 </div>
                                 {/* CARD 2: REFERENCE FORMAT */}
