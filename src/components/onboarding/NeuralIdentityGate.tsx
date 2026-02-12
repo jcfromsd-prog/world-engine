@@ -1,16 +1,66 @@
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import type { UserProfile } from "../../App";
 import { supabase } from "../../lib/supabase";
 
-// ... (existing imports)
+interface NeuralGateProps {
+    onComplete: (profile: Partial<UserProfile>) => void;
+    onCancel: () => void;
+}
+
+const ARCHETYPES = {
+    BUILDER: { title: "Construct", icon: "🛠️", color: "text-blue-400", border: "border-blue-500" },
+    EXPLORER: { title: "Discover", icon: "🔭", color: "text-purple-400", border: "border-purple-500" },
+    FIXER: { title: "Repair", icon: "🔧", color: "text-green-400", border: "border-green-500" },
+    LEADER: { title: "Guide", icon: "👑", color: "text-yellow-400", border: "border-yellow-500" },
+};
+
+const SCRIPT = [
+    "I am Sage. I have been waiting for a mind like yours.",
+    "The world is full of noise. We are here to find the signal.",
+    "Tell me, what is the one problem you see in the world that you desperately want to fix?"
+];
 
 export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCancel }) => {
     const [stage, setStage] = useState<"INTRO" | "QUESTION" | "ANALYSIS" | "RESULT" | "AUTH">("INTRO");
-    // ... (existing state)
+    const [dialogueIndex, setDialogueIndex] = useState(0);
+    const [typedText, setTypedText] = useState("");
+    const [userInput, setUserInput] = useState("");
+    const [archetype, setArchetype] = useState<keyof typeof ARCHETYPES>("BUILDER");
+
+    // Auth State
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isRegistering, setIsRegistering] = useState(false);
     const [authError, setAuthError] = useState<string | null>(null);
 
-    // ... (existing effects and helper functions)
+    // Typing Effect
+    useEffect(() => {
+        if (stage === "INTRO") {
+            const currentLine = SCRIPT[dialogueIndex];
+            let i = 0;
+            setTypedText("");
+            const interval = setInterval(() => {
+                setTypedText(currentLine.substring(0, i + 1));
+                i++;
+                if (i === currentLine.length) clearInterval(interval);
+            }, 30);
+            return () => clearInterval(interval);
+        }
+    }, [dialogueIndex, stage]);
+
+    const determineArchetype = (input: string) => {
+        const lower = input.toLowerCase();
+        if (lower.includes("build") || lower.includes("create") || lower.includes("make") || lower.includes("code")) {
+            setArchetype("BUILDER");
+        } else if (lower.includes("find") || lower.includes("search") || lower.includes("learn") || lower.includes("why")) {
+            setArchetype("EXPLORER");
+        } else if (lower.includes("fix") || lower.includes("help") || lower.includes("people") || lower.includes("world")) {
+            setArchetype("FIXER");
+        } else {
+            setArchetype("LEADER");
+        }
+    };
 
     const handleNext = () => {
         if (dialogueIndex < SCRIPT.length - 1) {
@@ -23,7 +73,10 @@ export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCa
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!userInput.trim()) return;
+
         setStage("ANALYSIS");
+
+        // Simulate Analysis
         setTimeout(() => {
             determineArchetype(userInput);
             setStage("RESULT");
@@ -89,7 +142,6 @@ export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCa
             {/* TEXT AREA */}
             <div className="min-h-[180px] w-full max-w-2xl flex flex-col items-center">
                 {stage === "INTRO" && (
-                    // ... (existing INTRO rendering)
                     <>
                         <p className="text-xl md:text-3xl text-cyan-50 drop-shadow-md mb-8 leading-relaxed">
                             {typedText}<span className="animate-pulse text-cyan-400">_</span>
