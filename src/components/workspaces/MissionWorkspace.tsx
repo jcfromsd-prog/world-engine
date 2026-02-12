@@ -75,6 +75,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                     <div className="flex items-center gap-2 mb-1">
                         <span className={`w-2 h-2 rounded-full ${mission.type === 'TRAINING' ? 'bg-purple-500' : 'bg-blue-500'}`}></span>
                         <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">{mission.type} MISSION</span>
+                        {mission.standard && <span className="ml-2 px-2 py-0.5 bg-cyan-900/50 border border-cyan-500/30 rounded text-[10px] font-mono text-cyan-400 uppercase">{mission.standard}</span>}
                     </div>
                     <h2 className="text-xl font-black">{mission.title}</h2>
                 </div>
@@ -145,7 +146,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                                     </ul>
                                 </div>
                                 <div className="bg-blue-900/20 p-4 rounded-xl border border-blue-500/20 text-xs text-blue-200">
-                                    <strong>💡 SAGE TIP:</strong> check the 'Intel' tab if you get stuck!
+                                    <strong>📡 SQUAD DISPATCH:</strong> Your team is standing by for this {mission.category?.toLowerCase() || 'mission'} data. Precision is mandatory.
                                 </div>
                             </div>
 
@@ -160,7 +161,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                                     value={content}
                                     onChange={(e) => { setContent(e.target.value); setFeedback(null); }}
                                     className="flex-1 bg-transparent p-6 text-zinc-300 font-mono focus:outline-none resize-none text-lg leading-relaxed"
-                                    placeholder="// Begin your work here..."
+                                    placeholder={mission.category === 'CODING' ? '// FUNCTION SPECIFICATION\n// ========================\n// Name: \n// Input: \n// Output: \n// Logic:\n\nfunction solve() {\n  // Your code here\n}' : mission.category === 'SCIENCE' ? '# FIELD REPORT\n## Executive Summary:\n\n## Observations & Data Points:\n\n## Analysis & Recommendations:\n' : mission.category === 'CREATIVE' ? '# NARRATIVE DRAFT\n## Title:\n\n## Opening Hook:\n\n## Development:\n\n## Resolution:\n' : '# SUBMISSION\n## Summary:\n\n## Details:\n\n## Conclusion:\n'}
                                     spellCheck="false"
                                 />
 
