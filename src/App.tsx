@@ -51,7 +51,7 @@ const APP_LEARNER_PROFILE: LearnerProfile = {
 
 // --- TYPES ---
 type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP";
-type OnboardingStep = "NAME" | "GRADE" | "PASSION" | "MATCHING";
+
 
 export interface UserProfile {
   name: string;
@@ -196,11 +196,17 @@ const BreadcrumbHeader: React.FC<{ name: string, grade: string, passion: string,
 /* ==========================================================================
    COMPONENT: ONBOARDING WIZARD (Visual Choice Cards)
    ========================================================================== */
+type OnboardingStep = "NAME" | "GRADE" | "PASSION" | "MATCHING" | "AUTH";
+
 const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) => void, onCancel: () => void }> = ({ onComplete, onCancel }) => {
-  const [step, setStep] = useState<OnboardingStep>("NAME");
+  const [step, setStep] = useState<OnboardingStep | "AUTH">("NAME");
   const [name, setName] = useState("");
   const [grade, setGrade] = useState("");
   const [passion, setPassion] = useState("");
+  const [squad, setSquad] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
   const [fade, setFade] = useState(false);
   const [matchStatus, setMatchStatus] = useState("SEARCHING GLOBAL NETWORK...");
 
@@ -232,46 +238,54 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
     else {
       setPassion(value);
       transitionTo("MATCHING");
+
+      // Determine Squad
+      let sq = "The Generalists";
+      if (value.includes("COD")) sq = "The Algo-Rhythm (2 AI / 1 Human)";
+      if (value.includes("SCI")) sq = "The Bio-Guardians (3 AI)";
+      if (value.includes("CRE")) sq = "The Visionaries (1 AI / 2 Humans)";
+      setSquad(sq);
+
       // AI SQUAD LOGIC
       setTimeout(() => setMatchStatus("FOUND 1 HUMAN MATCH..."), 1000);
       setTimeout(() => setMatchStatus("RECRUITING AI AGENTS TO FILL SQUAD..."), 2000);
-      setTimeout(async () => {
-        let squad = "The Generalists";
-        if (value.includes("COD")) squad = "The Algo-Rhythm (2 AI / 1 Human)";
-        if (value.includes("SCI")) squad = "The Bio-Guardians (3 AI)";
-        if (value.includes("CRE")) squad = "The Visionaries (1 AI / 2 Humans)";
-
-        // 🔒 INVISIBLE SECURITY: BACKGROUND REGISTRATION
-        try {
-          const tempId = Math.random().toString(36).substring(7);
-          const hiddenEmail = `${name.replace(/\s+/g, '').toLowerCase()}_${tempId}@world.engine`;
-          const hiddenPass = `CADET_${tempId}!23`;
-
-          console.log("🔒 CREATING INVISIBLE IDENTITY:", hiddenEmail);
-
-          await supabase.auth.signUp({
-            email: hiddenEmail,
-            password: hiddenPass,
-            options: {
-              data: {
-                full_name: name,
-                grade: grade,
-                passion: value,
-                squad: squad,
-                is_child_account: true
-              }
-            }
-          });
-        } catch (err) {
-          console.warn("Background Auth Failed, continuing as Ghost:", err);
-        }
-
-        onComplete({ name, grade, passion: value, squad });
+      setTimeout(() => {
+        transitionTo("AUTH");
       }, 3500);
     }
   };
 
-  const transitionTo = (nextStep: OnboardingStep) => { setFade(true); setTimeout(() => { setStep(nextStep); setFade(false); }, 300); };
+  const handleAuthSubmit = async () => {
+    if (!email || !password) { setAuthError("Email and Password required."); return; }
+    if (password.length < 6) { setAuthError("Password must be at least 6 characters."); return; }
+
+    try {
+      setMatchStatus("SECURING VAULT CONNECTION...");
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            grade: grade,
+            passion: passion,
+            squad: squad,
+            is_child_account: true
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      console.log("✅ AUTH SUCCESS:", data.user?.id);
+      onComplete({ name, grade, passion, squad });
+    } catch (err: any) {
+      console.error("Auth Fail:", err);
+      setAuthError(err.message || "Connection Failed. Try again.");
+    }
+  };
+
+  const transitionTo = (nextStep: OnboardingStep | "AUTH") => { setFade(true); setTimeout(() => { setStep(nextStep); setFade(false); }, 300); };
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in p-6 font-sans">
@@ -324,6 +338,41 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
               )
             })}
           </div>
+        </div>
+      )}
+
+      {step === "AUTH" && (
+        <div className={`text-center w-full max-w-md transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
+          <div className="text-6xl mb-6">🔐</div>
+          <h1 className="text-3xl font-black text-white mb-2">Secure Your <span className="text-blue-400">Engine Key</span></h1>
+          <p className="text-zinc-400 mb-8 text-sm">Create a secure pilot identity to save your progress.</p>
+
+          <div className="space-y-4">
+            <input
+              type="email"
+              autoFocus
+              className="w-full bg-zinc-900 border border-white/10 rounded-xl px-6 py-4 text-xl text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 transition-all"
+              placeholder="Pilot Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
+            <input
+              type="password"
+              className="w-full bg-zinc-900 border border-white/10 rounded-xl px-6 py-4 text-xl text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 transition-all"
+              placeholder="Secret Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+          </div>
+
+          {authError && <p className="text-red-400 mt-4 text-sm font-bold bg-red-900/20 py-2 px-4 rounded-lg">{authError}</p>}
+
+          <button
+            onClick={handleAuthSubmit}
+            className="w-full mt-8 py-5 bg-blue-500 hover:bg-blue-400 text-black font-black text-xl rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+          >
+            CONFIRM IDENTITY 🚀
+          </button>
         </div>
       )}
     </div>
