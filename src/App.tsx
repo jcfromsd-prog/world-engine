@@ -23,6 +23,7 @@ import { WorldEngineDevConsole } from "./components/WorldEngine/DevConsole";
 
 import Header from "./components/Header";
 import { FounderMenu } from "./components/Navigation/FounderMenu";
+import { NeuralIdentityGate } from "./components/onboarding/NeuralIdentityGate";
 import { ImpactEngine, STARTING_MISSIONS, type ImpactMission } from "./components/engines/ImpactEngine";
 import { ActiveMission } from "./components/engines/ActiveMission";
 import type { LiveMission } from "./lib/MissionGenerator";
@@ -169,119 +170,6 @@ const EnginesGrid = ({ onSolveClick, onLearnClick }: { onSolveClick: () => void,
   </div>
 );
 
-/* ==========================================================================
-   COMPONENT: BREADCRUMB HEADER (The History Trail)
-   ========================================================================== */
-const BreadcrumbHeader: React.FC<{ name: string, grade: string, passion: string, step: string }> = ({ name, grade, passion, step }) => {
-  return (
-    <div className="flex items-center gap-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 mx-auto w-fit shadow-2xl">
-      <div className={`flex items-center gap-2 ${step === "NAME" ? "text-blue-400" : name ? "text-green-400" : "text-zinc-600"}`}>
-        <span className="text-lg">👤</span>
-        <span className="font-bold text-xs uppercase tracking-wider">{name || "IDENTITY"}</span>
-      </div>
-      <div className="w-4 h-px bg-white/20"></div>
-      <div className={`flex items-center gap-2 ${step === "GRADE" ? "text-blue-400" : grade ? "text-green-400" : "text-zinc-600"}`}>
-        <span className="text-lg">🎓</span>
-        <span className="font-bold text-xs uppercase tracking-wider">{grade ? `GRADE ${grade}` : "LEVEL"}</span>
-      </div>
-      <div className="w-4 h-px bg-white/20"></div>
-      <div className={`flex items-center gap-2 ${step === "PASSION" ? "text-blue-400" : passion ? "text-green-400" : "text-zinc-600"}`}>
-        <span className="text-lg">🔥</span>
-        <span className="font-bold text-xs uppercase tracking-wider">{passion || "PASSION"}</span>
-      </div>
-    </div>
-  );
-};
-
-/* ==========================================================================
-   COMPONENT: ONBOARDING WIZARD (Visual Choice Cards)
-   ========================================================================== */
-const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) => void, onCancel: () => void }> = ({ onComplete, onCancel }) => {
-  const [step, setStep] = useState<OnboardingStep>("NAME");
-  const [name, setName] = useState("");
-  const [grade, setGrade] = useState("");
-  const [passion, setPassion] = useState("");
-  const [fade, setFade] = useState(false);
-  const [matchStatus, setMatchStatus] = useState("SEARCHING GLOBAL NETWORK...");
-
-  const handleNameSubmit = (e: React.KeyboardEvent) => { if (e.key === "Enter" && name.trim()) transitionTo("GRADE"); };
-
-  const handleSelection = (type: "GRADE" | "PASSION", value: string) => {
-    if (type === "GRADE") { setGrade(value); transitionTo("PASSION"); }
-    else {
-      setPassion(value);
-      transitionTo("MATCHING");
-      // AI SQUAD LOGIC
-      setTimeout(() => setMatchStatus("FOUND 1 HUMAN MATCH..."), 1000);
-      setTimeout(() => setMatchStatus("RECRUITING AI AGENTS TO FILL SQUAD..."), 2000);
-      setTimeout(() => {
-        let squad = "The Generalists";
-        if (value.includes("COD")) squad = "The Algo-Rhythm (2 AI / 1 Human)";
-        if (value.includes("SCI")) squad = "The Bio-Guardians (3 AI)";
-        if (value.includes("CRE")) squad = "The Visionaries (1 AI / 2 Humans)";
-        onComplete({ name, grade, passion: value, squad });
-      }, 3500);
-    }
-  };
-
-  const transitionTo = (nextStep: OnboardingStep) => { setFade(true); setTimeout(() => { setStep(nextStep); setFade(false); }, 300); };
-
-  return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in p-6 font-sans">
-      <div className="mb-8">
-        <BreadcrumbHeader name={name} grade={grade} passion={passion} step={step} />
-      </div>
-      <button onClick={onCancel} className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors">✕ ESC</button>
-
-      {step === "MATCHING" && (
-        <div className="text-center">
-          <div className="text-6xl mb-6 animate-bounce">🧬</div>
-          <h2 className="text-3xl font-black text-white tracking-widest mb-2">BUILDING SQUAD</h2>
-          <p className="text-green-400 font-mono text-sm uppercase animate-pulse">{matchStatus}</p>
-        </div>
-      )}
-
-      {step === "NAME" && (
-        <div className={`text-center w-full max-w-2xl transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tight">What is your <span className="text-yellow-400">Name</span>?</h1>
-          <input autoFocus className="relative w-full bg-zinc-900 border border-white/10 rounded-xl px-8 py-6 text-2xl text-center text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 transition-all" placeholder="Type Name & Hit Enter..." value={name} onChange={e => setName(e.target.value)} onKeyDown={handleNameSubmit} />
-        </div>
-      )}
-
-      {step === "GRADE" && (
-        <div className={`w-full max-w-5xl transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
-          <h1 className="text-4xl font-black text-white text-center mb-10">Calibrate Your <span className="text-purple-400">Engine</span></h1>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {["2|Sprouts|K-2|🌱", "5|Builders|3-5|🛠️", "8|Trailblazers|6-8|🌲", "12|Explorers|9-12|🧭", "16|Voyagers|College+|🚀"].map(g => {
-              const [val, title, sub, icon] = g.split("|");
-              return (
-                <button key={val} onClick={() => handleSelection("GRADE", val)} className="group p-8 bg-zinc-900/50 border border-white/10 rounded-3xl hover:bg-zinc-800 hover:border-blue-500 hover:-translate-y-2 transition-all">
-                  <div className="text-5xl mb-4">{icon}</div><h3 className="text-xl font-bold text-white">{title}</h3><p className="text-xs text-zinc-400">{sub}</p>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {step === "PASSION" && (
-        <div className={`w-full max-w-5xl transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
-          <h1 className="text-4xl font-black text-white text-center mb-10">Select Your <span className="text-green-400">Primary Engine</span></h1>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {["CODING|Tech & Code|Building Future|💻", "SCIENCE|Nature|Protect Planet|🌿", "CREATIVE|Art & Design|Create Beauty|🎨", "LEADERSHIP|Leadership|Guide Teams|🤝"].map(p => {
-              const [val, title, sub, icon] = p.split("|");
-              return (
-                <button key={val} onClick={() => handleSelection("PASSION", val)} className="group p-8 bg-zinc-900/50 border border-white/10 rounded-3xl hover:bg-zinc-800 hover:border-yellow-400 hover:-translate-y-2 transition-all">
-                  <div className="text-5xl mb-4">{icon}</div><h3 className="text-xl font-bold text-white">{title}</h3><p className="text-xs text-zinc-400">{sub}</p>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 /* ==========================================================================
    COMPONENT: VIRAL SHARE MODAL (CMO Logic)
@@ -573,8 +461,8 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* 🧬 ONBOARDING */}
-      {appState === "ONBOARDING" && <OnboardingWizard onComplete={completeOnboarding} onCancel={() => setAppState("LANDING")} />}
+      {/* 🧬 ONBOARDING (SAGE IDENTITY GATE) */}
+      {appState === "ONBOARDING" && <NeuralIdentityGate onComplete={completeOnboarding} onCancel={() => setAppState("LANDING")} />}
 
       {/* 🧠 SAGE PREP (Micro-Syllabus) */}
       {appState === "SAGE_PREP" && (
