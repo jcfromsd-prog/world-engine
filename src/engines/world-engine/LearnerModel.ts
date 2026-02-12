@@ -54,6 +54,9 @@ export interface LearnerProfile {
     // Progress Tracking
     completedMissions: string[];
     genesisPoints: number;
+
+    // Assessment Engine
+    calibrationScore: number; // 0-100: How confident the system is in this student's placement (0 = uncalibrated)
 }
 
 export class LearnerModel {

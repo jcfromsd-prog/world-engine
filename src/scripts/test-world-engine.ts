@@ -25,7 +25,10 @@ const testProfile: LearnerProfile = {
     },
     interests: ["Space", "Dinosaurs"],
     learningStyle: 'visual',
-    goals: ["Become an Astronaut"]
+    goals: ["Become an Astronaut"],
+    completedMissions: [],
+    genesisPoints: 0,
+    calibrationScore: 0
 };
 
 // 2. Initialize the Engine

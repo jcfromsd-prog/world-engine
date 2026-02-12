@@ -21,7 +21,8 @@ const LEARNER_PROFILE: LearnerProfile = {
     learningStyle: 'kinesthetic',
     goals: ["Build a Robot"],
     completedMissions: [],
-    genesisPoints: 0
+    genesisPoints: 0,
+    calibrationScore: 0
 };
 
 export const LearnerMap: React.FC = () => {

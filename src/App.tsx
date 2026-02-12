@@ -44,7 +44,8 @@ const APP_LEARNER_PROFILE: LearnerProfile = {
   learningStyle: 'visual',
   goals: ["Explore the World"],
   completedMissions: [],
-  genesisPoints: 0
+  genesisPoints: 0,
+  calibrationScore: 0
 };
 
 
