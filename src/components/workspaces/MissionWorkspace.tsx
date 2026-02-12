@@ -68,7 +68,7 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
     };
 
     return (
-        <div className="fixed inset-0 z-[100] bg-zinc-950 flex flex-col animate-fade-in text-white font-sans">
+        <div className="fixed inset-0 z-[1500] bg-zinc-950 flex flex-col animate-fade-in text-white font-sans">
             {/* HEADER */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-zinc-900">
                 <div>
