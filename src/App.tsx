@@ -60,6 +60,7 @@ export interface UserProfile {
   squad: string;
   genesisPoints: number;
   completedMissions: string[];
+  calibrationScore: number; // 0-100: system confidence in placement
 }
 
 export interface Mission {
@@ -386,7 +387,8 @@ const App: React.FC = () => {
       passion: profile.passion || "ALL",
       squad: profile.squad || "Alpha",
       genesisPoints: 0,
-      completedMissions: []
+      completedMissions: [],
+      calibrationScore: 0
     });
     setAppState("CHOICE_SELECTION");
   };
@@ -432,7 +434,8 @@ const App: React.FC = () => {
         return {
           ...prev,
           genesisPoints: prev.genesisPoints + studentPayout,
-          completedMissions: [...prev.completedMissions, mission.id]
+          completedMissions: [...prev.completedMissions, mission.id],
+          calibrationScore: Math.min(100, (prev.calibrationScore || 0) + 15)
         };
       });
       setAppState("MISSION_COMPLETE");
@@ -551,8 +554,8 @@ const App: React.FC = () => {
         <ActiveMission
           missionId={activeImpactMission.id}
           onComplete={(reward) => {
-            // Update Balance
-            setUserProfile(prev => prev ? { ...prev, genesisPoints: prev.genesisPoints + reward } : null);
+            // Update Balance + Calibration
+            setUserProfile(prev => prev ? { ...prev, genesisPoints: prev.genesisPoints + reward, calibrationScore: Math.min(100, (prev.calibrationScore || 0) + 15) } : null);
             // System pays
             setSystemBalance(prev => prev - reward);
 
@@ -634,6 +637,15 @@ const App: React.FC = () => {
                     <div className="flex-1 p-4 bg-black/40 rounded-2xl border border-white/5">
                       <div className="text-[10px] text-zinc-600 font-bold mb-1">RANK</div>
                       <div className="text-xl font-black text-white">LVL {userProfile?.grade}</div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
+                    <div className="text-[10px] text-zinc-600 font-bold mb-2">CALIBRATION</div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-500 ${(userProfile?.calibrationScore || 0) >= 70 ? 'bg-green-500' : (userProfile?.calibrationScore || 0) >= 40 ? 'bg-yellow-500' : 'bg-blue-500'}`} style={{ width: `${userProfile?.calibrationScore || 0}%` }} />
+                      </div>
+                      <span className={`text-sm font-black ${(userProfile?.calibrationScore || 0) >= 70 ? 'text-green-400' : (userProfile?.calibrationScore || 0) >= 40 ? 'text-yellow-400' : 'text-blue-400'}`}>{userProfile?.calibrationScore || 0}%</span>
                     </div>
                   </div>
                 </div>
