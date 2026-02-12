@@ -1,59 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import type { UserProfile } from "../../App";
+import { supabase } from "../../lib/supabase";
 
-interface NeuralGateProps {
-    onComplete: (profile: Partial<UserProfile>) => void;
-    onCancel: () => void;
-}
-
-const ARCHETYPES = {
-    BUILDER: { title: "Construct", icon: "🛠️", color: "text-blue-400", border: "border-blue-500" },
-    EXPLORER: { title: "Discover", icon: "🔭", color: "text-purple-400", border: "border-purple-500" },
-    FIXER: { title: "Repair", icon: "🔧", color: "text-green-400", border: "border-green-500" },
-    LEADER: { title: "Guide", icon: "👑", color: "text-yellow-400", border: "border-yellow-500" },
-};
-
-const SCRIPT = [
-    "I am Sage. I have been waiting for a mind like yours.",
-    "The world is full of noise. We are here to find the signal.",
-    "Tell me, what is the one problem you see in the world that you desperately want to fix?"
-];
+// ... (existing imports)
 
 export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCancel }) => {
-    const [stage, setStage] = useState<"INTRO" | "QUESTION" | "ANALYSIS" | "RESULT">("INTRO");
-    const [dialogueIndex, setDialogueIndex] = useState(0);
-    const [typedText, setTypedText] = useState("");
-    const [userInput, setUserInput] = useState("");
-    const [archetype, setArchetype] = useState<keyof typeof ARCHETYPES>("BUILDER");
+    const [stage, setStage] = useState<"INTRO" | "QUESTION" | "ANALYSIS" | "RESULT" | "AUTH">("INTRO");
+    // ... (existing state)
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [authError, setAuthError] = useState<string | null>(null);
 
-    // Typing Effect
-    useEffect(() => {
-        if (stage === "INTRO") {
-            const currentLine = SCRIPT[dialogueIndex];
-            let i = 0;
-            setTypedText("");
-            const interval = setInterval(() => {
-                setTypedText(currentLine.substring(0, i + 1));
-                i++;
-                if (i === currentLine.length) clearInterval(interval);
-            }, 30);
-            return () => clearInterval(interval);
-        }
-    }, [dialogueIndex, stage]);
-
-    const determineArchetype = (input: string) => {
-        const lower = input.toLowerCase();
-        if (lower.includes("build") || lower.includes("create") || lower.includes("make") || lower.includes("code")) {
-            setArchetype("BUILDER");
-        } else if (lower.includes("find") || lower.includes("search") || lower.includes("learn") || lower.includes("why")) {
-            setArchetype("EXPLORER");
-        } else if (lower.includes("fix") || lower.includes("help") || lower.includes("people") || lower.includes("world")) {
-            setArchetype("FIXER");
-        } else {
-            setArchetype("LEADER");
-        }
-    };
+    // ... (existing effects and helper functions)
 
     const handleNext = () => {
         if (dialogueIndex < SCRIPT.length - 1) {
@@ -66,23 +23,57 @@ export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCa
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!userInput.trim()) return;
-
         setStage("ANALYSIS");
-
-        // Simulate Analysis
         setTimeout(() => {
             determineArchetype(userInput);
             setStage("RESULT");
         }, 2500);
     };
 
-    const finalizeIdentity = () => {
-        onComplete({
-            name: "Initiate_01",
-            grade: "Level 1",
-            passion: ARCHETYPES[archetype].title,
-            squad: `The ${ARCHETYPES[archetype].title} Squad`
-        });
+    const goToAuth = () => {
+        setStage("AUTH");
+    };
+
+    const handleRegister = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password) return;
+
+        setIsRegistering(true);
+        setAuthError(null);
+
+        try {
+            // 1. Create Supabase User
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: userInput.substring(0, 20) || "Initiate",
+                        archetype: ARCHETYPES[archetype].title,
+                        squad: archetype
+                    }
+                }
+            });
+
+            if (error) throw error;
+
+            if (data.user) {
+                // 2. Complete Onboarding with REAL ID
+                onComplete({
+                    name: userInput.substring(0, 20) || "Initiate",
+                    grade: "Level 1",
+                    passion: ARCHETYPES[archetype].title,
+                    squad: `The ${ARCHETYPES[archetype].title} Squad`
+                });
+            } else {
+                throw new Error("Registration failed. Please try again.");
+            }
+
+        } catch (err: any) {
+            console.error("Auth Error:", err);
+            setAuthError(err.message || "Connection refused. Check credentials.");
+            setIsRegistering(false);
+        }
     };
 
     return (
@@ -98,6 +89,7 @@ export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCa
             {/* TEXT AREA */}
             <div className="min-h-[180px] w-full max-w-2xl flex flex-col items-center">
                 {stage === "INTRO" && (
+                    // ... (existing INTRO rendering)
                     <>
                         <p className="text-xl md:text-3xl text-cyan-50 drop-shadow-md mb-8 leading-relaxed">
                             {typedText}<span className="animate-pulse text-cyan-400">_</span>
@@ -159,11 +151,61 @@ export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCa
                             <strong className={`block mt-1 ${ARCHETYPES[archetype].color}`}> {ARCHETYPES[archetype].title} Protocol </strong>
                         </p>
                         <button
-                            onClick={finalizeIdentity}
+                            onClick={goToAuth}
                             className={`w-full py-4 bg-zinc-800 ${ARCHETYPES[archetype].border} border text-white font-bold rounded-xl hover:bg-zinc-700 transition-all uppercase tracking-widest text-sm`}
                         >
-                            Enter The Engine
+                            Confirm Identity
                         </button>
+                    </motion.div>
+                )}
+
+                {stage === "AUTH" && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-zinc-900/90 border border-cyan-500/30 p-8 rounded-3xl w-full max-w-md backdrop-blur-xl shadow-2xl"
+                    >
+                        <h2 className="text-cyan-400 text-xs uppercase tracking-[0.2em] mb-6 animate-pulse">Neural Link Required</h2>
+
+                        {authError && (
+                            <div className="mb-4 p-3 bg-red-900/30 border border-red-500/30 rounded text-red-200 text-xs">
+                                {authError}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleRegister} className="space-y-4">
+                            <div>
+                                <label className="block text-left text-[10px] uppercase text-zinc-500 font-bold mb-1">Neural ID (Email)</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-cyan-500 focus:outline-none transition-colors font-mono"
+                                    placeholder="initiate@world.engine"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-left text-[10px] uppercase text-zinc-500 font-bold mb-1">Access Key (Password)</label>
+                                <input
+                                    type="password"
+                                    required
+                                    minLength={6}
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-cyan-500 focus:outline-none transition-colors font-mono"
+                                    placeholder="••••••••"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isRegistering}
+                                className="w-full py-4 mt-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition-all uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(8,145,178,0.4)]"
+                            >
+                                {isRegistering ? "Establishing Link..." : "Initialize Link"}
+                            </button>
+                        </form>
                     </motion.div>
                 )}
             </div>
