@@ -98,27 +98,42 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                     {activeTab === 'BRIEFING' && (
                         <div className="flex flex-col h-full animate-fade-in">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                {/* JIT SYLLABUS CARDS */}
+                                {/* CARD 1: INTEL DATA */}
                                 <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
-                                    <div className="text-4xl mb-4">🧠</div>
-                                    <h3 className="font-bold text-lg mb-2">The Concept</h3>
-                                    <p className="text-sm text-zinc-400 leading-relaxed mb-4">Before we start, let's understand the core principle. Watch this 30s primer.</p>
-                                    <div className="w-full h-32 bg-black rounded-lg flex items-center justify-center border border-white/5 text-zinc-600 font-mono text-xs">[VIDEO PLACEHOLDER]</div>
-                                </div>
-                                <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
-                                    <div className="text-4xl mb-4">👁️</div>
-                                    <h3 className="font-bold text-lg mb-2">The Example</h3>
-                                    <p className="text-sm text-zinc-400 leading-relaxed mb-4">Here is what a 10/10 submission looks like. Notice the structure.</p>
-                                    <div className="p-3 bg-zinc-800 rounded font-mono text-xs text-green-400 border-l-2 border-green-500">
-                                        "{mission.category === 'CODING' ? 'function hero() { return "Fly"; }' : 'My hero glows with blue energy...'}"
+                                    <div className="text-4xl mb-4">{mission.category === 'CODING' ? '💻' : mission.category === 'SCIENCE' ? '🔬' : mission.category === 'CREATIVE' ? '🎨' : '📋'}</div>
+                                    <h3 className="font-bold text-lg mb-2">Intel Data</h3>
+                                    <p className="text-sm text-zinc-400 leading-relaxed mb-4">
+                                        {mission.category === 'CODING' && 'Review the function signature and edge cases below. Your code must handle all listed inputs.'}
+                                        {mission.category === 'SCIENCE' && 'Analyze the field data collected from the survey region. Use these data points in your report.'}
+                                        {mission.category === 'CREATIVE' && 'Study the narrative prompt and character constraints. Your draft must address the core theme.'}
+                                        {!['CODING', 'SCIENCE', 'CREATIVE'].includes(mission.category) && 'Review the source material below. Your submission must reference these key points.'}
+                                    </p>
+                                    <div className="p-3 bg-black/50 rounded border-l-2 border-cyan-500 text-xs text-cyan-300 font-mono space-y-1">
+                                        {mission.category === 'CODING' && <><div>▸ Input: Array of integers</div><div>▸ Output: Sorted result</div><div>▸ Edge: Empty array returns []</div></>}
+                                        {mission.category === 'SCIENCE' && <><div>▸ Soil pH: 5.2 (acidic)</div><div>▸ Water level: -2.4 in. from baseline</div><div>▸ Flora: 3 invasive species detected</div></>}
+                                        {mission.category === 'CREATIVE' && <><div>▸ Theme: Resilience under pressure</div><div>▸ Setting: Near-future urban</div><div>▸ Constraint: 500 words max</div></>}
+                                        {!['CODING', 'SCIENCE', 'CREATIVE'].includes(mission.category) && <><div>▸ Refer to mission briefing</div><div>▸ Follow submission format</div><div>▸ Cite your sources</div></>}
                                     </div>
                                 </div>
+                                {/* CARD 2: REFERENCE FORMAT */}
                                 <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
-                                    <div className="text-4xl mb-4">⚡</div>
-                                    <h3 className="font-bold text-lg mb-2">Your Task</h3>
+                                    <div className="text-4xl mb-4">👁️</div>
+                                    <h3 className="font-bold text-lg mb-2">Reference Format</h3>
+                                    <p className="text-sm text-zinc-400 leading-relaxed mb-4">A 10/10 submission follows this structure:</p>
+                                    <div className="p-3 bg-zinc-800 rounded font-mono text-xs text-green-400 border-l-2 border-green-500 whitespace-pre-line">
+                                        {mission.category === 'CODING' && 'function solve(arr) {\n  if (!arr.length) return [];\n  return arr.sort((a,b) => a - b);\n}'}
+                                        {mission.category === 'SCIENCE' && '# FIELD REPORT\n## Summary: Acidic soil in Sector 7\n## Data: pH 5.2, water -2.4 in.\n## Recommendation: Soil treatment'}
+                                        {mission.category === 'CREATIVE' && '"The city hummed beneath\na sky the color of static.\nShe pressed forward, knowing\nretreat was never an option."'}
+                                        {!['CODING', 'SCIENCE', 'CREATIVE'].includes(mission.category) && '# REPORT\n## Summary:\n## Key Findings:\n## Conclusion:'}
+                                    </div>
+                                </div>
+                                {/* CARD 3: DELIVERABLE */}
+                                <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-2xl">
+                                    <div className="text-4xl mb-4">🎯</div>
+                                    <h3 className="font-bold text-lg mb-2">Your Deliverable</h3>
                                     <ul className="text-sm text-zinc-400 space-y-2">
-                                        <li>1. Open the Workbench.</li>
-                                        <li>2. {mission.category === 'CODING' ? 'Write the function.' : 'Draft your story.'}</li>
+                                        <li>1. Review the Intel Data.</li>
+                                        <li>2. {mission.category === 'CODING' ? 'Write the function in the Workbench.' : mission.category === 'SCIENCE' ? 'Draft your Field Report using the data.' : mission.category === 'CREATIVE' ? 'Write your narrative draft.' : 'Complete the assignment.'}</li>
                                         <li>3. Submit for AI Verification.</li>
                                     </ul>
                                 </div>
