@@ -98,7 +98,7 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userT
     }, [onMissionSelect]);
 
     return (
-        <div className="px-0 pb-24 animate-fade-in w-full">
+        <div className="px-0 pb-24 animate-fade-in w-full mt-12 relative">
             {/* HEADER */}
             <div className="max-w-6xl mx-auto mb-8">
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 flex-wrap">
