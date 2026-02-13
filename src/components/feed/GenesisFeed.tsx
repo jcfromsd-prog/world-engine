@@ -37,7 +37,7 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userT
             const { data } = await supabase
                 .from('company_bounties')
                 .select('*')
-                .eq('status', 'LIVE') // Only fetch live missions
+                .in('status', ['LIVE', 'live']) // Fetch both cases to be safe
                 .limit(5);
 
             const realMissions: LiveMission[] = (data || []).map(m => ({
