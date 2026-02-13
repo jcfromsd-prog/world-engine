@@ -9,18 +9,20 @@ interface CalibrationModalProps {
     grade: string;
 }
 
-type Stage = 'INTRO' | 'MATH' | 'SCIENCE' | 'ENGLISH' | 'COMPLETE';
+type Stage = 'INTRO' | 'LOGIC' | 'OBSERVATION' | 'ANALYSIS' | 'COMPLETE';
 
-const QUESTIONS = {
+const SCENARIOS = {
     'K-5': {
-        MATH: { q: 'If you have 3 Engines and build 4 more, how many do you have?', a: ['6', '7', '8'], correct: '7', icon: '⚙️' },
-        SCIENCE: { q: 'What do plants need to grow?', a: ['Sunlight', 'Moonlight', 'Starlight'], correct: 'Sunlight', icon: '🔎' },
-        ENGLISH: { q: 'Which word is a verb?', a: ['Pilot', 'Fly', 'Sky'], correct: 'Fly', icon: '🎯' }
+        name: "PROJECT: TREEHOUSE",
+        LOGIC: { q: 'To build the floor, you need 8 planks. You have 3. How many more do you need?', a: ['4', '5', '11'], correct: '5', icon: '🪵' },
+        OBSERVATION: { q: 'Which location is best for the treehouse?', a: ['Dead Branch', 'Strong Oak', 'Sapling'], correct: 'Strong Oak', icon: '🌳' },
+        ANALYSIS: { q: 'Choose the sign for your door:', a: ['Privet Keep Out', 'Private Keep Out', 'Privit Keep Out'], correct: 'Private Keep Out', icon: '🚪' }
     },
     '6+': {
-        MATH: { q: 'Solve for x: 2x + 4 = 12', a: ['3', '4', '6'], correct: '4', icon: '⚙️' },
-        SCIENCE: { q: 'What is the powerhouse of the cell?', a: ['Nucleus', 'Mitochondria', 'Ribosome'], correct: 'Mitochondria', icon: '🔎' },
-        ENGLISH: { q: 'Select the synonym for "Resilient".', a: ['Weak', 'Robust', 'Fragile'], correct: 'Robust', icon: '🎯' }
+        name: "PROJECT: MARS BASE",
+        LOGIC: { q: 'Rations per day: 2. Crew: 4. Days: 10. Total rations needed?', a: ['20', '40', '80'], correct: '80', icon: '🥫' },
+        OBSERVATION: { q: 'Solar panels are covered in dust. Energy output is:', a: ['Rising', 'Stable', 'Falling'], correct: 'Falling', icon: '📉' },
+        ANALYSIS: { q: 'Decode the incoming transmission: "Sys_em F_ilure".', a: ['System Failure', 'System Fillure', 'Systim Failure'], correct: 'System Failure', icon: '📡' }
     }
 };
 
@@ -31,15 +33,15 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
 
     // Determine Logic Level
     const level = (parseInt(grade) || 5) <= 5 ? 'K-5' : '6+';
-    const deck = QUESTIONS[level];
+    const mission = SCENARIOS[level];
 
     const handleAnswer = (answer: string, correct: string) => {
         if (answer === correct) setScore(prev => prev + 1);
 
         // Progress Logic
-        if (stage === 'MATH') { setStage('SCIENCE'); setProgress(33); }
-        if (stage === 'SCIENCE') { setStage('ENGLISH'); setProgress(66); }
-        if (stage === 'ENGLISH') { setStage('COMPLETE'); setProgress(100); }
+        if (stage === 'LOGIC') { setStage('OBSERVATION'); setProgress(33); }
+        if (stage === 'OBSERVATION') { setStage('ANALYSIS'); setProgress(66); }
+        if (stage === 'ANALYSIS') { setStage('COMPLETE'); setProgress(100); }
     };
 
     if (!isOpen) return null;
@@ -56,33 +58,31 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
                 {/* CONTENT SWITCHER */}
                 {stage === 'INTRO' && (
                     <div className="text-center animate-slide-up">
-                        <div className="text-8xl mb-6">🧬</div>
-                        <h2 className="text-4xl font-black text-white mb-4 italic tracking-tighter">LOGIC-LINK <span className="text-blue-500">REQUIRED</span></h2>
+                        <div className="text-8xl mb-6">🚀</div>
+                        <h2 className="text-4xl font-black text-white mb-2 italic tracking-tighter">MISSION: <span className="text-emerald-500">{mission.name}</span></h2>
                         <p className="text-xl text-zinc-400 mb-12 max-w-lg mx-auto">
-                            To activate your World Engine, we must calibrate your reasoning matrix.
-                            <br /><br />
-                            <span className="text-white font-bold">3 MODULES:</span> Logic, Observation, Language.
+                            To launch this project, you must solve 3 field challenges using your Logic, Observation, and Language skills.
                         </p>
-                        <button onClick={() => setStage('MATH')} className="px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-xl transition-all hover:scale-105 shadow-lg shadow-blue-500/20">
-                            INITIATE SCAN 🚀
+                        <button onClick={() => setStage('LOGIC')} className="px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xl transition-all hover:scale-105 shadow-lg shadow-emerald-500/20">
+                            START CHALLENGE
                         </button>
                     </div>
                 )}
 
-                {(stage === 'MATH' || stage === 'SCIENCE' || stage === 'ENGLISH') && (
+                {(stage === 'LOGIC' || stage === 'OBSERVATION' || stage === 'ANALYSIS') && (
                     <div className="text-center animate-fade-in-up">
                         <div className="text-6xl mb-6 bg-zinc-800 w-24 h-24 rounded-full flex items-center justify-center mx-auto border border-white/10">
-                            {deck[stage].icon}
+                            {mission[stage].icon}
                         </div>
-                        <h3 className="text-blue-400 font-bold tracking-widest text-sm mb-2">{stage} MODULE</h3>
-                        <h2 className="text-3xl font-bold text-white mb-10">{deck[stage].q}</h2>
+                        <h3 className="text-emerald-400 font-bold tracking-widest text-sm mb-2">{stage} CHECK</h3>
+                        <h2 className="text-3xl font-bold text-white mb-10">{mission[stage].q}</h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {deck[stage].a.map((opt) => (
+                            {mission[stage].a.map((opt) => (
                                 <button
                                     key={opt}
-                                    onClick={() => handleAnswer(opt, deck[stage].correct)}
-                                    className="p-6 bg-zinc-800 border border-white/5 rounded-2xl hover:bg-zinc-700 hover:border-blue-500 transition-all text-xl font-bold text-white active:scale-95"
+                                    onClick={() => handleAnswer(opt, mission[stage].correct)}
+                                    className="p-6 bg-zinc-800 border border-white/5 rounded-2xl hover:bg-zinc-700 hover:border-emerald-500 transition-all text-xl font-bold text-white active:scale-95"
                                 >
                                     {opt}
                                 </button>

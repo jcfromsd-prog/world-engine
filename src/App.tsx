@@ -76,6 +76,7 @@ export interface Mission {
   type: "TRAINING" | "CLIENT_CONTRACT";
   status: "LIVE" | "TRENDING" | "EXPIRING" | "CLAIMED";
   expiresAt: number;
+  requirements?: { type: "MATH" | "SCIENCE" | "ENGLISH" | "LOGIC"; desc: string }[];
 }
 
 // --- THE TREASURY (CEO Logic) ---
@@ -89,11 +90,20 @@ const MISSION_DB: Mission[] = [
   // K-5 FOUNDATIONS
   {
     id: "SCI.K5.01", type: "TRAINING", title: "Backyard Bio-Blitz", client: "Academy", reward: 100, desc: "Find/draw 3 bugs.", category: "SCIENCE", minGrade: 0, maxGrade: 5, color: "text-emerald-400",
-    status: "LIVE", expiresAt: Date.now() + 86400000
+    status: "LIVE", expiresAt: Date.now() + 86400000,
+    requirements: [
+      { type: "SCIENCE", desc: "Identify 3 insect species." },
+      { type: "MATH", desc: "Count legs and antennae (Logic Check)." },
+      { type: "ENGLISH", desc: "Label your drawing." }
+    ]
   },
   {
     id: "COD.K5.01", type: "TRAINING", title: "Robot Logic Maze", client: "Academy", reward: 100, desc: "Guide the mouse.", category: "CODING", minGrade: 0, maxGrade: 5, color: "text-blue-400",
-    status: "LIVE", expiresAt: Date.now() + 86400000
+    status: "LIVE", expiresAt: Date.now() + 86400000,
+    requirements: [
+      { type: "LOGIC", desc: "Plan the shortest path." },
+      { type: "MATH", desc: "Count total steps (A+B)." }
+    ]
   },
   {
     id: "CRE.K5.01", type: "TRAINING", title: "My Hero Story", client: "Academy", reward: 100, desc: "Draw a hero.", category: "CREATIVE", minGrade: 0, maxGrade: 5, color: "text-yellow-400",
@@ -103,7 +113,12 @@ const MISSION_DB: Mission[] = [
   // 6-12 SKILLS
   {
     id: "CS.WEB.03", type: "TRAINING", title: "Portfolio Site", client: "Academy", reward: 260, desc: "Code your own site.", category: "CODING", minGrade: 6, maxGrade: 16, color: "text-indigo-400",
-    status: "LIVE", expiresAt: Date.now() + 86400000
+    status: "LIVE", expiresAt: Date.now() + 86400000,
+    requirements: [
+      { type: "LOGIC", desc: "Debug CSS Layout." },
+      { type: "ENGLISH", desc: "Write 'About Me' Bio." },
+      { type: "MATH", desc: "Calculate pixel dimensions." }
+    ]
   },
   {
     id: "CRE.MED.08", type: "TRAINING", title: "Viral Impact Doc", client: "Academy", reward: 240, desc: "Edit a 60s doc.", category: "CREATIVE", minGrade: 6, maxGrade: 16, color: "text-pink-500",
