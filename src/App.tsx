@@ -278,6 +278,7 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
 
     try {
       setMatchStatus("SECURING VAULT CONNECTION...");
+      // 1. Try Sign Up
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -297,6 +298,24 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
       console.log("✅ AUTH SUCCESS:", data.user?.id);
       onComplete({ name, grade, passion, squad, id: data.user?.id });
     } catch (err: any) {
+      // 2. Fallback: If User Exists, Try Sign In
+      if (err.message?.includes("already registered") || err.message?.includes("User already exists")) {
+        console.log("⚠️ User exists, attempting login...");
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (!loginError && loginData.user) {
+          console.log("✅ LOGIN SUCCESS:", loginData.user.id);
+          onComplete({ name, grade, passion, squad, id: loginData.user.id });
+          return;
+        } else {
+          setAuthError(loginError?.message || "Login Failed. Check password.");
+          return;
+        }
+      }
+
       console.error("Auth Fail:", err);
       setAuthError(err.message || "Connection Failed. Try again.");
     }
