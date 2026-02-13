@@ -191,15 +191,18 @@ export async function fetchGitHubBounties(options: {
     const searchUrl = `https://api.github.com/search/issues?q=${encodeURIComponent(query)}&per_page=${limit}`;
 
     try {
-        const response = await fetch(searchUrl, {
-            headers: {
-                'Accept': 'application/vnd.github.v3+json',
-                // Add token if available for higher rate limits
-                ...(import.meta.env.VITE_GITHUB_TOKEN && {
-                    'Authorization': `token ${import.meta.env.VITE_GITHUB_TOKEN}`
-                })
-            }
-        });
+        // Cross-environment token access (Vite vs Node.js)
+        const token = import.meta.env?.VITE_GITHUB_TOKEN || process.env.VITE_GITHUB_TOKEN;
+
+        const headers: HeadersInit = {
+            'Accept': 'application/vnd.github.v3+json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `token ${token}`;
+        }
+
+        const response = await fetch(searchUrl, { headers });
 
         if (response.status === 403 || response.status === 429) {
             console.warn('GitHub API rate limit hit. Using mock data.');

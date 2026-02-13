@@ -97,6 +97,12 @@ export class KnowledgeGraph {
         });
         return result;
     }
+    /**
+     * Get IDs of nodes unlocked by a specific node (Children)
+     */
+    public getConnectedNodes(nodeId: string): string[] {
+        return this.adjacencyList.get(nodeId) || [];
+    }
 }
 
 // ============================================================================
@@ -161,4 +167,64 @@ SEED_GRAPH.addNode({
     tags: ["reading", "vocabulary"],
     difficulty: 0.3,
     estimatedTime: 15
+});
+
+// GRADE 5 - MATH (Entry Point)
+SEED_GRAPH.addNode({
+    id: "math.g5.fractions.intro",
+    title: "Understanding Fractions",
+    domain: "numeracy",
+    gradeLevel: 5,
+    prerequisites: [], // Entry node for G5 (assumes G1-4 mastery)
+    unlocks: ["math.g5.fractions.addition"],
+    description: "Understand fractions as parts of a whole.",
+    standardRef: "CCSS.MATH.CONTENT.5.NF.A.1",
+    tags: ["fractions", "division"],
+    difficulty: 0.5,
+    estimatedTime: 20
+});
+
+// GRADE 5 - SCIENCE (Entry Point)
+SEED_GRAPH.addNode({
+    id: "sci.g5.ecosystems.food_webs",
+    title: "Food Webs & Energy",
+    domain: "science",
+    gradeLevel: 5,
+    prerequisites: [],
+    unlocks: ["sci.g5.ecosystems.decomposers"],
+    description: "Trace the flow of energy through an ecosystem.",
+    standardRef: "NGSS.5-PS3-1",
+    tags: ["biology", "nature"],
+    difficulty: 0.4,
+    estimatedTime: 25
+});
+
+// GRADE 5 - MATH (Depth 1)
+SEED_GRAPH.addNode({
+    id: "math.g5.fractions.addition",
+    title: "Adding Like Fractions",
+    domain: "numeracy",
+    gradeLevel: 5,
+    prerequisites: ["math.g5.fractions.intro"], // Depth 1
+    unlocks: [], // Leaf for now
+    description: "Add fractions with the same denominator.",
+    standardRef: "CCSS.MATH.CONTENT.5.NF.A.1",
+    tags: ["fractions", "addition"],
+    difficulty: 0.6,
+    estimatedTime: 20
+});
+
+// GRADE 5 - SCIENCE (Depth 1)
+SEED_GRAPH.addNode({
+    id: "sci.g5.ecosystems.decomposers",
+    title: "Decomposers & Nutrient Cycling",
+    domain: "science",
+    gradeLevel: 5,
+    prerequisites: ["sci.g5.ecosystems.food_webs"], // Depth 1
+    unlocks: [], // Leaf for now
+    description: "Understand the role of decomposers in recycling nutrients.",
+    standardRef: "NGSS.5-LS2-1",
+    tags: ["biology", "recycling"],
+    difficulty: 0.5,
+    estimatedTime: 20
 });

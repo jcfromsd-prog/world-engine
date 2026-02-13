@@ -81,11 +81,50 @@ export class WorldEngine {
     }
 
     /**
-     * DEV ONLY: Reset all progress
+     * DEV ONLY: Reset all progress with optional Grade Reseed
+     * @param targetGrade Classifies the learner to a specific grade level.
      */
-    public resetProgress(): void {
+    public resetProgress(targetGrade?: number): void {
         this.learner.getProfile().masteryMap.clear();
         this.learner.getProfile().completedMissions = [];
         this.learner.getProfile().genesisPoints = 0;
+
+        if (targetGrade) {
+            // Safe Cast: We trust the Dev Console input to be 1-12
+            this.learner.getProfile().currentGrade = targetGrade as any;
+
+            // OPTION B: Recursively Unlock Subtrees (Runway)
+            const entryNodes = this.graph.getNodesByGrade(targetGrade as any).filter(n => n.prerequisites.length === 0);
+
+            entryNodes.forEach(root => {
+                this.unlockSubtree(root.id, 2); // Depth 2 by default
+            });
+        }
+    }
+
+    /**
+     * PRIVATE: Recursively unlock a subtree to provide a "runway" for the agent.
+     * Uses BFS to traverse deeper into the graph.
+     */
+    private unlockSubtree(rootId: string, maxDepth: number): void {
+        const queue: { id: string, depth: number }[] = [{ id: rootId, depth: 0 }];
+        const visited = new Set<string>();
+
+        while (queue.length > 0) {
+            const current = queue.shift()!;
+            if (visited.has(current.id)) continue;
+            visited.add(current.id);
+
+            // "Master" this node so its children unlock
+            // We set it as "System Mastered" to distinguish from real user work
+            this.learner.updateMastery(current.id, true, 0);
+
+            if (current.depth < maxDepth) {
+                const children = this.graph.getConnectedNodes(current.id);
+                children.forEach(childId => {
+                    queue.push({ id: childId, depth: current.depth + 1 });
+                });
+            }
+        }
     }
 }
