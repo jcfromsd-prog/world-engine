@@ -199,7 +199,7 @@ const BreadcrumbHeader: React.FC<{ name: string, grade: string, passion: string,
 type OnboardingStep = "NAME" | "GRADE" | "PASSION" | "MATCHING" | "AUTH";
 
 const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) => void, onCancel: () => void }> = ({ onComplete, onCancel }) => {
-  const [step, setStep] = useState<OnboardingStep | "AUTH">("NAME");
+  const [step, setStep] = useState<OnboardingStep>("NAME");
   const [name, setName] = useState("");
   const [grade, setGrade] = useState("");
   const [passion, setPassion] = useState("");
@@ -228,6 +228,7 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
     if (step === "GRADE") speak(`Nice to meet you, ${name}. What is your experience level?`);
     if (step === "PASSION") speak("Excellent. Now, what mission calls to you?");
     if (step === "MATCHING") speak("Initializing your squad. Stand by.");
+    if (step === "AUTH") speak("Final Step. Secure your Engine Key to save your progress.");
 
   }, [step, name]);
 
@@ -285,7 +286,7 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
     }
   };
 
-  const transitionTo = (nextStep: OnboardingStep | "AUTH") => { setFade(true); setTimeout(() => { setStep(nextStep); setFade(false); }, 300); };
+  const transitionTo = (nextStep: OnboardingStep) => { setFade(true); setTimeout(() => { setStep(nextStep); setFade(false); }, 300); };
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in p-6 font-sans">
