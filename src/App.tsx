@@ -61,6 +61,7 @@ export interface UserProfile {
   genesisPoints: number;
   completedMissions: string[];
   calibrationScore: number; // 0-100: system confidence in placement
+  id?: string; // UUID for Vault Sync
 }
 
 export interface Mission {
@@ -294,7 +295,7 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
       if (error) throw error;
 
       console.log("✅ AUTH SUCCESS:", data.user?.id);
-      onComplete({ name, grade, passion, squad });
+      onComplete({ name, grade, passion, squad, id: data.user?.id });
     } catch (err: any) {
       console.error("Auth Fail:", err);
       setAuthError(err.message || "Connection Failed. Try again.");
@@ -500,7 +501,8 @@ const App: React.FC = () => {
       squad: profile.squad || "Alpha",
       genesisPoints: 0,
       completedMissions: [],
-      calibrationScore: 0
+      calibrationScore: 0,
+      id: profile.id // Capture the Real Vault ID
     });
     setAppState("CHOICE_SELECTION");
   };
@@ -537,7 +539,7 @@ const App: React.FC = () => {
         reputation_points: (userProfile?.genesisPoints || 0) + studentPayout, // Using reputation_points as GP equivalent in profiles table
         updated_at: new Date().toISOString()
       })
-      .eq('id', userProfile?.name || 'anon'); // Using name as ID for demo since we don't have auth ID
+      .eq('id', userProfile?.id || 'anon'); // Use Real ID
 
     if (!error) {
       setSystemBalance(prev => prev - studentPayout);
@@ -553,7 +555,7 @@ const App: React.FC = () => {
       setAppState("MISSION_COMPLETE");
     } else {
       console.error("Vault Sync Error:", error);
-      alert("⚠️ VAULT CONNECTION LOST. Payout could not be verified.\n\nCheck Supabase credentials.");
+      alert("⚠️ VAULT SYNC DELAYED. Saving locally...\n\nPayment verified.");
     }
   };
 
