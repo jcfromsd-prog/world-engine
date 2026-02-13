@@ -577,7 +577,16 @@ const App: React.FC = () => {
       )}
 
       {/* CALIBRATION MODAL */}
-      {showCalibration && <CalibrationModal isOpen={true} onClose={() => setShowCalibration(false)} />}
+      {showCalibration && (
+        <CalibrationModal
+          isOpen={true}
+          grade={userProfile?.grade || "5"}
+          onClose={(score) => {
+            setUserProfile(prev => prev ? { ...prev, calibrationScore: score } : null);
+            setShowCalibration(false);
+          }}
+        />
+      )}
 
       {/* ADMIN OVERLAYS */}
       {showSwarm && <SwarmDashboard onClose={() => setShowSwarm(false)} />}
