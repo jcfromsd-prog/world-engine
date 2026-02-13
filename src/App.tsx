@@ -737,7 +737,7 @@ const App: React.FC = () => {
       {/* 🛡️ THE HQ (Feed Selection) */}
       {appState === "CHOICE_SELECTION" && (
         <div className="max-w-7xl mx-auto p-6 md:p-12 animate-fade-in pt-24">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-12">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-6">
             <div className="w-full md:w-[400px]">
               <div className="sticky top-24 p-8 bg-zinc-900/30 border border-white/5 rounded-3xl backdrop-blur-md">
                 <div className="text-4xl mb-4">🛡️</div>

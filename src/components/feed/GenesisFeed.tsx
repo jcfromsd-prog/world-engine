@@ -98,12 +98,12 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userT
     }, [onMissionSelect]);
 
     return (
-        <div className="pt-32 px-6 pb-24 animate-fade-in">
+        <div className="px-0 pb-24 animate-fade-in w-full">
             {/* HEADER */}
             <div className="max-w-6xl mx-auto mb-8">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 mb-2">
+                        <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 mb-2 whitespace-nowrap">
                             GENESIS FEED
                         </h1>
                         <p className="text-zinc-500 text-sm font-mono flex items-center gap-2">
