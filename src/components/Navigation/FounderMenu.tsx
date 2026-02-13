@@ -80,22 +80,22 @@ export const FounderMenu: React.FC<FounderMenuProps> = ({
                         {/* Divider */}
                         <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-1" />
 
-                        {/* 3. RESET SYSTEM (Danger Zone) */}
+                        {/* 3. LOG OUT (Safe Exit) */}
                         <button
                             onClick={() => {
-                                if (window.confirm("WARNING: COMPLETE SYSTEM RESET.\n\nThis will wipe your User Profile, Genesis Points, and Mission History.\n\nAre you sure completely sure?")) {
+                                if (window.confirm("Sign out of current session?")) {
                                     onReset();
                                     setIsOpen(false);
                                 }
                             }}
                             className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-red-950/30 border border-transparent hover:border-red-500/30 group transition-all w-full text-left"
                         >
-                            <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-lg group-hover:rotate-180 transition-transform duration-500">
-                                🔄
+                            <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-lg group-hover:translate-x-1 transition-transform">
+                                🚪
                             </div>
                             <div>
-                                <div className="text-sm font-bold text-slate-400 group-hover:text-red-400 transition-colors">Hard Reset</div>
-                                <div className="text-[10px] text-slate-600 group-hover:text-red-400/60">Wipe Data & Reboot Core</div>
+                                <div className="text-sm font-bold text-slate-400 group-hover:text-red-400 transition-colors">Log Out</div>
+                                <div className="text-[10px] text-slate-600 group-hover:text-red-400/60">Switch Pilot Identity</div>
                             </div>
                         </button>
 
