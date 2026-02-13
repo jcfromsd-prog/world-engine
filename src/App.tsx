@@ -321,7 +321,10 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
 
       {step === "NAME" && (
         <div className={`text-center w-full max-w-2xl transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
-          <h1 className="text-3xl md:text-4xl font-black text-white mb-8 tracking-tight">Type in your <span className="text-yellow-400">Name</span> and press enter to begin.</h1>
+          <div className="flex flex-col items-center gap-2 mb-8">
+            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">Type your <span className="text-blue-400">Name</span></h1>
+            <h2 className="text-2xl md:text-3xl font-bold text-zinc-400 tracking-wide">press <span className="text-blue-400">Enter</span></h2>
+          </div>
           <input autoFocus className="relative w-full bg-zinc-900 border border-white/10 rounded-xl px-8 py-6 text-2xl text-center text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 transition-all" placeholder="Your Name... [Enter]" value={name} onChange={e => setName(e.target.value)} onKeyDown={handleNameSubmit} />
         </div>
       )}
