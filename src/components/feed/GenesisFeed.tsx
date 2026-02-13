@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MissionGenerator } from '../../lib/MissionGenerator';
 import type { LiveMission } from '../../lib/MissionGenerator';
+import { supabase } from '../../lib/supabase';
 
 interface GenesisFeedProps {
     onMissionSelect: (mission: LiveMission) => void;
@@ -29,13 +30,40 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userT
         });
     }, [userTrack]);
 
-    // Initialize feed
+    // Initialize feed (Real Data + Simulation)
     useEffect(() => {
-        setTimeout(() => {
-            const initial = MissionGenerator.generateInitialFeed(8);
+        const fetchMissions = async () => {
+            // 1. Fetch Real Founder Missions
+            const { data } = await supabase
+                .from('company_bounties')
+                .select('*')
+                .eq('status', 'LIVE') // Only fetch live missions
+                .limit(5);
+
+            const realMissions: LiveMission[] = (data || []).map(m => ({
+                id: m.id,
+                title: m.title,
+                client: 'Founder Corp',
+                reward: m.reward_amount,
+                desc: m.description,
+                category: m.category.toUpperCase() as any,
+                status: 'LIVE',
+                expiresAt: Date.now() + 86400000,
+                type: 'CLIENT_CONTRACT', // Added to satisfy interface
+                minGrade: 0,
+                maxGrade: 99,
+                color: 'text-white'
+            }));
+
+            // 2. Fill the rest with Simulation
+            const needed = Math.max(0, 8 - realMissions.length);
+            const initial = [...realMissions, ...MissionGenerator.generateInitialFeed(needed)];
+
             setMissions(sortMissions(initial));
             setIsLoading(false);
-        }, 800);
+        };
+
+        fetchMissions();
     }, [sortMissions]);
 
     // Update currentTime every second
