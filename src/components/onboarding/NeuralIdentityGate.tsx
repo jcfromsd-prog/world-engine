@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import type { UserProfile } from "../../App";
-import { supabase } from "../../lib/supabase";
+import { supabase, updateProfile } from "../../lib/supabase"; // Uses Circuit Breaker
 
 interface NeuralGateProps {
     onComplete: (profile: Partial<UserProfile>) => void;
@@ -21,12 +21,17 @@ const SCRIPT = [
     "Tell me, what is the one problem you see in the world that you desperately want to fix?"
 ];
 
+type GateStage = "INTRO" | "QUESTION" | "ANALYSIS" | "RESULT" | "AGE_GATE" | "CADET_MODE" | "AUTH";
+
 export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCancel }) => {
-    const [stage, setStage] = useState<"INTRO" | "QUESTION" | "ANALYSIS" | "RESULT" | "AUTH">("INTRO");
+    const [stage, setStage] = useState<GateStage>("INTRO");
     const [dialogueIndex, setDialogueIndex] = useState(0);
     const [typedText, setTypedText] = useState("");
     const [userInput, setUserInput] = useState("");
     const [archetype, setArchetype] = useState<keyof typeof ARCHETYPES>("BUILDER");
+
+    // Age Gate State
+    const [birthYear, setBirthYear] = useState("");
 
     // Auth State
     const [email, setEmail] = useState("");
@@ -83,8 +88,17 @@ export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCa
         }, 2500);
     };
 
-    const goToAuth = () => {
-        setStage("AUTH");
+    const handleAgeVerification = (e: React.FormEvent) => {
+        e.preventDefault();
+        const year = parseInt(birthYear);
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - year;
+
+        if (age < 13) {
+            setStage("CADET_MODE");
+        } else {
+            setStage("AUTH");
+        }
     };
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -111,7 +125,15 @@ export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCa
             if (error) throw error;
 
             if (data.user) {
-                // 2. Complete Onboarding with REAL ID
+                // 2. EXPLICIT PERSISTENCE (Circuit Breaker Protected)
+                // We call updateProfile to ensure the "trigger" didn't fail silently
+                await updateProfile(data.user.id, {
+                    username: userInput.substring(0, 20) || "Initiate",
+                    archetype: ARCHETYPES[archetype].title,
+                    goal: userInput // Save their "problem statement" as initial goal
+                });
+
+                // 3. Complete Onboarding with REAL ID
                 onComplete({
                     name: userInput.substring(0, 20) || "Initiate",
                     grade: "Level 1",
@@ -119,7 +141,7 @@ export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCa
                     squad: `The ${ARCHETYPES[archetype].title} Squad`
                 });
             } else {
-                throw new Error("Registration failed. Please try again.");
+                throw new Error("Registration handshake incomplete. Please retry.");
             }
 
         } catch (err: any) {
@@ -203,11 +225,63 @@ export const NeuralIdentityGate: React.FC<NeuralGateProps> = ({ onComplete, onCa
                             <strong className={`block mt-1 ${ARCHETYPES[archetype].color}`}> {ARCHETYPES[archetype].title} Protocol </strong>
                         </p>
                         <button
-                            onClick={goToAuth}
+                            onClick={() => setStage("AGE_GATE")}
                             className={`w-full py-4 bg-zinc-800 ${ARCHETYPES[archetype].border} border text-white font-bold rounded-xl hover:bg-zinc-700 transition-all uppercase tracking-widest text-sm`}
                         >
                             Confirm Identity
                         </button>
+                    </motion.div>
+                )}
+
+                {stage === "AGE_GATE" && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full max-w-md"
+                    >
+                        <h2 className="text-cyan-400 text-xs uppercase tracking-[0.2em] mb-6">Establish Timeline Protocol</h2>
+                        <p className="text-white mb-6">To calibrate your difficulty level, please confirm your Arrival Year.</p>
+                        <form onSubmit={handleAgeVerification}>
+                            <input
+                                autoFocus
+                                type="number"
+                                min="1900"
+                                max={new Date().getFullYear()}
+                                value={birthYear}
+                                onChange={(e) => setBirthYear(e.target.value)}
+                                className="w-full bg-transparent border-b border-cyan-500/30 py-4 text-3xl text-center text-white focus:outline-none focus:border-cyan-400 transition-all font-mono mb-8"
+                                placeholder="YYYY"
+                                required
+                            />
+                            <button
+                                type="submit"
+                                disabled={birthYear.length !== 4}
+                                className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition-all uppercase tracking-widest text-sm disabled:opacity-50"
+                            >
+                                Calibrate
+                            </button>
+                        </form>
+                    </motion.div>
+                )}
+
+                {stage === "CADET_MODE" && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-green-900/30 border border-green-500/50 p-8 rounded-3xl w-full max-w-lg backdrop-blur-md"
+                    >
+                        <div className="text-4xl mb-4">🌱</div>
+                        <h2 className="text-green-400 font-bold text-xl mb-4">CADET MODE DETECTED</h2>
+                        <p className="text-slate-300 mb-6 text-sm leading-relaxed">
+                            Welcome, young Cadet! Because you are under 13, Neural Law requires us to get your guardian's permission before you can link your mind to the network.
+                        </p>
+                        <button
+                            onClick={onCancel} // Placeholder for Parent Email Flow
+                            className="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all uppercase tracking-widest text-sm"
+                        >
+                            Ask Guardian for Access
+                        </button>
+                        <p className="text-[10px] text-zinc-500 mt-4 uppercase tracking-widest">COPPA Protocol Active</p>
                     </motion.div>
                 )}
 
