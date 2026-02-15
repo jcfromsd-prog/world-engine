@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Sparkles, Check, Zap } from 'lucide-react';
-import { devTelemetry } from '../../engines/logic-link/ObservabilityLayer';
+import { devTelemetry } from '../../../engines/logic-link/ObservabilityLayer';
 
 interface SproutsInterfaceProps {
     onComplete: () => void;
