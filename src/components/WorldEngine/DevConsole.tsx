@@ -8,6 +8,15 @@ import { OpenClawSystem } from '../../systems/OpenClaw';
 const CARD_STYLE = "bg-zinc-900 border border-white/10 rounded-xl p-6 mb-4";
 const HEADER_STYLE = "text-xl font-bold text-white mb-4 flex items-center gap-2";
 
+// --- 5-TIER MATRIX DEFINITIONS ---
+const GRADE_BANDS = [
+    { name: 'SPROUTS', range: [1, 2], icon: '🌱', color: 'text-green-400', border: 'border-green-500', bg: 'bg-green-500/10' },
+    { name: 'BUILDERS', range: [3, 5], icon: '🛠️', color: 'text-blue-400', border: 'border-blue-500', bg: 'bg-blue-500/10' },
+    { name: 'TRAILBLAZERS', range: [6, 8], icon: '🌲', color: 'text-amber-400', border: 'border-amber-500', bg: 'bg-amber-500/10' },
+    { name: 'EXPLORERS', range: [9, 12], icon: '🧭', color: 'text-purple-400', border: 'border-purple-500', bg: 'bg-purple-500/10' },
+    { name: 'VOYAGERS', range: [13, 16], icon: '🚀', color: 'text-red-400', border: 'border-red-500', bg: 'bg-red-500/10' }
+];
+
 export const WorldEngineDevConsole: React.FC<{
     onExit: () => void;
     engine: WorldEngine;
@@ -132,6 +141,42 @@ export const WorldEngineDevConsole: React.FC<{
                     </div>
                 </div>
 
+                {/* 🧠 COGNITIVE TELEMETRY & MATRIX VALIDATOR */}
+                <div className="w-full mb-8 p-6 bg-zinc-900/80 border border-indigo-500/30 rounded-xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-2 opacity-20 text-6xl grayscale">📐</div>
+                    <h3 className="text-white font-black text-xl mb-6 flex items-center gap-3">
+                        <span className="text-2xl">🧠</span>
+                        COGNITIVE TELEMETRY
+                        <span className="text-xs font-mono font-normal text-indigo-400 border border-indigo-500/50 px-2 py-0.5 rounded">MATRIX VALIDATION ACTIVE</span>
+                    </h3>
+
+                    <div className="grid grid-cols-5 gap-2 mb-6">
+                        {GRADE_BANDS.map(band => {
+                            const isActive = profile.currentGrade >= band.range[0] && profile.currentGrade <= band.range[1];
+                            return (
+                                <button
+                                    key={band.name}
+                                    onClick={() => {
+                                        // DIRECT MUTATION FOR DEV CONSOLE - Triggers Re-render via 'tick'
+                                        (profile as any).currentGrade = band.range[0];
+                                        setTick(t => t + 1);
+                                        addLog(`[MATRIX] Shifted to ${band.name} (Grade ${band.range[0]})`);
+                                    }}
+                                    className={`relative p-3 rounded-lg border transition-all ${isActive ? `${band.bg} ${band.border} border-b-4` : 'bg-black border-white/5 opacity-50 hover:opacity-100'}`}
+                                >
+                                    <div className="text-2xl mb-1">{band.icon}</div>
+                                    <div className={`text-[10px] font-black tracking-widest ${band.color}`}>{band.name}</div>
+                                    <div className="text-[9px] text-zinc-500">GR {band.range[0]}-{band.range[1]}</div>
+
+                                    {isActive && (
+                                        <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_white]"></div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
                     {/* LEFT: LEARNER STATE */}
@@ -139,7 +184,15 @@ export const WorldEngineDevConsole: React.FC<{
                         <div className={CARD_STYLE}>
                             <h2 className={HEADER_STYLE}>🧠 CORTEX STATE</h2>
                             <div className="space-y-2 text-sm text-zinc-400">
-                                <div className="flex justify-between"><span>GRADE LEVEL:</span> <span className="text-white">{profile.currentGrade}</span></div>
+                                <div className="flex justify-between items-center">
+                                    <span>GRADE LEVEL:</span>
+                                    <div className="text-right">
+                                        <span className="text-white font-bold text-lg">{profile.currentGrade}</span>
+                                        <span className="text-[10px] block text-zinc-500 uppercase tracking-wider">
+                                            {GRADE_BANDS.find(b => profile.currentGrade >= b.range[0] && profile.currentGrade <= b.range[1])?.name || 'UNKNOWN'}
+                                        </span>
+                                    </div>
+                                </div>
                                 <div className="flex justify-between"><span>MASTERY NODES:</span> <span className="text-white">{masteryCount}</span></div>
                                 <div className="flex justify-between"><span>FOCUS:</span> <span className="text-blue-400">{profile.cognitiveState.focusLevel}%</span></div>
                                 <div className="flex justify-between"><span>FRUSTRATION:</span> <span className="text-red-400">{profile.cognitiveState.frustrationLevel}%</span></div>
