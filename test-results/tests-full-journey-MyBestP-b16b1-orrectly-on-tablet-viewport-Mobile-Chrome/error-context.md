@@ -1,0 +1,59 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e5]:
+    - generic [ref=e7]:
+      - link "MYBESTPURPOSE WORLD ENGINE" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e9]: MYBESTPURPOSE
+        - generic [ref=e10]: WORLD ENGINE
+      - generic "Initialize Neural Link" [ref=e11] [cursor=pointer]
+    - generic [ref=e15]:
+      - button "SOLVER" [ref=e16] [cursor=pointer]
+      - button "CLIENT" [ref=e17] [cursor=pointer]
+    - generic [ref=e19] [cursor=pointer]:
+      - generic [ref=e20]: CC
+      - generic [ref=e21]: Level 4
+  - generic [ref=e24]:
+    - heading "SOLVE & EARN." [level=1] [ref=e25]
+    - paragraph [ref=e26]: MyBestPurpose is an AI-guided Engine where you evolve from a passive student into a Verified Contributor.
+    - generic [ref=e27]:
+      - button "🚀 START YOUR ENGINE" [ref=e28] [cursor=pointer]
+      - 'button "🛠️ DEV: WORLD ENGINE" [ref=e29] [cursor=pointer]'
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - generic [ref=e32]: 🟢
+        - heading "CONNECT" [level=3] [ref=e33]
+        - paragraph [ref=e34]:
+          - text: The
+          - strong [ref=e35]: Squad Engine
+          - text: . Stop learning alone. Find your tribe and validate your belonging.
+      - generic [ref=e36] [cursor=pointer]:
+        - generic [ref=e37]: 🟣
+        - heading "LEARN" [level=3] [ref=e38]
+        - paragraph [ref=e39]:
+          - text: The
+          - strong [ref=e40]: Acceleration Engine
+          - text: . AI speed. Download skills and reach flow state instantly.
+        - generic [ref=e41]: Initialize →
+      - generic [ref=e42] [cursor=pointer]:
+        - generic [ref=e44]: 🔵
+        - heading "SOLVE" [level=3] [ref=e45]
+        - paragraph [ref=e46]:
+          - text: The
+          - strong [ref=e47]: Impact Engine
+          - text: . No tests. Just real-world missions that build your portfolio.
+        - generic [ref=e48]: Boot Up →
+      - generic [ref=e49]:
+        - generic [ref=e50]: 🟡
+        - heading "EARN" [level=3] [ref=e51]
+        - paragraph [ref=e52]:
+          - text: The
+          - strong [ref=e53]: Legend Engine
+          - text: . Real value, real reward. Verify your impact and build wealth.
+  - 'button "⌘ FOUNDER: 🟢 100% OPTIMIZED ▶" [ref=e56] [cursor=pointer]':
+    - generic [ref=e57]: ⌘
+    - generic [ref=e58]: "FOUNDER: 🟢 100% OPTIMIZED"
+    - generic [ref=e59]: ▶
+```

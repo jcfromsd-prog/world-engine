@@ -34,6 +34,8 @@ export const WorldEngineDevConsole: React.FC<{
 
     // REAL TELEMETRY BRIDGE
     React.useEffect(() => {
+        let interactionTimer: NodeJS.Timeout;
+
         const unsubscribe = devTelemetry.subscribe((event) => {
             // Map Phase to Stage Number
             const stageMap: Record<LogicPhase, 1 | 2 | 3 | 4> = {
@@ -47,13 +49,18 @@ export const WorldEngineDevConsole: React.FC<{
                 setPulseStage(stageMap[event.phase]);
                 setLastEventStatus(event.status);
 
-                // Auto-reset pulse after 2 seconds
-                setTimeout(() => setPulseStage(0), 2000);
+                // Clear any existing reset timer
+                if (interactionTimer) clearTimeout(interactionTimer);
 
-
+                // Auto-reset pulse after 3 seconds
+                interactionTimer = setTimeout(() => setPulseStage(0), 3000);
             }
         });
-        return unsubscribe;
+
+        return () => {
+            unsubscribe();
+            if (interactionTimer) clearTimeout(interactionTimer);
+        };
     }, []);
 
     React.useEffect(() => {

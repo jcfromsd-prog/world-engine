@@ -24,12 +24,13 @@ export const SproutsInterface: React.FC<SproutsInterfaceProps> = ({ onComplete, 
     const handleInteraction = () => {
         if (stage !== 'IDLE') return;
 
-        // 1. ACTION PHASE ⚡
+        // 1. ACTION PHASE ⚡ (Immediate)
         setStage('PROCESSING');
         devTelemetry.trackEvent('ACTION', `Child tapped interaction button`, 'neutral', { taskId: activeTask?.id });
         engine.triggerUpdate(); // FORCE PULSE SYNC
 
         // Simulate Processing & Validation (The "Check" Phase)
+        // DELAY 1: Visualizes the "Thinking" or "Transmission" time
         setTimeout(() => {
             // 2. CHECK PHASE 🛡️
             const success = Math.random() > 0.1; // 90% Success Rate for K-2 (High Motivation)
@@ -37,20 +38,25 @@ export const SproutsInterface: React.FC<SproutsInterfaceProps> = ({ onComplete, 
             if (success) {
                 devTelemetry.trackEvent('CHECK', 'Action Validated', 'success');
                 engine.triggerUpdate(); // FORCE PULSE SYNC
-                setStage('SUCCESS');
 
-                // 3. PAYOFF PHASE 🎁
+                // DELAY 2: Visualizes the "Validation" before Reward
                 setTimeout(() => {
+                    setStage('SUCCESS');
+                    // 3. PAYOFF PHASE 🎁
                     devTelemetry.trackEvent('PAYOFF', 'Reward Issued: Star Burst', 'success');
                     engine.triggerUpdate(); // FORCE PULSE SYNC
-                    onComplete(); // Advance
-                }, 1000);
+
+                    // Final delay before ensuring next state
+                    setTimeout(() => {
+                        onComplete(); // Advance
+                    }, 1500);
+                }, 800);
 
             } else {
                 devTelemetry.trackEvent('CHECK', 'Action Invalid - Retry', 'failure');
                 setStage('IDLE'); // Reset to try again
             }
-        }, 600);
+        }, 800);
     };
 
     return (
