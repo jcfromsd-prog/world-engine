@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import type { KnowledgeNode } from '../../engines/world-engine/KnowledgeGraph';
 import { WorldEngine } from '../../engines/world-engine/WorldEngine';
-import { WorldEngine } from '../../engines/world-engine/WorldEngine';
+
 import { OpenClawSystem } from '../../systems/OpenClaw';
 import { devTelemetry, type LogicPhase } from '../../engines/logic-link/ObservabilityLayer';
 
