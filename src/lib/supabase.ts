@@ -7,6 +7,14 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
 
+// 1. Initialize Circuit Breaker
+import { CircuitBreaker } from '../core/CircuitBreaker';
+
+export const dbBreaker = new CircuitBreaker({
+    failureThreshold: 5,
+    resetTimeout: 30000 // 30s cooldown
+});
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Type definitions for our database tables
@@ -79,28 +87,32 @@ export async function hasUserJoinedGauntlet(userId: string, eventName: string = 
 
 // Profile helpers
 export async function getProfile(userId: string) {
-    const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+    return dbBreaker.execute(async () => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
-    return data;
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
+        return data;
+    });
 }
 
 export async function updateProfile(userId: string, updates: Partial<Profile>) {
-    const { data, error } = await supabase
-        .from('profiles')
-        .upsert({
-            id: userId,
-            ...updates,
-            updated_at: new Date().toISOString()
-        })
-        .select();
+    return dbBreaker.execute(async () => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .upsert({
+                id: userId,
+                ...updates,
+                updated_at: new Date().toISOString()
+            })
+            .select();
 
-    if (error) throw error;
-    return data;
+        if (error) throw error;
+        return data;
+    });
 }
 
 export interface Bounty {
@@ -129,21 +141,23 @@ export async function createBounty(bounty: Partial<Bounty>) {
 }
 
 export async function getBounties() {
-    const { data, error } = await supabase
-        .from('bounties')
-        .select(`
-            *,
-            profiles:client_id (
-                username,
-                avatar_url,
-                reputation_points
-            )
-        `)
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
+    return dbBreaker.execute(async () => {
+        const { data, error } = await supabase
+            .from('bounties')
+            .select(`
+                *,
+                profiles:client_id (
+                    username,
+                    avatar_url,
+                    reputation_points
+                )
+            `)
+            .eq('status', 'open')
+            .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data;
+        if (error) throw error;
+        return data;
+    });
 }
 
 export interface Wallet {
