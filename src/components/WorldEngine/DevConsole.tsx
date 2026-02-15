@@ -49,6 +49,9 @@ export const WorldEngineDevConsole: React.FC<{
 
                 // Auto-reset pulse after 2 seconds
                 setTimeout(() => setPulseStage(0), 2000);
+
+                // FORCE RENDER
+                setTick(t => t + 1);
             }
         });
         return unsubscribe;

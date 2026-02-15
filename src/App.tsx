@@ -772,7 +772,7 @@ const App: React.FC = () => {
           onExit={() => setAppState("LANDING")}
           engine={worldEngine}
           onPlay={(node) => {
-            worldEngine.activeTask = node;
+            worldEngine.setActiveTask(node);
             setAppState("WORLD_ENGINE_PLAY");
           }}
         />

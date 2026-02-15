@@ -35,6 +35,14 @@ export class WorldEngine {
         this.listeners.forEach(l => l());
     }
 
+    public setActiveTask(task: KnowledgeNode | null): void {
+        this.activeTask = task;
+        if (task) {
+            devTelemetry.trackEvent('GOAL', `User selected task: ${task.title}`, 'success', { id: task.id });
+        }
+        this.triggerUpdate();
+    }
+
     /**
      * DECISION ENGINE: SELECTION LOGIC
      * 1. Check what is UNLOCKED (Prereqs met).
