@@ -16,6 +16,7 @@ import { devTelemetry } from '../logic-link/ObservabilityLayer';
 export class WorldEngine {
     private learner: LearnerModel;
     private graph: KnowledgeGraph;
+    public activeTask: KnowledgeNode | null = null;
 
     constructor(initialProfile: LearnerProfile, graph: KnowledgeGraph = new KnowledgeGraph()) {
         this.learner = new LearnerModel(initialProfile);
