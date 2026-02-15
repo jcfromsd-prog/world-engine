@@ -21,7 +21,7 @@ export const ActionSchema = z.object({
     goalId: z.string().uuid(),
     userId: z.string().uuid(),
     type: z.enum(['tap', 'drag', 'sequence', 'code', 'text-input']),
-    payload: z.record(z.unknown()),
+    payload: z.record(z.string(), z.unknown()),
     timestamp: z.date(),
     deviceContext: z.object({
         userAgent: z.string(),
