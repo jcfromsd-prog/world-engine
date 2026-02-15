@@ -25,8 +25,20 @@ export const WorldEngineDevConsole: React.FC<{
 
     // Local State to force re-renders when engine updates
     const [tick, setTick] = useState(0);
+    const [pulseStage, setPulseStage] = useState<0 | 1 | 2 | 3 | 4>(0); // 0=Idle, 1=Goal, 2=Action, 3=Check, 4=Payoff
     const [logs, setLogs] = useState<string[]>(["System Initialized."]);
     const [isClawRunning, setIsClawRunning] = useState(false);
+
+    // MOCK PULSE ANIMATION (Heartbeat Simulation)
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            setPulseStage(prev => {
+                if (prev >= 4) return 0;
+                return (prev + 1) as 0 | 1 | 2 | 3 | 4;
+            });
+        }, 1000); // 1-second pulse cycle
+        return () => clearInterval(interval);
+    }, []);
 
     const addLog = React.useCallback((msg: string) => {
         setLogs(prev => [msg, ...prev].slice(0, 20));
@@ -172,6 +184,44 @@ export const WorldEngineDevConsole: React.FC<{
                                         <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_white]"></div>
                                     )}
                                 </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* ⚡ LOGIC-LINK MONITOR (NEURAL PULSE) */}
+                <div className="w-full mb-8 p-6 bg-black border border-zinc-800 rounded-xl">
+                    <h3 className="text-zinc-400 font-bold text-sm mb-4 flex justify-between">
+                        <span>LOGIC-LINK PROTOCOL v2.0</span>
+                        <span className="font-mono text-xs text-green-500 animate-pulse">● LIVE PULSE</span>
+                    </h3>
+                    <div className="flex items-center justify-between relative">
+                        {/* CONNECTING LINE */}
+                        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-zinc-800 -z-10"></div>
+
+                        {[
+                            { label: 'GOAL', icon: '🎯' },
+                            { label: 'ACTION', icon: '⚡' },
+                            { label: 'CHECK', icon: '🛡️' },
+                            { label: 'PAYOFF', icon: '🎁' }
+                        ].map((node, index) => {
+                            const isActive = pulseStage > index;
+                            const isCurrent = pulseStage === index + 1;
+
+                            return (
+                                <div key={node.label} className="flex flex-col items-center gap-2 bg-black px-4">
+                                    <div className={`
+                                        w-12 h-12 rounded-full flex items-center justify-center text-xl border-2 transition-all duration-300
+                                        ${isActive || isCurrent
+                                            ? 'border-green-500 bg-green-500/20 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)] scale-110'
+                                            : 'border-zinc-800 bg-zinc-900 text-zinc-600 grayscale'}
+                                    `}>
+                                        {node.icon}
+                                    </div>
+                                    <span className={`text-[10px] font-black tracking-widest transition-colors ${isActive || isCurrent ? 'text-green-400' : 'text-zinc-600'}`}>
+                                        {node.label}
+                                    </span>
+                                </div>
                             );
                         })}
                     </div>
