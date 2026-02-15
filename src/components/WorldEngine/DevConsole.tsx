@@ -61,8 +61,9 @@ export const WorldEngineDevConsole: React.FC<{
     const openClaw = useMemo(() => new OpenClawSystem(engine, addLog), [engine, addLog]);
 
     // Refresh recommendations whenever 'tick' changes (tick is incremented on task completion/reset)
-    void tick; // consumed to satisfy lint — triggers re-render
-    const recommendations = engine?.getNextTaskOptions?.(3) || [];
+    const recommendations = useMemo(() => {
+        return engine?.getNextTaskOptions?.(3) || [];
+    }, [engine, tick]);
 
     // Engine is now passed in props to allow parent (LearnerMap) to coordinate Play mode
     if (!engine) {
