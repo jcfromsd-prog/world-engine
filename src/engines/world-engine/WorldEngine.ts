@@ -11,6 +11,7 @@ import type { LearnerProfile } from './LearnerModel';
 import { LearnerModel } from './LearnerModel';
 import type { KnowledgeNode } from './KnowledgeGraph';
 import { KnowledgeGraph, SEED_GRAPH } from './KnowledgeGraph';
+import { devTelemetry } from '../logic-link/ObservabilityLayer';
 
 export class WorldEngine {
     private learner: LearnerModel;
@@ -53,7 +54,21 @@ export class WorldEngine {
             return Math.random() - 0.5;
         });
 
-        return validCandidates.slice(0, limit);
+    });
+
+    const selected = validCandidates.slice(0, limit);
+
+    // [TELEMETRY] 🎯 GOAL PHASE
+    if(selected.length > 0) {
+    devTelemetry.trackEvent('GOAL', `Identified ${selected.length} valid tasks`, 'success', {
+        topCandidate: selected[0].title,
+        gradeLevel: currentGrade
+    });
+} else {
+    devTelemetry.trackEvent('GOAL', 'No tasks found (Curriculum Complete?)', 'neutral');
+}
+
+return selected;
     }
 
     /**
@@ -61,31 +76,48 @@ export class WorldEngine {
      * Updates the learner model based on performance.
      */
     public submitTask(nodeId: string, success: boolean, timeSpent: number): void {
-        this.learner.updateMastery(nodeId, success, timeSpent);
+    // [TELEMETRY] ⚡ ACTION PHASE
+    devTelemetry.trackEvent('ACTION', `User submitted task: ${nodeId}`, 'neutral', { timeSpent });
+
+    this.learner.updateMastery(nodeId, success, timeSpent);
+
+    // [TELEMETRY] 🛡️ CHECK PHASE
+    const newMastery = this.learner.getProfile().masteryMap.get(nodeId);
+    const passedCheck = newMastery && newMastery.masteryScore > 0.8;
+
+    devTelemetry.trackEvent('CHECK',
+        success ? `Validation Passed (Mastery: ${newMastery?.masteryScore.toFixed(2)})` : 'Task Failed',
+        success ? 'success' : 'failure'
+    );
+
+    if(success) {
+        // [TELEMETRY] 🎁 PAYOFF PHASE
+        devTelemetry.trackEvent('PAYOFF', 'Awarded Genesis Points +200 GP', 'success');
+    }
 
         // Apply decay to OLD memories occasionally
         // (In a real app, this might run on a cron job or startup, not every task)
         this.learner.applyDecay();
-    }
+}
 
     public getProfile(): LearnerProfile {
-        return this.learner.getProfile();
-    }
+    return this.learner.getProfile();
+}
 
     /**
      * Diagnostic: Check if learner is ready for next grade
      */
     public checkGradeAdvancement(): boolean {
-        // Implementation TBD: Check if > 80% of current grade nodes are mastered
-        return false;
-    }
+    // Implementation TBD: Check if > 80% of current grade nodes are mastered
+    return false;
+}
 
     /**
      * DEV ONLY: Reset all progress
      */
     public resetProgress(): void {
-        this.learner.getProfile().masteryMap.clear();
-        this.learner.getProfile().completedMissions = [];
-        this.learner.getProfile().genesisPoints = 0;
-    }
+    this.learner.getProfile().masteryMap.clear();
+    this.learner.getProfile().completedMissions = [];
+    this.learner.getProfile().genesisPoints = 0;
+}
 }

@@ -2,7 +2,9 @@
 import React, { useState, useMemo } from 'react';
 import type { KnowledgeNode } from '../../engines/world-engine/KnowledgeGraph';
 import { WorldEngine } from '../../engines/world-engine/WorldEngine';
+import { WorldEngine } from '../../engines/world-engine/WorldEngine';
 import { OpenClawSystem } from '../../systems/OpenClaw';
+import { devTelemetry, type LogicPhase } from '../../engines/logic-link/ObservabilityLayer';
 
 // --- STYLES ---
 const CARD_STYLE = "bg-zinc-900 border border-white/10 rounded-xl p-6 mb-4";
@@ -26,18 +28,30 @@ export const WorldEngineDevConsole: React.FC<{
     // Local State to force re-renders when engine updates
     const [tick, setTick] = useState(0);
     const [pulseStage, setPulseStage] = useState<0 | 1 | 2 | 3 | 4>(0); // 0=Idle, 1=Goal, 2=Action, 3=Check, 4=Payoff
+    const [lastEventStatus, setLastEventStatus] = useState<'success' | 'failure' | 'neutral'>('neutral');
     const [logs, setLogs] = useState<string[]>(["System Initialized."]);
     const [isClawRunning, setIsClawRunning] = useState(false);
 
-    // MOCK PULSE ANIMATION (Heartbeat Simulation)
+    // REAL TELEMETRY BRIDGE
     React.useEffect(() => {
-        const interval = setInterval(() => {
-            setPulseStage(prev => {
-                if (prev >= 4) return 0;
-                return (prev + 1) as 0 | 1 | 2 | 3 | 4;
-            });
-        }, 1000); // 1-second pulse cycle
-        return () => clearInterval(interval);
+        const unsubscribe = devTelemetry.subscribe((event) => {
+            // Map Phase to Stage Number
+            const stageMap: Record<LogicPhase, 1 | 2 | 3 | 4> = {
+                'GOAL': 1,
+                'ACTION': 2,
+                'CHECK': 3,
+                'PAYOFF': 4
+            };
+
+            if (event.phase in stageMap) {
+                setPulseStage(stageMap[event.phase]);
+                setLastEventStatus(event.status);
+
+                // Auto-reset pulse after 2 seconds
+                setTimeout(() => setPulseStage(0), 2000);
+            }
+        });
+        return unsubscribe;
     }, []);
 
     const addLog = React.useCallback((msg: string) => {
@@ -208,17 +222,24 @@ export const WorldEngineDevConsole: React.FC<{
                             const isActive = pulseStage > index;
                             const isCurrent = pulseStage === index + 1;
 
+                            // Dynamic Color based on Status (Green=Success, Red=Fail)
+                            const statusColor = lastEventStatus === 'failure' && isCurrent ? 'red' : 'green';
+                            const borderColor = `border-${statusColor}-500`;
+                            const bgColor = `bg-${statusColor}-500/20`;
+                            const textColor = `text-${statusColor}-400`;
+                            const shadow = `shadow-[0_0_15px_rgba(${statusColor === 'green' ? '34,197,94' : '239,68,68'},0.5)]`;
+
                             return (
                                 <div key={node.label} className="flex flex-col items-center gap-2 bg-black px-4">
                                     <div className={`
                                         w-12 h-12 rounded-full flex items-center justify-center text-xl border-2 transition-all duration-300
                                         ${isActive || isCurrent
-                                            ? 'border-green-500 bg-green-500/20 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)] scale-110'
+                                            ? `${borderColor} ${bgColor} text-white ${shadow} scale-110`
                                             : 'border-zinc-800 bg-zinc-900 text-zinc-600 grayscale'}
                                     `}>
                                         {node.icon}
                                     </div>
-                                    <span className={`text-[10px] font-black tracking-widest transition-colors ${isActive || isCurrent ? 'text-green-400' : 'text-zinc-600'}`}>
+                                    <span className={`text-[10px] font-black tracking-widest transition-colors ${isActive || isCurrent ? textColor : 'text-zinc-600'}`}>
                                         {node.label}
                                     </span>
                                 </div>
