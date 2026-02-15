@@ -3,9 +3,12 @@ import React, { useState } from 'react';
 import { Sparkles, Check, Zap } from 'lucide-react';
 import { devTelemetry } from '../../../engines/logic-link/ObservabilityLayer';
 
+import { WorldEngine } from '../../../engines/world-engine/WorldEngine';
+
 interface SproutsInterfaceProps {
     onComplete: () => void;
     activeTask?: { id: string; title: string };
+    engine: WorldEngine;
 }
 
 /**
@@ -15,7 +18,7 @@ interface SproutsInterfaceProps {
  * This component represents the "Body" of the learning loop.
  * It is wired to the "Brain" (DevTelemetry) to visualize the Logic-Link.
  */
-export const SproutsInterface: React.FC<SproutsInterfaceProps> = ({ onComplete, activeTask }) => {
+export const SproutsInterface: React.FC<SproutsInterfaceProps> = ({ onComplete, activeTask, engine }) => {
     const [stage, setStage] = useState<'IDLE' | 'PROCESSING' | 'SUCCESS'>('IDLE');
 
     const handleInteraction = () => {
@@ -24,6 +27,7 @@ export const SproutsInterface: React.FC<SproutsInterfaceProps> = ({ onComplete, 
         // 1. ACTION PHASE ⚡
         setStage('PROCESSING');
         devTelemetry.trackEvent('ACTION', `Child tapped interaction button`, 'neutral', { taskId: activeTask?.id });
+        engine.triggerUpdate(); // FORCE PULSE SYNC
 
         // Simulate Processing & Validation (The "Check" Phase)
         setTimeout(() => {
@@ -32,11 +36,13 @@ export const SproutsInterface: React.FC<SproutsInterfaceProps> = ({ onComplete, 
 
             if (success) {
                 devTelemetry.trackEvent('CHECK', 'Action Validated', 'success');
+                engine.triggerUpdate(); // FORCE PULSE SYNC
                 setStage('SUCCESS');
 
                 // 3. PAYOFF PHASE 🎁
                 setTimeout(() => {
                     devTelemetry.trackEvent('PAYOFF', 'Reward Issued: Star Burst', 'success');
+                    engine.triggerUpdate(); // FORCE PULSE SYNC
                     onComplete(); // Advance
                 }, 1000);
 

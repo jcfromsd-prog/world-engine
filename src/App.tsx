@@ -19,6 +19,7 @@ import { SagePrep } from "./components/learning/SagePrep";
 import AssessmentModule from "./components/AssessmentModule";
 import { LearnerMap } from "./components/learner/LearnerMap";
 import { WorldEngineDevConsole } from "./components/WorldEngine/DevConsole";
+import { SproutsInterface } from "./components/WorldEngine/views/SproutsInterface";
 
 
 import Header from "./components/Header";
@@ -754,7 +755,54 @@ const App: React.FC = () => {
       )}
 
       {/* 🚀 LEARNER MAP (K-5 Environment) */}
-      {appState === "LEARNER_MAP" && <LearnerMap />}
+      {appState === "LEARNER_MAP" && (
+        <LearnerMap
+          initialGrade={5}
+          onMissionStart={(mission) => {
+            console.log("Starting Mission:", mission);
+            // In a real app, this would route to a mission view
+          }}
+          onBack={() => setAppState("DASHBOARD")}
+        />
+      )}
+
+      {/* 🛠️ WORLD ENGINE DEV CONSOLE */}
+      {appState === "WORLD_ENGINE_DEV" && (
+        <WorldEngineDevConsole
+          onExit={() => setAppState("LANDING")}
+          engine={worldEngine}
+          onPlay={(node) => {
+            worldEngine.activeTask = node;
+            setAppState("WORLD_ENGINE_PLAY");
+          }}
+        />
+      )}
+
+      {/* 🌱 SPROUTS INTERFACE (OVERLAY MODE) */}
+      {appState === "WORLD_ENGINE_PLAY" && (
+        <>
+          {/* KEEP CONSOLE VISIBLE IN BACKGROUND FOR TELEMETRY */}
+          <div className="opacity-50 pointer-events-none fixed inset-0 z-0">
+            <WorldEngineDevConsole
+              onExit={() => { }}
+              engine={worldEngine}
+            />
+          </div>
+
+          <div className="fixed inset-0 z-[3000] flex items-center justify-center pointer-events-auto">
+            <SproutsInterface
+              activeTask={worldEngine.activeTask || { id: 'test', title: 'Test Task' }}
+              engine={worldEngine}
+              onComplete={() => {
+                if (worldEngine.activeTask) {
+                  worldEngine.submitTask(worldEngine.activeTask.id, true, 30);
+                }
+                setAppState("WORLD_ENGINE_DEV");
+              }}
+            />
+          </div>
+        </>
+      )}
 
       {/* 🛡️ THE HQ (Feed Selection) */}
       {appState === "CHOICE_SELECTION" && (

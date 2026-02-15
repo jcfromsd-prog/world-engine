@@ -17,10 +17,22 @@ export class WorldEngine {
     private learner: LearnerModel;
     private graph: KnowledgeGraph;
     public activeTask: KnowledgeNode | null = null;
+    private listeners: (() => void)[] = [];
 
     constructor(initialProfile: LearnerProfile, graph: KnowledgeGraph = new KnowledgeGraph()) {
         this.learner = new LearnerModel(initialProfile);
         this.graph = graph;
+    }
+
+    public subscribe(listener: () => void): () => void {
+        this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
+    }
+
+    public triggerUpdate(): void {
+        this.listeners.forEach(l => l());
     }
 
     /**

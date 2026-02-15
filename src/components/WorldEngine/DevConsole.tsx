@@ -54,6 +54,14 @@ export const WorldEngineDevConsole: React.FC<{
         return unsubscribe;
     }, []);
 
+    React.useEffect(() => {
+        // Subscribe to Engine Updates (Ticks)
+        const unsubscribe = engine.subscribe(() => {
+            setTick(t => t + 1);
+        });
+        return unsubscribe;
+    }, [engine]);
+
     const addLog = React.useCallback((msg: string) => {
         setLogs(prev => [msg, ...prev].slice(0, 20));
     }, []);
