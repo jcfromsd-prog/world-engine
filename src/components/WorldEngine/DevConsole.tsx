@@ -2,11 +2,22 @@
 import React, { useState, useMemo } from 'react';
 import type { KnowledgeNode } from '../../engines/world-engine/KnowledgeGraph';
 import { WorldEngine } from '../../engines/world-engine/WorldEngine';
+
 import { OpenClawSystem } from '../../systems/OpenClaw';
+import { devTelemetry, type LogicPhase } from '../../engines/logic-link/ObservabilityLayer';
 
 // --- STYLES ---
 const CARD_STYLE = "bg-zinc-900 border border-white/10 rounded-xl p-6 mb-4";
 const HEADER_STYLE = "text-xl font-bold text-white mb-4 flex items-center gap-2";
+
+// --- 5-TIER MATRIX DEFINITIONS ---
+const GRADE_BANDS = [
+    { name: 'SPROUTS', range: [1, 2], icon: '🌱', color: 'text-green-400', border: 'border-green-500', bg: 'bg-green-500/10' },
+    { name: 'BUILDERS', range: [3, 5], icon: '🛠️', color: 'text-blue-400', border: 'border-blue-500', bg: 'bg-blue-500/10' },
+    { name: 'TRAILBLAZERS', range: [6, 8], icon: '🌲', color: 'text-amber-400', border: 'border-amber-500', bg: 'bg-amber-500/10' },
+    { name: 'EXPLORERS', range: [9, 12], icon: '🧭', color: 'text-purple-400', border: 'border-purple-500', bg: 'bg-purple-500/10' },
+    { name: 'VOYAGERS', range: [13, 16], icon: '🚀', color: 'text-red-400', border: 'border-red-500', bg: 'bg-red-500/10' }
+];
 
 export const WorldEngineDevConsole: React.FC<{
     onExit: () => void;
@@ -16,8 +27,32 @@ export const WorldEngineDevConsole: React.FC<{
 
     // Local State to force re-renders when engine updates
     const [tick, setTick] = useState(0);
+    const [pulseStage, setPulseStage] = useState<0 | 1 | 2 | 3 | 4>(0); // 0=Idle, 1=Goal, 2=Action, 3=Check, 4=Payoff
+    const [lastEventStatus, setLastEventStatus] = useState<'success' | 'failure' | 'neutral'>('neutral');
     const [logs, setLogs] = useState<string[]>(["System Initialized."]);
     const [isClawRunning, setIsClawRunning] = useState(false);
+
+    // REAL TELEMETRY BRIDGE
+    React.useEffect(() => {
+        const unsubscribe = devTelemetry.subscribe((event) => {
+            // Map Phase to Stage Number
+            const stageMap: Record<LogicPhase, 1 | 2 | 3 | 4> = {
+                'GOAL': 1,
+                'ACTION': 2,
+                'CHECK': 3,
+                'PAYOFF': 4
+            };
+
+            if (event.phase in stageMap) {
+                setPulseStage(stageMap[event.phase]);
+                setLastEventStatus(event.status);
+
+                // Auto-reset pulse after 2 seconds
+                setTimeout(() => setPulseStage(0), 2000);
+            }
+        });
+        return unsubscribe;
+    }, []);
 
     const addLog = React.useCallback((msg: string) => {
         setLogs(prev => [msg, ...prev].slice(0, 20));
@@ -132,6 +167,87 @@ export const WorldEngineDevConsole: React.FC<{
                     </div>
                 </div>
 
+                {/* 🧠 COGNITIVE TELEMETRY & MATRIX VALIDATOR */}
+                <div className="w-full mb-8 p-6 bg-zinc-900/80 border border-indigo-500/30 rounded-xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-2 opacity-20 text-6xl grayscale">📐</div>
+                    <h3 className="text-white font-black text-xl mb-6 flex items-center gap-3">
+                        <span className="text-2xl">🧠</span>
+                        COGNITIVE TELEMETRY
+                        <span className="text-xs font-mono font-normal text-indigo-400 border border-indigo-500/50 px-2 py-0.5 rounded">MATRIX VALIDATION ACTIVE</span>
+                    </h3>
+
+                    <div className="grid grid-cols-5 gap-2 mb-6">
+                        {GRADE_BANDS.map(band => {
+                            const isActive = profile.currentGrade >= band.range[0] && profile.currentGrade <= band.range[1];
+                            return (
+                                <button
+                                    key={band.name}
+                                    onClick={() => {
+                                        // DIRECT MUTATION FOR DEV CONSOLE - Triggers Re-render via 'tick'
+                                        (profile as any).currentGrade = band.range[0];
+                                        setTick(t => t + 1);
+                                        addLog(`[MATRIX] Shifted to ${band.name} (Grade ${band.range[0]})`);
+                                    }}
+                                    className={`relative p-3 rounded-lg border transition-all ${isActive ? `${band.bg} ${band.border} border-b-4` : 'bg-black border-white/5 opacity-50 hover:opacity-100'}`}
+                                >
+                                    <div className="text-2xl mb-1">{band.icon}</div>
+                                    <div className={`text-[10px] font-black tracking-widest ${band.color}`}>{band.name}</div>
+                                    <div className="text-[9px] text-zinc-500">GR {band.range[0]}-{band.range[1]}</div>
+
+                                    {isActive && (
+                                        <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_white]"></div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* ⚡ LOGIC-LINK MONITOR (NEURAL PULSE) */}
+                <div className="w-full mb-8 p-6 bg-black border border-zinc-800 rounded-xl">
+                    <h3 className="text-zinc-400 font-bold text-sm mb-4 flex justify-between">
+                        <span>LOGIC-LINK PROTOCOL v2.0</span>
+                        <span className="font-mono text-xs text-green-500 animate-pulse">● LIVE PULSE</span>
+                    </h3>
+                    <div className="flex items-center justify-between relative">
+                        {/* CONNECTING LINE */}
+                        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-zinc-800 -z-10"></div>
+
+                        {[
+                            { label: 'GOAL', icon: '🎯' },
+                            { label: 'ACTION', icon: '⚡' },
+                            { label: 'CHECK', icon: '🛡️' },
+                            { label: 'PAYOFF', icon: '🎁' }
+                        ].map((node, index) => {
+                            const isActive = pulseStage > index;
+                            const isCurrent = pulseStage === index + 1;
+
+                            // Dynamic Color based on Status (Green=Success, Red=Fail)
+                            const statusColor = lastEventStatus === 'failure' && isCurrent ? 'red' : 'green';
+                            const borderColor = `border-${statusColor}-500`;
+                            const bgColor = `bg-${statusColor}-500/20`;
+                            const textColor = `text-${statusColor}-400`;
+                            const shadow = `shadow-[0_0_15px_rgba(${statusColor === 'green' ? '34,197,94' : '239,68,68'},0.5)]`;
+
+                            return (
+                                <div key={node.label} className="flex flex-col items-center gap-2 bg-black px-4">
+                                    <div className={`
+                                        w-12 h-12 rounded-full flex items-center justify-center text-xl border-2 transition-all duration-300
+                                        ${isActive || isCurrent
+                                            ? `${borderColor} ${bgColor} text-white ${shadow} scale-110`
+                                            : 'border-zinc-800 bg-zinc-900 text-zinc-600 grayscale'}
+                                    `}>
+                                        {node.icon}
+                                    </div>
+                                    <span className={`text-[10px] font-black tracking-widest transition-colors ${isActive || isCurrent ? textColor : 'text-zinc-600'}`}>
+                                        {node.label}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
                     {/* LEFT: LEARNER STATE */}
@@ -139,7 +255,15 @@ export const WorldEngineDevConsole: React.FC<{
                         <div className={CARD_STYLE}>
                             <h2 className={HEADER_STYLE}>🧠 CORTEX STATE</h2>
                             <div className="space-y-2 text-sm text-zinc-400">
-                                <div className="flex justify-between"><span>GRADE LEVEL:</span> <span className="text-white">{profile.currentGrade}</span></div>
+                                <div className="flex justify-between items-center">
+                                    <span>GRADE LEVEL:</span>
+                                    <div className="text-right">
+                                        <span className="text-white font-bold text-lg">{profile.currentGrade}</span>
+                                        <span className="text-[10px] block text-zinc-500 uppercase tracking-wider">
+                                            {GRADE_BANDS.find(b => profile.currentGrade >= b.range[0] && profile.currentGrade <= b.range[1])?.name || 'UNKNOWN'}
+                                        </span>
+                                    </div>
+                                </div>
                                 <div className="flex justify-between"><span>MASTERY NODES:</span> <span className="text-white">{masteryCount}</span></div>
                                 <div className="flex justify-between"><span>FOCUS:</span> <span className="text-blue-400">{profile.cognitiveState.focusLevel}%</span></div>
                                 <div className="flex justify-between"><span>FRUSTRATION:</span> <span className="text-red-400">{profile.cognitiveState.frustrationLevel}%</span></div>
