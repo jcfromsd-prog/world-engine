@@ -81,7 +81,7 @@ export class WorldEngine {
 
         // [TELEMETRY] 🛡️ CHECK PHASE
         const newMastery = this.learner.getProfile().masteryMap.get(nodeId);
-        const passedCheck = newMastery && newMastery.masteryScore > 0.8;
+
 
         devTelemetry.trackEvent('CHECK',
             success ? `Validation Passed (Mastery: ${newMastery?.masteryScore.toFixed(2)})` : 'Task Failed',
