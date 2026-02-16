@@ -31,6 +31,7 @@ import { RecommendationEngine } from "./services/RecommendationEngine";
 import { WorldEngine } from "./engines/world-engine/WorldEngine";
 import { SEED_GRAPH } from "./engines/world-engine/KnowledgeGraph";
 import type { LearnerProfile } from "./engines/world-engine/LearnerModel";
+import BlueprintCanvas from "./architect/components/BlueprintCanvas";
 
 // --- MOCK PROFILE FOR APP-LEVEL ENGINE ---
 const APP_LEARNER_PROFILE: LearnerProfile = {
@@ -50,7 +51,7 @@ const APP_LEARNER_PROFILE: LearnerProfile = {
 
 
 // --- TYPES ---
-type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP";
+type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP" | "BLUEPRINT_MODE";
 
 
 export interface UserProfile {
@@ -489,8 +490,15 @@ const App: React.FC = () => {
   const [showCalibration, setShowCalibration] = useState(false); // CALIBRATION TOGGLE
   const [viewMode, setViewMode] = useState<'solver' | 'client'>('solver'); // HEADER VIEW MODE
 
+
+
   // --- SWARM & MASTER TEACHER LISTENER ---
   useEffect(() => {
+    // 1. URL ROUTING LISTENER
+    if (window.location.pathname === '/architect/blueprint') {
+      setAppState("BLUEPRINT_MODE");
+    }
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's')) {
         e.preventDefault();
@@ -655,12 +663,21 @@ const App: React.FC = () => {
               </button>
 
               {import.meta.env.DEV && (
-                <button
-                  onClick={() => setAppState("WORLD_ENGINE_DEV")}
-                  className="px-6 py-6 bg-zinc-900 border border-green-500/30 text-green-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
-                >
-                  🛠️ DEV: WORLD ENGINE
-                </button>
+                <>
+                  <button
+                    onClick={() => setAppState("WORLD_ENGINE_DEV")}
+                    className="px-6 py-6 bg-zinc-900 border border-green-500/30 text-green-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
+                  >
+                    🛠️ DEV: WORLD ENGINE
+                  </button>
+
+                  <button
+                    onClick={() => setAppState("BLUEPRINT_MODE")}
+                    className="px-6 py-6 bg-zinc-900 border border-blue-500/30 text-blue-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
+                  >
+                    📐 DEV: ARCHITECT BLUEPRINT
+                  </button>
+                </>
               )}
             </div>
 
@@ -755,6 +772,24 @@ const App: React.FC = () => {
 
       {/* 🚀 LEARNER MAP (K-5 Environment) */}
       {appState === "LEARNER_MAP" && <LearnerMap />}
+
+      {/* 📐 BLUEPRINT MODE (Architect Tier) */}
+      {appState === "BLUEPRINT_MODE" && (
+        <div className="fixed inset-0 z-[2000] bg-zinc-950 flex flex-col">
+          <div className="p-4 border-b border-white/10 flex justify-between items-center bg-zinc-900">
+            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+              <span className="text-2xl">📐</span> ARCHITECT BLUEPRINT
+            </h1>
+            <button
+              onClick={() => setAppState("LANDING")}
+              className="px-4 py-2 border border-white/20 hover:bg-white/10 rounded text-sm transition-colors"
+            >
+              EXIT STUDIO
+            </button>
+          </div>
+          <BlueprintCanvas />
+        </div>
+      )}
 
       {/* 🛡️ THE HQ (Feed Selection) */}
       {appState === "CHOICE_SELECTION" && (

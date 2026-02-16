@@ -24,18 +24,22 @@
     "@langchain/openai": "^1.2.5",
     "@supabase/supabase-js": "^2.93.2",
     "@types/d3": "^7.4.3",
+    "@types/lodash": "^4.17.23",
     "d3": "^7.9.0",
     "dotenv": "^16.4.5",
     "framer-motion": "^12.33.0",
     "graphql": "^16.12.0",
     "langchain": "^1.2.18",
+    "lodash": "^4.17.23",
     "lucide-react": "^0.563.0",
     "neo4j-driver": "^6.0.1",
     "node-fetch": "^3.3.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",
-    "urql": "^5.0.1"
+    "reactflow": "^11.11.4",
+    "urql": "^5.0.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
