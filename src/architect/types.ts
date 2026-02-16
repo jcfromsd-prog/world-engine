@@ -33,3 +33,9 @@ export interface BlueprintState {
     isValid: boolean;
     lastSynced: number;
 }
+
+export interface Command {
+    execute(): void;
+    undo(): void;
+    label: string; // "Add Node", "Connect", etc.
+}

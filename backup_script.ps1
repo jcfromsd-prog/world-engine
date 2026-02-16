@@ -27,9 +27,11 @@ if (Test-Path repo_history.bundle) {
 # 5. Transfer to USB (D:)
 if (Test-Path D:) {
     Write-Host "USB Drive (D:) Detected. Transferring..."
-    Copy-Item -Path $tempZip -Destination "D:\$zipName" -Force
-    if (Test-Path "D:\$zipName") {
-        Write-Host "✅ SUCCESS: Backup Verified on D:\$zipName"
+    $destDir = "D:\MyBestPurpose_SecureBackup"
+    if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force }
+    Copy-Item -Path $tempZip -Destination "$destDir\$zipName" -Force
+    if (Test-Path "$destDir\$zipName") {
+        Write-Host "✅ SUCCESS: Backup Verified on $destDir\$zipName"
         # Optional: Remove local copy if successful
         # Remove-Item $tempZip
     } else {

@@ -1,7 +1,8 @@
-import { debounce } from 'lodash';
-import type { LogicNode, LogicConnection, BlueprintState } from '../types';
+import { debounce } from 'lodash-es';
+import type { LogicNode, LogicConnection, BlueprintState, Command } from '../types';
 import { LogicSieve } from '../validation/LogicSieve';
 import { devTelemetry } from '../../engines/logic-link/ObservabilityLayer';
+import { supabase } from '../../lib/supabase'; // Ensure this path is correct or mock it if needed
 
 // --- Singleton Engine ---
 
@@ -18,8 +19,13 @@ export class BlueprintEngine {
 
     private subscribers: ((state: BlueprintState) => void)[] = [];
 
+    // Command Pattern State
+    private commandStack: Command[] = [];
+    private commandIndex: number = -1; // -1 means no commands executed
+    private readonly MAX_HISTORY = 50;
+
     // Debounced Sync Function
-    private debouncedSync = debounce(this.persistToCloud, 2000);
+    private debouncedSync = debounce(() => this.persistToCloud(), 1000);
 
     private constructor() {
         // Private constructor for Singleton
@@ -30,6 +36,51 @@ export class BlueprintEngine {
             BlueprintEngine.instance = new BlueprintEngine();
         }
         return BlueprintEngine.instance;
+    }
+
+    // ... (Command Execution methods same as before) ...
+    public executeCommand(command: Command) {
+        if (this.commandIndex < this.commandStack.length - 1) {
+            this.commandStack = this.commandStack.slice(0, this.commandIndex + 1);
+        }
+        command.execute();
+        this.commandStack.push(command);
+        this.commandIndex++;
+        if (this.commandStack.length > this.MAX_HISTORY) {
+            this.commandStack.shift();
+            this.commandIndex--;
+        }
+        this.validateAndNotify();
+        devTelemetry.trackEvent('ACTION', `Execute: ${command.label}`, 'neutral');
+    }
+
+    public undo() {
+        if (this.commandIndex >= 0) {
+            const command = this.commandStack[this.commandIndex];
+            command.undo();
+            this.commandIndex--;
+            this.validateAndNotify();
+            devTelemetry.trackEvent('ACTION', `Undo: ${command.label}`, 'neutral');
+        }
+    }
+
+    public redo() {
+        if (this.commandIndex < this.commandStack.length - 1) {
+            this.commandIndex++;
+            const command = this.commandStack[this.commandIndex];
+            command.execute();
+            this.validateAndNotify();
+            devTelemetry.trackEvent('ACTION', `Redo: ${command.label}`, 'neutral');
+        }
+    }
+
+    private validateAndNotify() {
+        // Validate structurally
+        const validation = LogicSieve.validateCompleteness(this.currentState.nodes, this.currentState.connections);
+        this.currentState.isValid = validation.valid;
+
+        this.notifySubscribers();
+        this.debouncedSync();
     }
 
     /**
@@ -54,24 +105,45 @@ export class BlueprintEngine {
      * Persists the current blueprint to Supabase.
      */
     private async persistToCloud() {
-        if (!this.currentState.isValid && this.currentState.nodes.length > 0) {
-            console.warn('[BlueprintEngine] Skipping sync: Invalid State');
-            return;
-        }
+        if (this.currentState.nodes.length === 0) return;
 
         console.log('[BlueprintEngine] Syncing to Cloud...', this.currentState);
 
-        // TODO: Replace with actual Supabase call
-        // const { error } = await supabase.from('blueprints').upsert(...)
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                console.warn('[BlueprintEngine] No user authenticated. Skipping cloud sync.');
+                return;
+            }
 
-        devTelemetry.trackEvent(
-            'CHECK',
-            `Blueprint Synced (${this.currentState.nodes.length} nodes)`,
-            'success'
-        );
+            // Sync Logic
+            const payload = {
+                user_id: user.id,
+                nodes: this.currentState.nodes,
+                connections: this.currentState.connections,
+                is_valid: this.currentState.isValid,
+                updated_at: new Date().toISOString()
+            };
 
-        this.currentState.lastSynced = Date.now();
-        this.notifySubscribers();
+            const { error } = await supabase
+                .from('blueprints')
+                .upsert(payload, { onConflict: 'user_id' }); // Assuming 1 blueprint per user for now, or use 'id'
+
+            if (error) throw error;
+
+            devTelemetry.trackEvent(
+                'CHECK',
+                `Blueprint Saved (${this.currentState.nodes.length} nodes)`,
+                'success'
+            );
+
+            this.currentState.lastSynced = Date.now();
+            this.notifySubscribers();
+
+        } catch (err) {
+            console.error('[BlueprintEngine] Sync Failed:', err);
+            devTelemetry.trackEvent('CHECK', 'Blueprint Sync Failed', 'failure');
+        }
     }
 
     // --- Subscription Pattern ---

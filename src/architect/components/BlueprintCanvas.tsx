@@ -15,12 +15,43 @@ import type {
     NodeChange
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import confetti from 'canvas-confetti';
+
 import { BlueprintEngine } from '../core/BlueprintEngine';
 import type { LogicNode, LogicConnection } from '../types';
 import { devTelemetry } from '../../engines/logic-link/ObservabilityLayer';
 
+import { NeuralEdge } from './NeuralEdge';
+import { LogicSieve } from '../validation/LogicSieve';
+
 // Initialize Engine Singleton
 const engine = BlueprintEngine.getInstance();
+
+const edgeTypes = {
+    neural: NeuralEdge,
+};
+
+// Command Factory Helper
+const createAddNodeCommand = (node: Node, setNodes: React.Dispatch<React.SetStateAction<Node[]>>, nodesRef: React.MutableRefObject<Node[]>) => ({
+    label: `Add Node ${node.data.type}`,
+    execute: () => {
+        setNodes(nds => nds.concat(node));
+        nodesRef.current.push(node);
+
+        // Sync Logic Nodes to Engine
+        // NOTE: In a full implementation, we'd map ReactFlow Nodes -> LogicNodes here
+        const logicNodes = nodesRef.current.map(n => ({ id: n.id, type: n.data.type, position: n.position, label: n.data.label }));
+        // We aren't updating connections in this specific command, but we should sync state broadly
+        engine.updateLocalState(logicNodes, []); // Simplification for MVP Command
+    },
+    undo: () => {
+        setNodes(nds => nds.filter(n => n.id !== node.id));
+        nodesRef.current = nodesRef.current.filter(n => n.id !== node.id);
+
+        const logicNodes = nodesRef.current.map(n => ({ id: n.id, type: n.data.type, position: n.position, label: n.data.label }));
+        engine.updateLocalState(logicNodes, []);
+    }
+});
 
 const BlueprintCanvas: React.FC = () => {
     // We use React State here ONLY for rendering, but Logic is decoupled.
@@ -29,18 +60,43 @@ const BlueprintCanvas: React.FC = () => {
     const [edges, setEdges] = useState<Edge[]>([]);
     const [isValid, setIsValid] = useState(false);
 
-    // Refs for performance (avoiding closure staleness)
+    // Refs for performance (avoiding closure staleness in callbacks)
     const nodesRef = useRef<Node[]>([]);
     const edgesRef = useRef<Edge[]>([]);
 
     useEffect(() => {
-        // Subscribe to Engine updates (e.g. from cloud sync)
+        // Subscribe to Engine updates (e.g. from cloud sync or undo/redo)
         const unsubscribe = engine.subscribe((state) => {
             setIsValid(state.isValid);
-            // Transform LogicTypes to ReactFlow Types if needed
-            // For now assuming 1:1 mapping for simplicity
+
+            if (state.isValid) {
+                // SUCCESS DOPAMINE
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#34d399', '#60a5fa', '#fbbf24'] // Green, Blue, Amber
+                });
+                devTelemetry.trackEvent('CHECK', 'Blueprint Compiled & Valid', 'success');
+            }
         });
         return unsubscribe;
+    }, []);
+
+    // KEYBOARD SHORTCUTS
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    engine.redo();
+                } else {
+                    engine.undo();
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
     const onNodesChange = useCallback((changes: NodeChange[]) => {
@@ -60,46 +116,79 @@ const BlueprintCanvas: React.FC = () => {
     }, []);
 
     const onConnect = useCallback((connection: Connection) => {
-        setEdges((eds) => {
-            const next = addEdge(connection, eds);
-            edgesRef.current = next;
-            return next;
-        });
-    }, []);
+        if (!connection.source || !connection.target) return;
 
-    const handleCompile = useCallback(() => {
-        // Transform ReactFlow Nodes -> LogicNodes
-        const logicNodes: LogicNode[] = nodesRef.current.map(n => ({
+        // 1. Construct Candidate Graph
+        const currentNodes: LogicNode[] = nodesRef.current.map(n => ({
             id: n.id,
-            type: (n.data?.type || 'ACTION') as any, // Type assertion for now
+            type: (n.data?.type || 'ACTION') as any,
             label: n.data?.label || n.id,
-            position: n.position,
-            data: n.data
+            position: n.position
         }));
 
-        const logicConnections: LogicConnection[] = edgesRef.current.map(e => ({
+        const currentEdges: LogicConnection[] = edgesRef.current.map(e => ({
             id: e.id,
             source: e.source,
             target: e.target
         }));
 
-        // Send to Engine
-        engine.updateLocalState(logicNodes, logicConnections);
+        // Add candidate edge
+        const candidateEdge: LogicConnection = {
+            id: `temp-${Date.now()}`,
+            source: connection.source,
+            target: connection.target
+        };
 
-        // Check Validity
-        const validation = engine.validate();
-        setIsValid(validation.valid);
+        // 2. Validate Cycle
+        const hasCycle = LogicSieve.detectCycles(currentNodes, [...currentEdges, candidateEdge]);
 
-        // Feedback
-        if (validation.valid) {
-            devTelemetry.trackEvent('CHECK', 'Blueprint Compiled & Valid', 'success');
-        } else {
-            devTelemetry.trackEvent('CHECK', `Blueprint Invalid: ${validation.error}`, 'failure');
+        if (hasCycle) {
+            // BLOCK CONNECTION
+            devTelemetry.trackEvent('CHECK', 'Circular Dependency Detected & Blocked', 'failure');
+            alert("⚠️ LOGIC LOOP DETECTED: You cannot connect output back to input upstream.");
+            return;
         }
+
+        // 3. ALLOW CONNECTION
+        setEdges((eds) => {
+            const newEdge: Edge = {
+                ...connection,
+                id: `e-${connection.source}-${connection.target}`,
+                type: 'neural',
+                animated: true,
+                data: { isValid: true }
+            } as Edge;
+
+            const next = addEdge(newEdge, eds);
+            edgesRef.current = next;
+
+            // Sync to Engine
+            const logicEdges: LogicConnection[] = next.map(e => ({
+                id: e.id,
+                source: e.source,
+                target: e.target
+            }));
+            engine.updateLocalState(currentNodes, logicEdges);
+
+            return next;
+        });
+
+        devTelemetry.trackEvent('ACTION', 'Neural Link Established', 'neutral');
 
     }, []);
 
-    // Helper to add node for testing
+    const handleCompile = useCallback(() => {
+        // Trigger explicit validation check via Engine
+        const validation = engine.validate();
+        setIsValid(validation.valid);
+
+        if (!validation.valid) {
+            devTelemetry.trackEvent('CHECK', `Blueprint Invalid: ${validation.error}`, 'failure');
+            alert(`Blueprint Incomplete: ${validation.error}`);
+        }
+    }, []);
+
+    // Helper to add node for testing (Wrapped in Command)
     const addNode = (type: string) => {
         const id = `${type}-${Date.now()}`;
         const newNode: Node = {
@@ -108,12 +197,14 @@ const BlueprintCanvas: React.FC = () => {
             data: { label: type, type },
             style: { border: '1px solid #777', padding: 10, borderRadius: 5, background: '#1a1a1a', color: '#fff' }
         };
-        setNodes(nds => nds.concat(newNode));
-        nodesRef.current.push(newNode);
+
+        // Execute via Engine Command
+        const cmd = createAddNodeCommand(newNode, setNodes, nodesRef);
+        engine.executeCommand(cmd);
     };
 
     return (
-        <div className={`h-[600px] w-full border-4 transition-colors duration-500 ${isValid ? 'border-green-500/50' : 'border-red-500/50'}`}>
+        <div data-testid="blueprint-root" className={`h-[600px] w-full border-4 transition-colors duration-500 ${isValid ? 'border-green-500/50' : 'border-red-500/50'}`}>
             <div className="absolute top-4 right-4 z-50 flex gap-2">
                 <button onClick={() => addNode('GOAL')} className="px-4 py-2 bg-slate-800 text-white rounded shadow">Add GOAL</button>
                 <button onClick={() => addNode('ACTION')} className="px-4 py-2 bg-slate-800 text-white rounded shadow">Add ACTION</button>
@@ -129,6 +220,7 @@ const BlueprintCanvas: React.FC = () => {
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
+                edgeTypes={edgeTypes}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
@@ -138,6 +230,9 @@ const BlueprintCanvas: React.FC = () => {
                 <Controls />
                 <MiniMap />
             </ReactFlow>
+            <div className="absolute bottom-4 left-4 text-xs text-white/30 font-mono pointer-events-none">
+                undo: ctrl+z | redo: ctrl+shift+z
+            </div>
         </div>
     );
 };

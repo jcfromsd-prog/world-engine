@@ -32,6 +32,7 @@ import { WorldEngine } from "./engines/world-engine/WorldEngine";
 import { SEED_GRAPH } from "./engines/world-engine/KnowledgeGraph";
 import type { LearnerProfile } from "./engines/world-engine/LearnerModel";
 import BlueprintCanvas from "./architect/components/BlueprintCanvas";
+import BlueprintErrorBoundary from "./architect/components/BlueprintErrorBoundary";
 
 // --- MOCK PROFILE FOR APP-LEVEL ENGINE ---
 const APP_LEARNER_PROFILE: LearnerProfile = {
@@ -773,6 +774,7 @@ const App: React.FC = () => {
       {/* 🚀 LEARNER MAP (K-5 Environment) */}
       {appState === "LEARNER_MAP" && <LearnerMap />}
 
+
       {/* 📐 BLUEPRINT MODE (Architect Tier) */}
       {appState === "BLUEPRINT_MODE" && (
         <div className="fixed inset-0 z-[2000] bg-zinc-950 flex flex-col">
@@ -787,7 +789,9 @@ const App: React.FC = () => {
               EXIT STUDIO
             </button>
           </div>
-          <BlueprintCanvas />
+          <BlueprintErrorBoundary>
+            <BlueprintCanvas />
+          </BlueprintErrorBoundary>
         </div>
       )}
 
