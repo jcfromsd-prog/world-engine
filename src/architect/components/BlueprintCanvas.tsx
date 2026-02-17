@@ -182,7 +182,15 @@ const BlueprintCanvas: React.FC = () => {
         const validation = engine.validate();
         setIsValid(validation.valid);
 
-        if (!validation.valid) {
+        if (validation.valid) {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#22d3ee', '#818cf8', '#34d399'] // Cyan, Indigo, Emerald
+            });
+            devTelemetry.trackEvent('CHECK', 'Blueprint Compiled & Valid', 'success');
+        } else {
             devTelemetry.trackEvent('CHECK', `Blueprint Invalid: ${validation.error}`, 'failure');
             alert(`Blueprint Incomplete: ${validation.error}`);
         }

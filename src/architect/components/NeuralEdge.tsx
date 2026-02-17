@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { BaseEdge, EdgeLabelRenderer, getBezierPath } from 'reactflow';
+import { BaseEdge, getBezierPath } from 'reactflow';
 import type { EdgeProps } from 'reactflow';
 
 export const NeuralEdge: React.FC<EdgeProps> = ({
@@ -11,11 +12,9 @@ export const NeuralEdge: React.FC<EdgeProps> = ({
     targetPosition,
     style = {},
     markerEnd,
-    data,
-    selected
+    data
 }) => {
-    // 1. Calculate Bezier Path (Smooth Curve)
-    const [edgePath, labelX, labelY] = getBezierPath({
+    const [edgePath] = getBezierPath({
         sourceX,
         sourceY,
         sourcePosition,
@@ -24,52 +23,32 @@ export const NeuralEdge: React.FC<EdgeProps> = ({
         targetPosition,
     });
 
-    // 2. Logic State Styling
-    const isError = data?.isError || false;
-    const isValid = data?.isValid || true;
-
-    // Pulse Animation: Active if valid, static if draft, shake logic handled by parent
-    const strokeColor = isError ? '#ef4444' : selected ? '#3b82f6' : '#10b981'; // Red / Blue / Green
-    const strokeWidth = selected ? 3 : 2;
-
-    // Animation via framer-motion or CSS
-    // Using inline CSS for performance on edges
-    const animatedStyle = {
-        ...style,
-        stroke: strokeColor,
-        strokeWidth,
-        strokeDasharray: isValid && !isError ? '5,5' : 'none',
-        animation: isValid && !isError ? 'dashdraw 1s linear infinite' : 'none',
-        transition: 'stroke 0.3s ease'
-    };
+    const isValid = data?.isValid !== false; // Default to valid if undefined
+    const strokeColor = isValid ? '#22d3ee' : '#ef4444'; // Cyan-400 vs Red-500
 
     return (
         <>
-            <BaseEdge path={edgePath} markerEnd={markerEnd} style={animatedStyle} />
-            {/* Optional Logic Label (e.g. IF/THEN) */}
-            {data?.label && (
-                <EdgeLabelRenderer>
-                    <div
-                        style={{
-                            position: 'absolute',
-                            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-                            background: '#000',
-                            padding: '4px 8px',
-                            borderRadius: 4,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            border: `1px solid ${strokeColor}`,
-                            color: strokeColor,
-                            pointerEvents: 'all',
-                        }}
-                        className="nodrag nopan"
-                    >
-                        {data.label}
-                    </div>
-                </EdgeLabelRenderer>
+            <BaseEdge
+                path={edgePath}
+                markerEnd={markerEnd}
+                style={{
+                    ...style,
+                    stroke: strokeColor,
+                    strokeWidth: 2,
+                    strokeDasharray: '5,5',
+                    animation: 'dashdraw 0.5s linear infinite', // We'll need to ensure this keyframe exists in global CSS or inline styles
+                }}
+            />
+            {/* Optional: Add glow effect for valid edges */}
+            {isValid && (
+                <path
+                    d={edgePath}
+                    fill="none"
+                    stroke={strokeColor}
+                    strokeWidth={8}
+                    className="opacity-20 animate-pulse"
+                />
             )}
-
-            {/* Global Keyframes for Animations */}
             <style>
                 {`
                     @keyframes dashdraw {
