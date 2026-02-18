@@ -90,7 +90,7 @@ export class WorldEngine {
 
         if (success) {
             // [TELEMETRY] 🎁 PAYOFF PHASE
-            devTelemetry.trackEvent('PAYOFF', 'Awarded Genesis Points +200 GP', 'success');
+            devTelemetry.trackEvent('PAYOFF', 'Competence verified — mastery recorded', 'success');
         }
 
         // Apply decay to OLD memories occasionally
@@ -116,6 +116,5 @@ export class WorldEngine {
     public resetProgress(): void {
         this.learner.getProfile().masteryMap.clear();
         this.learner.getProfile().completedMissions = [];
-        this.learner.getProfile().genesisPoints = 0;
     }
 }

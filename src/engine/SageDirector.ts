@@ -310,11 +310,11 @@ export const generateSageDirectives = (
     }
 
     // Check for bounty unlock
-    if (profile.verifiedSolverBadge && !profile.squadId) {
+    if (profile.verifiedSolverStatus && !profile.squadId) {
         directives.push({
             type: 'unlock_bounty',
             priority: 'high',
-            message: 'Congratulations! You\'ve earned your Verified Solver Badge. The Bounty Board awaits!',
+            message: 'You\'ve earned Verified Solver status. The Bounty Board awaits!',
             action: { showBountyBoard: true },
             triggeredBy: 'verification_complete'
         });

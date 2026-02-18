@@ -1,8 +1,9 @@
 // =============================================================================
 // SOULBOUND PROGRESSION ENGINE - Core Logic & State Management
 // =============================================================================
-// This is the "Brain" that powers skill progression, XP calculations,
+// This is the "Brain" that powers skill progression, mastery calculations,
 // streak tracking, and the "Welcome Back" resume system.
+// Updated for v9.3: Identity Over Points
 
 import type {
     SoulboundProfile,
@@ -14,7 +15,6 @@ import type {
 } from './types';
 
 import {
-    xpForLevel,
     getTierFromLevel,
     createDefaultProfile,
     ECONOMY_CONFIG
@@ -23,24 +23,23 @@ import {
 // ----------------- XP & LEVELING ENGINE -----------------
 
 /**
- * Add XP to a specific skill and handle level-ups
+ * Add mastery to a specific skill and handle level-ups
  */
 export const addSkillXP = (
     skill: Skill,
     xpGained: number
 ): { skill: Skill; leveledUp: boolean; newTier: MasteryTier | null } => {
-    let { level, xp, xpToNext, tier, lastPracticed } = skill;
+    let { level, mastery, tier, lastPracticed } = skill;
     let leveledUp = false;
     let newTier: MasteryTier | null = null;
 
-    // Add XP
-    xp += xpGained;
+    // Update mastery (0.0 to 1.0)
+    mastery = Math.min(1.0, mastery + (xpGained / 100));
 
-    // Check for level ups (can level multiple times)
-    while (xp >= xpToNext && level < 100) {
-        xp -= xpToNext;
-        level++;
-        xpToNext = xpForLevel(level);
+    // Level up when mastery crosses thresholds
+    const targetLevel = Math.floor(mastery * 100);
+    if (targetLevel > level && level < 100) {
+        level = targetLevel;
         leveledUp = true;
 
         // Check for tier upgrade
@@ -55,7 +54,7 @@ export const addSkillXP = (
     lastPracticed = Date.now();
 
     return {
-        skill: { ...skill, level, xp, xpToNext, tier, lastPracticed },
+        skill: { ...skill, level, mastery, tier, lastPracticed },
         leveledUp,
         newTier
     };
@@ -72,13 +71,13 @@ export const calculateSkillDecay = (skill: Skill): Skill => {
 
     if (daysSinceLastPractice <= 7) return skill;
 
-    // Lose 1% of current level XP per day after 7 days (max 10% total)
+    // Lose 1% of mastery per day after 7 days (max 10% total)
     const decayDays = Math.min(daysSinceLastPractice - 7, 10);
-    const decayAmount = Math.floor(skill.xp * 0.01 * decayDays);
+    const decayAmount = 0.01 * decayDays;
 
     return {
         ...skill,
-        xp: Math.max(0, skill.xp - decayAmount)
+        mastery: Math.max(0, skill.mastery - decayAmount)
     };
 };
 
@@ -91,14 +90,12 @@ export const updateSkillGraph = (
 ): { graph: SkillGraph; events: string[] } => {
     const events: string[] = [];
     const updatedSkills = { ...graph.skills };
-    let totalXP = graph.totalXP;
 
     Object.entries(rewards).forEach(([category, xp]) => {
         if (xp && xp > 0) {
             const skillCategory = category as SkillCategory;
             const result = addSkillXP(updatedSkills[skillCategory], xp);
             updatedSkills[skillCategory] = result.skill;
-            totalXP += xp;
 
             if (result.leveledUp) {
                 events.push(`⬆️ ${skillCategory.toUpperCase()} leveled up to ${result.skill.level}!`);
@@ -120,7 +117,7 @@ export const updateSkillGraph = (
     const weakestSkill = skillLevels[skillLevels.length - 1].category;
 
     return {
-        graph: { skills: updatedSkills, totalXP, dominantSkill, weakestSkill },
+        graph: { skills: updatedSkills, dominantSkill, weakestSkill },
         events
     };
 };
@@ -254,22 +251,21 @@ export const hasCompletedNode = (profile: SoulboundProfile, nodeId: string): boo
 // ----------------- ECONOMY FUNCTIONS -----------------
 
 /**
- * Add Genesis Points (play money)
+ * Record a verified competency (replaces addGenesisPoints)
  */
-export const addGenesisPoints = (
+export const recordCompetencyVerification = (
     profile: SoulboundProfile,
-    amount: number,
+    competencyId: string,
     description: string
 ): { profile: SoulboundProfile; transaction: object } => {
     return {
         profile: {
             ...profile,
-            genesisPoints: (profile?.genesisPoints || 0) + amount
+            verifiedCompetencyCount: (profile?.verifiedCompetencyCount || 0) + 1
         },
         transaction: {
-            type: 'mission_reward',
-            amount,
-            currency: 'GP',
+            type: 'competency_verified',
+            competencyId,
             description,
             timestamp: Date.now()
         }
@@ -313,11 +309,12 @@ export const canAccessBounties = (profile: SoulboundProfile): {
     reason: string;
     progress: number;
 } => {
-    if (!profile.verifiedSolverBadge) {
+    if (!profile.verifiedSolverStatus) {
+        const verifiedCount = profile.verifiedCompetencyCount || 0;
         return {
             canAccess: false,
-            reason: 'Complete verification tasks to earn your Verified Solver Badge',
-            progress: (profile.skillGraph.totalXP / ECONOMY_CONFIG.verificationThreshold) * 100
+            reason: 'Earn verified competencies to unlock Solver status',
+            progress: Math.min(100, (verifiedCount / ECONOMY_CONFIG.verificationThreshold) * 100)
         };
     }
 

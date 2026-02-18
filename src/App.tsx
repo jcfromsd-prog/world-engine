@@ -38,16 +38,31 @@ import BlueprintErrorBoundary from "./architect/components/BlueprintErrorBoundar
 const APP_LEARNER_PROFILE: LearnerProfile = {
   id: "learner-app-root",
   name: "Explorer Root",
-  currentGrade: 5, // Default to Grade 5
+  currentGrade: 12, // Upgraded to match Voyager
+  currentTier: 'VOYAGERS', // GOD MODE: Unlocked
   masteryMap: new Map(),
-  domainLevels: { literacy: 1.0, numeracy: 1.0, science: 1.0, social: 1.0, sel: 1.0, career: 1.0 },
+  domainLevels: { literacy: 4.0, numeracy: 4.0, science: 4.0, social: 4.0, sel: 4.0, career: 4.0 },
   cognitiveState: { focusLevel: 100, frustrationLevel: 0, energyLevel: 100, currentZPD: 0.2 },
   interests: ["General"],
   learningStyle: 'visual',
   goals: ["Explore the World"],
+  traits: new Map(),
+  verifiedCompetencies: [
+    {
+      competencyId: 'cert.python.basic',
+      title: 'Python Basic',
+      domain: 'science', // using science as proxy for CS
+      tier: 'VOYAGERS',
+      sdi: 1,
+      verifiedAt: Date.now(),
+      masteryScore: 1.0,
+      evidence: 'Passed exam'
+    }
+  ],
   completedMissions: [],
-  genesisPoints: 0,
-  calibrationScore: 0
+  activeContracts: [],
+  totalEarnings: 0,
+  calibrationScore: 95 // God Mode: High Confidence
 };
 
 
@@ -449,11 +464,19 @@ const ViralShareModal: React.FC<{ mission: Mission, earnings: number, onClose: (
    MAIN APP (The Engine)
    ========================================================================== */
 const App: React.FC = () => {
-  // 1. Injected Sage Prep State Logic
+  // 0. GLOBAL STATE
   const [appState, setAppState] = useState<AppState>("LANDING");
 
+  // GOD MODE: Check if founder mode is enabled
+  const [learnerProfile, setLearnerProfile] = useState<LearnerProfile>(() => {
+    const isGodMode = typeof window !== 'undefined' && localStorage.getItem('founder_mode') === 'true';
+    return isGodMode
+      ? { ...APP_LEARNER_PROFILE, currentTier: 'VOYAGERS', calibrationScore: 95 }
+      : APP_LEARNER_PROFILE;
+  });
+
   // --- WORLD ENGINE INSTANCE ---
-  const worldEngine = React.useMemo(() => new WorldEngine(APP_LEARNER_PROFILE, SEED_GRAPH), []);
+  const worldEngine = React.useMemo(() => new WorldEngine(learnerProfile, SEED_GRAPH), [learnerProfile]);
 
 
   const [sagePrepContent, setSagePrepContent] = useState<any>(null); // Using any to reuse RecommendationResult structure loosely
@@ -841,6 +864,8 @@ const App: React.FC = () => {
                 userTrack={getUserTrack()}
                 onMissionSelect={handleMissionSelect}
                 onCalibrate={() => setShowCalibration(true)}
+                profile={learnerProfile}
+                onProfileUpdate={setLearnerProfile}
               />
             </div>
           </div>

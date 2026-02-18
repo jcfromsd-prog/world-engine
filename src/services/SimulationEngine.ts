@@ -206,7 +206,7 @@ export const SimulationEngine = {
 
             if (missionSuccess) {
                 onUpdate(`   ✅ MISSION COMPLETE!`);
-                onUpdate(`   🏆 XP Earned: +${node.xpReward || 100}`);
+                onUpdate(`   🏆 Competence verified — mastery recorded`);
 
                 // Update theta for successful mission (bigger impact)
                 user.skillTheta = RecommendationEngine.updateSkillTheta(
@@ -236,10 +236,10 @@ export const SimulationEngine = {
         if (user.gradeLevel > 12) {
             onUpdate(`   💵 Internship Stipend: $${totalGP * 2} deposited`);
         } else {
-            onUpdate(`   🪙 Genesis Points: +${totalGP} GP credited`);
+            onUpdate(`   🏆 Verified Competencies: +${totalGP} recorded`);
         }
 
-        onUpdate(`   🎖️ Badge Unlocked: "${user.archetype} ${RecommendationEngine.getSkillLevelDescription(user.skillTheta)}"`);
+        onUpdate(`   🌟 Artifact Earned: "${user.archetype} ${RecommendationEngine.getSkillLevelDescription(user.skillTheta)}"`);
 
         // ─────────────────────────────────────────────────────────────────────────
         // SIMULATION COMPLETE

@@ -1,7 +1,9 @@
 /* ==========================================================================
-   ENGINE TYPES: The Core Data Contracts
-   K-16 Mastery Protocol with IRT + Bloom's Taxonomy
+   ENGINE TYPES: The Core Data Contracts (v9.3)
+   K-16 Mastery Protocol with IRT + Bloom's Taxonomy + Spiral Framework
    ========================================================================== */
+
+import type { SpiralTier, SDI } from '../engines/world-engine/KnowledgeGraph';
 
 export type BloomLevel = "REMEMBER" | "UNDERSTAND" | "APPLY" | "ANALYZE" | "EVALUATE" | "CREATE";
 export type Subject = "ELA" | "MATH" | "SCIENCE" | "HISTORY" | "CAREER";
@@ -40,8 +42,25 @@ export interface ContentNode {
     tags: string[]; // For interest matching: ["Civics", "Geometry", "NACE-Communication"]
     standardRef?: string; // Standards reference: "NY-ELA-9-12", "NGSS-MS-PS1", etc.
     estimatedMinutes?: number;
-    xpReward?: number;
-    gpReward?: number;
+
+    // ══════════════════════════════════════════════════════════
+    // SPIRAL FRAMEWORK (v9.3) — Identity Over Points
+    // ══════════════════════════════════════════════════════════
+
+    /** Developmental tier: SPROUTS → VOYAGERS */
+    tier?: SpiralTier;
+
+    /** Spiral Depth Index: 0=Concrete → 4=Systems */
+    sdi?: SDI;
+
+    /** Real-world phenomenon that anchors this task */
+    phenomenon?: string;
+
+    /** Why this task exists pedagogically */
+    pedagogicalWhy?: string;
+
+    /** If true, standard alignment must be RAG-verified */
+    ragRequired?: boolean;
 }
 
 /**

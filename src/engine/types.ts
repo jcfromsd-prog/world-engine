@@ -19,8 +19,7 @@ export type MasteryTier = 'novice' | 'apprentice' | 'journeyman' | 'expert' | 'm
 export interface Skill {
     category: SkillCategory;
     level: number;           // 1-100
-    xp: number;              // Current XP in this level
-    xpToNext: number;        // XP needed for next level
+    mastery: number;         // 0.0 - 1.0 (verified competence level)
     tier: MasteryTier;       // Unlocks at specific thresholds
     lastPracticed: number;   // Timestamp for decay calculation
     streak: number;          // Consecutive days practiced
@@ -28,7 +27,6 @@ export interface Skill {
 
 export interface SkillGraph {
     skills: Record<SkillCategory, Skill>;
-    totalXP: number;
     dominantSkill: SkillCategory;
     weakestSkill: SkillCategory;
 }
@@ -40,7 +38,7 @@ export interface CompletedNode {
     title: string;
     category: SkillCategory;
     completedAt: number;
-    xpEarned: number;
+    competencyProven: boolean; // Did this prove a verified competency?
     timeSpent: number;       // In seconds
     accuracy: number;        // 0-100%
     attempts: number;
@@ -75,12 +73,14 @@ export interface SoulboundProfile {
     reputation: number;      // 0-1000 (affects client trust)
     collaborationScore: number;
 
-    // Economy
-    genesisPoints: number;   // Play money (GP)
+    // Economy (Track 2 — Marketplace, Adults Only)
     realBalance: number;     // Actual USD earned
     pendingPayout: number;   // In escrow awaiting verification
     lifetimeEarnings: number;
-    verifiedSolverBadge: boolean;
+    verifiedSolverStatus: boolean; // Track 2: Marketplace access granted
+
+    // Identity (v9.3)
+    verifiedCompetencyCount: number; // How many artifacts of knowledge earned
 
     // Streaks & Engagement
     dailyStreak: number;
@@ -124,10 +124,9 @@ export interface MissionRequirements {
 }
 
 export interface MissionReward {
-    xp: Record<SkillCategory, number>;
-    genesisPoints: number;
-    realMoney?: number;      // Only for client missions
-    unlocks?: string[];      // IDs of content unlocked
+    competencies: string[];       // IDs of competencies this mission can verify
+    realMoney?: number;           // Only for client missions (Track 2)
+    unlocks?: string[];           // IDs of content unlocked
 }
 
 export interface Mission {
@@ -225,8 +224,7 @@ export interface SageAnalysis {
 export const DEFAULT_SKILL: Skill = {
     category: 'logic',
     level: 1,
-    xp: 0,
-    xpToNext: 100,
+    mastery: 0,
     tier: 'novice',
     lastPracticed: Date.now(),
     streak: 0
@@ -241,7 +239,6 @@ export const createDefaultSkillGraph = (): SkillGraph => ({
         nature: { ...DEFAULT_SKILL, category: 'nature' },
         social: { ...DEFAULT_SKILL, category: 'social' }
     },
-    totalXP: 0,
     dominantSkill: 'logic',
     weakestSkill: 'social'
 });
@@ -260,11 +257,11 @@ export const createDefaultProfile = (userId: string, name: string, archetype: st
     reputation: 100,
     collaborationScore: 0,
 
-    genesisPoints: 500, // Founding Solver Bootstrap Credit ($5.00)
     realBalance: 0,
     pendingPayout: 0,
     lifetimeEarnings: 0,
-    verifiedSolverBadge: false,
+    verifiedSolverStatus: false,
+    verifiedCompetencyCount: 0,
 
     dailyStreak: 0,
     longestStreak: 0,
@@ -294,8 +291,8 @@ export const TIER_THRESHOLDS: Record<MasteryTier, number> = {
     master: 80
 };
 
-// XP required per level (exponential curve)
 export const xpForLevel = (level: number): number => {
+    // Retained for backward compatibility but no longer drives rewards
     return Math.floor(100 * Math.pow(1.15, level - 1));
 };
 

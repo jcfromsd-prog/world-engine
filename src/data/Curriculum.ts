@@ -32,8 +32,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Reading", "Phonics", "Animals"],
         standardRef: "NY-ELA-K-1",
         estimatedMinutes: 8,
-        xpReward: 40,
-        gpReward: 5,
+
+
     },
     {
         id: "ela_k_print_concepts",
@@ -47,8 +47,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Reading", "Books", "Basics"],
         standardRef: "NY-CA-ELA-K-RF",
         estimatedMinutes: 10,
-        xpReward: 35,
-        gpReward: 4,
+
+
     },
     {
         id: "ela_1_retelling",
@@ -62,8 +62,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Comprehension", "Storytelling", "Listening"],
         standardRef: "NY-CA-ELA-1-RL",
         estimatedMinutes: 15,
-        xpReward: 60,
-        gpReward: 8,
+
+
     },
     {
         id: "ela_2_ask_answer",
@@ -77,8 +77,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Comprehension", "Questions", "Reading"],
         standardRef: "CA-ELA-2-RL",
         estimatedMinutes: 12,
-        xpReward: 55,
-        gpReward: 7,
+
+
     },
     {
         id: "ela_2_opinion_writing",
@@ -92,8 +92,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Writing", "Opinion", "Expression"],
         standardRef: "NY-ELA-2-W",
         estimatedMinutes: 20,
-        xpReward: 70,
-        gpReward: 10,
+
+
     },
 
     // === Math K-2 ===
@@ -109,8 +109,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Geometry", "Visual", "Games"],
         standardRef: "NY-CA-MATH-K-2",
         estimatedMinutes: 10,
-        xpReward: 50,
-        gpReward: 5,
+
+
     },
     {
         id: "math_k_counting",
@@ -124,8 +124,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Counting", "Numbers", "Interactive"],
         standardRef: "NY-CA-MATH-K-CC",
         estimatedMinutes: 8,
-        xpReward: 40,
-        gpReward: 5,
+
+
     },
     {
         id: "math_1_addition",
@@ -139,8 +139,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Addition", "Operations", "Visual"],
         standardRef: "CCSS-MATH-1-OA",
         estimatedMinutes: 12,
-        xpReward: 55,
-        gpReward: 7,
+
+
     },
     {
         id: "math_2_place_value",
@@ -154,8 +154,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Place Value", "Numbers", "Foundation"],
         standardRef: "NY-CA-MATH-2-NBT",
         estimatedMinutes: 15,
-        xpReward: 65,
-        gpReward: 9,
+
+
     },
     {
         id: "math_2_measurement",
@@ -169,8 +169,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Measurement", "Length", "Hands-on"],
         standardRef: "CCSS-MATH-2-MD",
         estimatedMinutes: 18,
-        xpReward: 70,
-        gpReward: 10,
+
+
     },
 
     // === Science K-2 ===
@@ -186,8 +186,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Observation", "Nature", "Journal"],
         standardRef: "NGSS-K-2-Earth",
         estimatedMinutes: 15,
-        xpReward: 75,
-        gpReward: 10,
+
+
     },
     {
         id: "sci_k_living_things",
@@ -201,8 +201,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Life Science", "Classification", "Nature"],
         standardRef: "NGSS-K-LS1",
         estimatedMinutes: 12,
-        xpReward: 55,
-        gpReward: 7,
+
+
     },
     {
         id: "sci_1_pushpull",
@@ -216,8 +216,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Physics", "Forces", "Experiment"],
         standardRef: "NGSS-K-PS2",
         estimatedMinutes: 20,
-        xpReward: 65,
-        gpReward: 8,
+
+
     },
     {
         id: "sci_2_habitats",
@@ -231,8 +231,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Ecosystems", "Animals", "Nature"],
         standardRef: "NGSS-2-LS4",
         estimatedMinutes: 15,
-        xpReward: 60,
-        gpReward: 8,
+
+
     },
 
     // === History/Social Studies K-2 ===
@@ -248,8 +248,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Family", "Community", "Culture"],
         standardRef: "NY-CA-HSS-K",
         estimatedMinutes: 20,
-        xpReward: 50,
-        gpReward: 6,
+
+
     },
     {
         id: "hist_1_community",
@@ -263,8 +263,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Community", "Helpers", "Citizenship"],
         standardRef: "CA-HSS-1",
         estimatedMinutes: 15,
-        xpReward: 55,
-        gpReward: 7,
+
+
     },
     {
         id: "hist_2_maps",
@@ -278,8 +278,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Geography", "Maps", "Spatial"],
         standardRef: "NY-HSS-2-Geo",
         estimatedMinutes: 25,
-        xpReward: 80,
-        gpReward: 12,
+
+
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -299,8 +299,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Reading", "Comprehension", "Nonfiction"],
         standardRef: "NY-CA-ELA-3-RI",
         estimatedMinutes: 20,
-        xpReward: 100,
-        gpReward: 15,
+
+
     },
     {
         id: "ela_3_5_narrative",
@@ -314,8 +314,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Writing", "Creativity", "Storytelling"],
         standardRef: "NY-ELA-3-5-Writing",
         estimatedMinutes: 30,
-        xpReward: 150,
-        gpReward: 25,
+
+
     },
     {
         id: "ela_4_compare_texts",
@@ -329,8 +329,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Reading", "Comparison", "Critical Thinking"],
         standardRef: "CA-ELA-4-RI",
         estimatedMinutes: 25,
-        xpReward: 120,
-        gpReward: 20,
+
+
     },
     {
         id: "ela_5_opinion_essay",
@@ -344,8 +344,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Writing", "Argument", "Structure"],
         standardRef: "NY-ELA-5-W",
         estimatedMinutes: 35,
-        xpReward: 160,
-        gpReward: 28,
+
+
     },
     {
         id: "ela_5_research",
@@ -359,8 +359,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Research", "Presentation", "Information Literacy"],
         standardRef: "CA-ELA-5-W",
         estimatedMinutes: 40,
-        xpReward: 180,
-        gpReward: 30,
+
+
     },
 
     // === Math 3-5 ===
@@ -376,8 +376,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Multiplication", "Operations", "Facts"],
         standardRef: "CCSS-MATH-3-OA",
         estimatedMinutes: 20,
-        xpReward: 90,
-        gpReward: 12,
+
+
     },
     {
         id: "math_3_5_fractions",
@@ -391,8 +391,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Fractions", "Visual", "Food"],
         standardRef: "CCSS-MATH-3-5-NF",
         estimatedMinutes: 20,
-        xpReward: 100,
-        gpReward: 15,
+
+
     },
     {
         id: "math_4_area_perimeter",
@@ -406,8 +406,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Geometry", "Measurement", "Design"],
         standardRef: "NY-MATH-4-MD",
         estimatedMinutes: 25,
-        xpReward: 110,
-        gpReward: 18,
+
+
     },
     {
         id: "math_5_decimals",
@@ -421,8 +421,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Decimals", "Operations", "Place Value"],
         standardRef: "CCSS-MATH-5-NBT",
         estimatedMinutes: 22,
-        xpReward: 115,
-        gpReward: 17,
+
+
     },
     {
         id: "math_5_coordinates",
@@ -436,8 +436,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Coordinates", "Graphing", "Games"],
         standardRef: "CA-MATH-5-G",
         estimatedMinutes: 20,
-        xpReward: 100,
-        gpReward: 15,
+
+
     },
 
     // === Science 3-5 ===
@@ -453,8 +453,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Biology", "Nature", "Design"],
         standardRef: "NGSS-3-5-LS2",
         estimatedMinutes: 35,
-        xpReward: 175,
-        gpReward: 30,
+
+
     },
     {
         id: "sci_3_states_matter",
@@ -468,8 +468,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Chemistry", "States", "Experiment"],
         standardRef: "NGSS-3-PS1",
         estimatedMinutes: 25,
-        xpReward: 100,
-        gpReward: 15,
+
+
     },
     {
         id: "sci_4_energy",
@@ -483,8 +483,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Physics", "Energy", "Investigation"],
         standardRef: "NGSS-4-PS3",
         estimatedMinutes: 30,
-        xpReward: 130,
-        gpReward: 22,
+
+
     },
     {
         id: "sci_5_earth_systems",
@@ -498,8 +498,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Earth Science", "Systems", "Modeling"],
         standardRef: "NGSS-5-ESS2",
         estimatedMinutes: 35,
-        xpReward: 150,
-        gpReward: 25,
+
+
     },
     {
         id: "sci_5_engineering",
@@ -513,8 +513,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Engineering", "Design", "Problem Solving"],
         standardRef: "NGSS-3-5-ETS1",
         estimatedMinutes: 45,
-        xpReward: 200,
-        gpReward: 35,
+
+
     },
 
     // === History/Social Studies 3-5 ===
@@ -530,8 +530,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Economics", "Strategy", "Simulation"],
         standardRef: "CA-HSS-3-5",
         estimatedMinutes: 25,
-        xpReward: 125,
-        gpReward: 20,
+
+
     },
     {
         id: "hist_3_communities",
@@ -545,8 +545,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Geography", "Culture", "Comparison"],
         standardRef: "NY-HSS-3",
         estimatedMinutes: 25,
-        xpReward: 110,
-        gpReward: 18,
+
+
     },
     {
         id: "hist_4_us_history",
@@ -560,8 +560,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["US History", "Timeline", "Events"],
         standardRef: "CA-HSS-4",
         estimatedMinutes: 30,
-        xpReward: 120,
-        gpReward: 20,
+
+
     },
     {
         id: "hist_5_government",
@@ -575,8 +575,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Civics", "Government", "Laws"],
         standardRef: "NY-HSS-5-Civics",
         estimatedMinutes: 25,
-        xpReward: 115,
-        gpReward: 18,
+
+
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -596,8 +596,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Reading", "Analysis", "Evidence"],
         standardRef: "NY-CA-ELA-6-RL",
         estimatedMinutes: 25,
-        xpReward: 150,
-        gpReward: 25,
+
+
     },
     {
         id: "ela_6_8_research",
@@ -611,8 +611,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Research", "Critical Thinking", "Media Literacy"],
         standardRef: "CA-ELA-6-8",
         estimatedMinutes: 35,
-        xpReward: 200,
-        gpReward: 40,
+
+
     },
     {
         id: "ela_7_argument",
@@ -626,8 +626,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Writing", "Argument", "Persuasion"],
         standardRef: "NY-ELA-7-W",
         estimatedMinutes: 40,
-        xpReward: 220,
-        gpReward: 45,
+
+
     },
     {
         id: "ela_8_theme_analysis",
@@ -641,8 +641,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Literature", "Theme", "Analysis"],
         standardRef: "CA-ELA-8-RL",
         estimatedMinutes: 30,
-        xpReward: 180,
-        gpReward: 35,
+
+
     },
     {
         id: "ela_8_presentation",
@@ -656,8 +656,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Speaking", "Presentation", "Technology"],
         standardRef: "NY-ELA-8-SL",
         estimatedMinutes: 45,
-        xpReward: 250,
-        gpReward: 50,
+
+
     },
 
     // === Math 6-8 ===
@@ -673,8 +673,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Ratios", "Proportions", "Real-world"],
         standardRef: "NY-MATH-6-RP",
         estimatedMinutes: 25,
-        xpReward: 150,
-        gpReward: 25,
+
+
     },
     {
         id: "math_6_8_stats",
@@ -688,8 +688,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Statistics", "Data", "Sports"],
         standardRef: "NY-MATH-6-8-Stats",
         estimatedMinutes: 25,
-        xpReward: 175,
-        gpReward: 35,
+
+
     },
     {
         id: "math_7_expressions",
@@ -703,8 +703,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Algebra", "Expressions", "Properties"],
         standardRef: "CCSS-MATH-7-EE",
         estimatedMinutes: 22,
-        xpReward: 160,
-        gpReward: 28,
+
+
     },
     {
         id: "math_7_equations",
@@ -718,8 +718,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Algebra", "Equations", "Problem Solving"],
         standardRef: "NY-MATH-7-EE",
         estimatedMinutes: 28,
-        xpReward: 180,
-        gpReward: 32,
+
+
     },
     {
         id: "math_8_pythagorean",
@@ -733,8 +733,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Geometry", "Pythagorean", "Distance"],
         standardRef: "CCSS-MATH-8-G",
         estimatedMinutes: 25,
-        xpReward: 200,
-        gpReward: 40,
+
+
     },
     {
         id: "math_8_functions",
@@ -748,8 +748,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Functions", "Algebra", "Graphing"],
         standardRef: "NY-MATH-8-F",
         estimatedMinutes: 30,
-        xpReward: 190,
-        gpReward: 38,
+
+
     },
 
     // === Science 6-8 ===
@@ -765,8 +765,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Chemistry", "Logic", "Virtual Lab"],
         standardRef: "NGSS-MS-PS1",
         estimatedMinutes: 30,
-        xpReward: 200,
-        gpReward: 40,
+
+
     },
     {
         id: "sci_6_cells",
@@ -780,8 +780,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Biology", "Cells", "Microscopy"],
         standardRef: "NGSS-MS-LS1",
         estimatedMinutes: 28,
-        xpReward: 170,
-        gpReward: 30,
+
+
     },
     {
         id: "sci_7_heredity",
@@ -795,8 +795,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Genetics", "Heredity", "Modeling"],
         standardRef: "NGSS-MS-LS3",
         estimatedMinutes: 35,
-        xpReward: 210,
-        gpReward: 42,
+
+
     },
     {
         id: "sci_7_forces",
@@ -810,8 +810,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Physics", "Forces", "Experiment"],
         standardRef: "NGSS-MS-PS2",
         estimatedMinutes: 40,
-        xpReward: 230,
-        gpReward: 48,
+
+
     },
     {
         id: "sci_8_earth_history",
@@ -825,8 +825,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Earth Science", "Geology", "History"],
         standardRef: "NGSS-MS-ESS1",
         estimatedMinutes: 32,
-        xpReward: 200,
-        gpReward: 40,
+
+
     },
     {
         id: "sci_8_climate",
@@ -840,8 +840,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Climate", "Modeling", "Environment"],
         standardRef: "NGSS-MS-ESS3",
         estimatedMinutes: 45,
-        xpReward: 260,
-        gpReward: 55,
+
+
     },
 
     // === History/Social Studies 6-8 ===
@@ -857,8 +857,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Ancient History", "Civilizations", "Comparison"],
         standardRef: "NY-HSS-6",
         estimatedMinutes: 35,
-        xpReward: 180,
-        gpReward: 35,
+
+
     },
     {
         id: "hist_6_8_civics",
@@ -872,8 +872,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Civics", "Government", "Debate"],
         standardRef: "NY-HSS-6-8-Civics",
         estimatedMinutes: 45,
-        xpReward: 250,
-        gpReward: 50,
+
+
     },
     {
         id: "hist_7_medieval",
@@ -887,8 +887,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Medieval", "World History", "Culture"],
         standardRef: "CA-HSS-7",
         estimatedMinutes: 30,
-        xpReward: 170,
-        gpReward: 32,
+
+
     },
     {
         id: "hist_8_us_constitution",
@@ -902,8 +902,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["US History", "Constitution", "Rights"],
         standardRef: "NY-HSS-8-Civics",
         estimatedMinutes: 40,
-        xpReward: 220,
-        gpReward: 45,
+
+
     },
     {
         id: "hist_8_industrial",
@@ -917,8 +917,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["US History", "Economics", "Technology"],
         standardRef: "CA-HSS-8",
         estimatedMinutes: 35,
-        xpReward: 200,
-        gpReward: 40,
+
+
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -938,8 +938,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Public Speaking", "Civics", "Environment"],
         standardRef: "NY-ELA-9-12-Rhetoric",
         estimatedMinutes: 60,
-        xpReward: 350,
-        gpReward: 75,
+
+
     },
     {
         id: "ela_9_literary_analysis",
@@ -953,8 +953,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Literature", "Analysis", "Writing"],
         standardRef: "NY-ELA-9-10-RL",
         estimatedMinutes: 45,
-        xpReward: 280,
-        gpReward: 55,
+
+
     },
     {
         id: "ela_10_synthesis",
@@ -968,8 +968,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Research", "Writing", "Synthesis"],
         standardRef: "CA-ELA-11-12-W",
         estimatedMinutes: 55,
-        xpReward: 320,
-        gpReward: 65,
+
+
     },
     {
         id: "ela_11_research_paper",
@@ -983,8 +983,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Research", "Academic Writing", "Citations"],
         standardRef: "NY-ELA-11-12-W",
         estimatedMinutes: 90,
-        xpReward: 450,
-        gpReward: 100,
+
+
     },
     {
         id: "ela_12_seminar",
@@ -998,8 +998,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Discussion", "Critical Thinking", "Collaboration"],
         standardRef: "CA-ELA-11-12-SL",
         estimatedMinutes: 50,
-        xpReward: 300,
-        gpReward: 60,
+
+
     },
 
     // === Math 9-12 (Regents Ready) ===
@@ -1015,8 +1015,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Algebra", "Regents", "Equations"],
         standardRef: "NY-Regents-Algebra-I",
         estimatedMinutes: 40,
-        xpReward: 280,
-        gpReward: 55,
+
+
     },
     {
         id: "math_9_12_model",
@@ -1030,8 +1030,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Calculus", "Physics", "Engineering"],
         standardRef: "CCSS-MATH-HS-Modeling",
         estimatedMinutes: 50,
-        xpReward: 400,
-        gpReward: 80,
+
+
     },
     {
         id: "math_10_geometry",
@@ -1045,8 +1045,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Geometry", "Proofs", "Logic"],
         standardRef: "NY-Regents-Geometry",
         estimatedMinutes: 45,
-        xpReward: 320,
-        gpReward: 65,
+
+
     },
     {
         id: "math_11_algebra2",
@@ -1060,8 +1060,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Algebra", "Functions", "Regents"],
         standardRef: "NY-Regents-Algebra-II",
         estimatedMinutes: 45,
-        xpReward: 350,
-        gpReward: 70,
+
+
     },
     {
         id: "math_12_statistics",
@@ -1075,8 +1075,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Statistics", "Probability", "Data Science"],
         standardRef: "CCSS-MATH-HS-Stats",
         estimatedMinutes: 50,
-        xpReward: 380,
-        gpReward: 75,
+
+
     },
 
     // === Science 9-12 (Regents Track) ===
@@ -1092,8 +1092,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Biology", "Ethics", "Technology"],
         standardRef: "NGSS-HS-LS3",
         estimatedMinutes: 55,
-        xpReward: 375,
-        gpReward: 70,
+
+
     },
     {
         id: "sci_9_living_env",
@@ -1107,8 +1107,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Biology", "Regents", "Review"],
         standardRef: "NY-Regents-Living-Env",
         estimatedMinutes: 60,
-        xpReward: 300,
-        gpReward: 60,
+
+
     },
     {
         id: "sci_10_chemistry",
@@ -1122,8 +1122,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Chemistry", "Regents", "Reactions"],
         standardRef: "NY-Regents-Chemistry",
         estimatedMinutes: 55,
-        xpReward: 340,
-        gpReward: 68,
+
+
     },
     {
         id: "sci_11_physics",
@@ -1137,8 +1137,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Physics", "Problem Solving", "Regents"],
         standardRef: "NY-Regents-Physics",
         estimatedMinutes: 50,
-        xpReward: 360,
-        gpReward: 72,
+
+
     },
     {
         id: "sci_12_research",
@@ -1152,8 +1152,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Research", "Experiment", "Data"],
         standardRef: "NGSS-HS-ETS1",
         estimatedMinutes: 120,
-        xpReward: 550,
-        gpReward: 120,
+
+
     },
 
     // === History/Social Studies 9-12 (Regents Track) ===
@@ -1169,8 +1169,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Research", "History", "Writing"],
         standardRef: "CA-HSS-9-12",
         estimatedMinutes: 45,
-        xpReward: 300,
-        gpReward: 60,
+
+
     },
     {
         id: "hist_9_global",
@@ -1184,8 +1184,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["World History", "Regents", "Civilizations"],
         standardRef: "NY-Regents-Global-I",
         estimatedMinutes: 50,
-        xpReward: 280,
-        gpReward: 55,
+
+
     },
     {
         id: "hist_10_global2",
@@ -1199,8 +1199,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["World History", "Regents", "Modern"],
         standardRef: "NY-Regents-Global-II",
         estimatedMinutes: 55,
-        xpReward: 320,
-        gpReward: 65,
+
+
     },
     {
         id: "hist_11_ushistory",
@@ -1214,8 +1214,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["US History", "Regents", "Government"],
         standardRef: "NY-Regents-US-History",
         estimatedMinutes: 60,
-        xpReward: 350,
-        gpReward: 70,
+
+
     },
     {
         id: "hist_12_economics",
@@ -1229,8 +1229,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["Economics", "Policy", "Analysis"],
         standardRef: "CA-HSS-12-Econ",
         estimatedMinutes: 45,
-        xpReward: 330,
-        gpReward: 66,
+
+
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -1248,8 +1248,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["NACE-Leadership", "Entrepreneurship", "Business"],
         standardRef: "NACE-Career-Readiness",
         estimatedMinutes: 120,
-        xpReward: 1000,
-        gpReward: 250,
+
+
     },
     {
         id: "col_internship",
@@ -1263,8 +1263,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["NACE-Technology", "Programming", "Collaboration"],
         standardRef: "NACE-Tech",
         estimatedMinutes: 90,
-        xpReward: 750,
-        gpReward: 175,
+
+
     },
     {
         id: "col_research",
@@ -1278,8 +1278,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["NACE-Critical-Thinking", "Research", "Writing"],
         standardRef: "NACE-Academic",
         estimatedMinutes: 180,
-        xpReward: 1200,
-        gpReward: 300,
+
+
     },
     {
         id: "col_portfolio",
@@ -1293,8 +1293,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["NACE-Professionalism", "Career", "Presentation"],
         standardRef: "NACE-Prof",
         estimatedMinutes: 60,
-        xpReward: 500,
-        gpReward: 100,
+
+
     },
     {
         id: "col_leadership",
@@ -1308,8 +1308,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["NACE-Leadership", "Teamwork", "Management"],
         standardRef: "NACE-Leadership",
         estimatedMinutes: 75,
-        xpReward: 650,
-        gpReward: 150,
+
+
     },
     {
         id: "col_communication",
@@ -1323,8 +1323,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["NACE-Communication", "Speaking", "Business"],
         standardRef: "NACE-Communication",
         estimatedMinutes: 50,
-        xpReward: 550,
-        gpReward: 120,
+
+
     },
     {
         id: "col_data_analysis",
@@ -1338,8 +1338,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["NACE-Technology", "Data Science", "Analytics"],
         standardRef: "NACE-Quantitative",
         estimatedMinutes: 80,
-        xpReward: 700,
-        gpReward: 160,
+
+
     },
     {
         id: "col_ethics",
@@ -1353,8 +1353,8 @@ export const CONTENT_DB: ContentNode[] = [
         tags: ["NACE-Professionalism", "Ethics", "Decision Making"],
         standardRef: "NACE-Ethics",
         estimatedMinutes: 45,
-        xpReward: 450,
-        gpReward: 90,
+
+
     },
 ];
 

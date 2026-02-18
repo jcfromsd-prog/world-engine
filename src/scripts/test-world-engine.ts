@@ -8,6 +8,7 @@ const testProfile: LearnerProfile = {
     id: "test-user-001",
     name: "Alex",
     currentGrade: 1,
+    currentTier: 'SPROUTS',
     masteryMap: new Map(),
     domainLevels: {
         literacy: 1.0,
@@ -26,8 +27,11 @@ const testProfile: LearnerProfile = {
     interests: ["Space", "Dinosaurs"],
     learningStyle: 'visual',
     goals: ["Become an Astronaut"],
+    traits: new Map(),
+    verifiedCompetencies: [],
     completedMissions: [],
-    genesisPoints: 0,
+    activeContracts: [],
+    totalEarnings: 0,
     calibrationScore: 0
 };
 

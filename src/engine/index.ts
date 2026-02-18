@@ -17,7 +17,7 @@ export {
     getWelcomeBackMessage,
     completeNode,
     hasCompletedNode,
-    addGenesisPoints,
+    recordCompetencyVerification,
     processClientPayment,
     canAccessBounties,
     checkSoloCap,

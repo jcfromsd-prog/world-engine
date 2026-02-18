@@ -38,8 +38,8 @@ const DEFAULT_MISSIONS: Mission[] = [
             verifiedBadgeRequired: false
         },
         rewards: {
-            xp: { logic: 0, creativity: 0, engineering: 0, leadership: 0, nature: 100, social: 0 },
-            genesisPoints: 50
+            competencies: ['nature-observation', 'photosynthesis-basics'],
+            unlocks: ['forest-ecology-201']
         },
         estimatedTime: 10,
         checkpoints: 1
@@ -58,8 +58,8 @@ const DEFAULT_MISSIONS: Mission[] = [
             verifiedBadgeRequired: false
         },
         rewards: {
-            xp: { logic: 250, creativity: 0, engineering: 0, leadership: 0, nature: 0, social: 0 },
-            genesisPoints: 120
+            competencies: ['boolean-logic', 'circuit-design'],
+            unlocks: ['advanced-circuits-301']
         },
         estimatedTime: 25,
         checkpoints: 2
@@ -79,8 +79,8 @@ const DEFAULT_MISSIONS: Mission[] = [
             verifiedBadgeRequired: false
         },
         rewards: {
-            xp: { logic: 0, creativity: 0, engineering: 0, leadership: 0, nature: 0, social: 150 },
-            genesisPoints: 80
+            competencies: ['division-remainders', 'fair-distribution'],
+            unlocks: ['collaborative-math-201']
         },
         estimatedTime: 15,
         checkpoints: 1

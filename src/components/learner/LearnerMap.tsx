@@ -14,14 +14,18 @@ const LEARNER_PROFILE: LearnerProfile = {
     id: "learner-1128",
     name: "Builder One",
     currentGrade: 4,
+    currentTier: 'BUILDERS',
     masteryMap: new Map(),
     domainLevels: { literacy: 3.0, numeracy: 3.0, science: 3.0, social: 3.0, sel: 3.0, career: 3.0 },
     cognitiveState: { focusLevel: 100, frustrationLevel: 0, energyLevel: 100, currentZPD: 0.5 },
     interests: ["Engineering", "Robotics"],
     learningStyle: 'kinesthetic',
     goals: ["Build a Robot"],
+    traits: new Map(),
+    verifiedCompetencies: [],
     completedMissions: [],
-    genesisPoints: 0,
+    activeContracts: [],
+    totalEarnings: 0,
     calibrationScore: 0
 };
 

@@ -4,8 +4,16 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+// reliable env access for both Vite and Node scripts
+const getEnv = (key: string) => {
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+        return import.meta.env[key];
+    }
+    return process.env[key];
+};
+
+const supabaseUrl = getEnv('VITE_SUPABASE_URL') || 'https://your-project.supabase.co';
+const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY') || 'your-anon-key';
 
 // 1. Initialize Circuit Breaker
 import { CircuitBreaker } from '../core/CircuitBreaker';
