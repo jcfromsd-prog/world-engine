@@ -22,15 +22,12 @@ export default class BlueprintErrorBoundary extends Component<Props, State> {
         return { hasError: true, error };
     }
 
-    public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        console.error("Blueprint Crashed:", error, errorInfo);
-        // Telemetry
-        // devTelemetry.track('error', ...)
+    public componentDidCatch(_error: Error, _errorInfo: ErrorInfo) {
+        // Error boundary caught a crash — telemetry integration point
     }
 
     private handleReset = () => {
         this.setState({ hasError: false, error: null });
-        // Ideally reload or clear bad state
     };
 
     public render() {

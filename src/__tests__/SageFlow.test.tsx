@@ -24,14 +24,13 @@ describe('SageFlow User Journey', () => {
         fireEvent.click(startBtn);
 
         // 4. Verify Onboarding Transition
-        // We match "What is your" to avoid issues with nested spans around "Name"
+        // The NAME step heading is "Type your Name" (with Name in a styled span)
         await waitFor(() => {
-            // Check for the headline text part
-            expect(screen.getByText(/What is your/i)).toBeInTheDocument();
+            expect(screen.getByText(/Type your/i)).toBeInTheDocument();
         }, { timeout: 2000 });
 
         // 5. Simulate Typing Name
-        const input = screen.getByPlaceholderText(/Type Name/i);
+        const input = screen.getByPlaceholderText(/Your Name/i);
         fireEvent.change(input, { target: { value: 'Auto-Test-User' } });
 
         // 6. Simulate Pressing ENTER

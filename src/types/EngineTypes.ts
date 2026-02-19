@@ -118,3 +118,93 @@ export const GRADE_LABELS: Record<number, string> = {
     9: "9th Grade (Freshman)", 10: "10th Grade (Sophomore)", 11: "11th Grade (Junior)", 12: "12th Grade (Senior)",
     13: "College Freshman", 14: "College Sophomore", 15: "College Junior", 16: "College Senior",
 };
+
+/* ==========================================================================
+   SIMULATION ENGINE v1.1 — BATCH ORCHESTRATION TYPES
+   ========================================================================== */
+
+export type SimulationStepName = "IDENTITY" | "CONNECT" | "LEARN" | "SOLVE" | "EARN" | "COMPLETE";
+
+export type StressVector = "ADVERSARIAL" | "RAGE_QUIT" | "SLOW_NETWORK" | "REFRESH_MID_FLOW" | "NONE";
+
+export type AgentOutcome = "PASS" | "FAIL" | "ABORT" | "CRASH";
+
+/**
+ * SIMULATION BATCH CONFIG
+ * Defines the parameters for a full autonomous batch run.
+ */
+export interface SimulationBatchConfig {
+    /** Total number of agents to simulate */
+    agentCount: number;
+    /** Target system under test (e.g., "Onboarding", "Marketplace") */
+    target: string;
+    /** Stress vectors to apply across the cohort */
+    stressVectors: StressVector[];
+    /** Persona distribution — keys from USER_PERSONAS, values = count */
+    personaDistribution?: Record<string, number>;
+    /** AbortController signal for emergency stop */
+    signal?: AbortSignal;
+    /** Simulated delay per step in ms (lower = faster runs). Default 200 */
+    stepDelayMs?: number;
+}
+
+/**
+ * SIMULATION PROGRESS
+ * Real-time progress state emitted during a batch run.
+ */
+export interface SimulationProgress {
+    /** Current agent index (1-based) */
+    currentAgent: number;
+    /** Total agents in the batch */
+    totalAgents: number;
+    /** Current agent's persona name */
+    agentName: string;
+    /** Current step the agent is on */
+    currentStep: SimulationStepName;
+    /** Overall batch progress 0.0 to 1.0 */
+    progressPercent: number;
+    /** Estimated time remaining in ms */
+    estimatedRemainingMs: number;
+    /** Agents completed so far */
+    completedCount: number;
+    /** Agents passed so far */
+    passedCount: number;
+    /** Agents failed so far */
+    failedCount: number;
+    /** Whether the batch is still running */
+    isRunning: boolean;
+    /** Whether the batch was aborted */
+    wasAborted: boolean;
+    /** Timestamp when batch started */
+    startedAt: number;
+}
+
+/**
+ * Individual agent simulation result
+ */
+export interface SimulationAgentResult {
+    agentIndex: number;
+    personaKey: string;
+    personaName: string;
+    outcome: AgentOutcome;
+    steps: SimulationStepName[];
+    failedAtStep?: SimulationStepName;
+    durationMs: number;
+    finalTheta: number;
+    logs: string[];
+}
+
+/**
+ * SIMULATION BATCH REPORT
+ * Final summary after a batch completes or is aborted.
+ */
+export interface SimulationBatchReport {
+    config: SimulationBatchConfig;
+    results: SimulationAgentResult[];
+    totalDurationMs: number;
+    passRate: number;
+    failRate: number;
+    abortRate: number;
+    wasAborted: boolean;
+    completedAt: number;
+}

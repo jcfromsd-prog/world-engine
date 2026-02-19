@@ -4,6 +4,8 @@ import { Send, CheckCircle, X, ShieldCheck } from 'lucide-react';
 import type { BountyTask } from './ApprenticeQueue';
 import confetti from 'canvas-confetti';
 
+const MINIMUM_DELIVERABLE_LENGTH = 50;
+
 interface ContractWorkspaceProps {
     task: BountyTask;
     onComplete: () => void;
@@ -14,16 +16,29 @@ export const ContractWorkspace: React.FC<ContractWorkspaceProps> = ({ task, onCo
     const [status, setStatus] = useState<'IDLE' | 'REVIEWING' | 'APPROVED'>('IDLE');
     const [deliverables, setDeliverables] = useState('');
     const [progress, setProgress] = useState(0);
+    const [validationError, setValidationError] = useState('');
 
     const handleSubmit = () => {
-        if (!deliverables.trim()) {
-            alert("Please submit your proof of work (link or description).");
+        if (status !== 'IDLE') return;
+
+        const trimmed = deliverables.trim();
+        setValidationError('');
+
+        if (trimmed.length === 0) {
+            setValidationError('Proof of work is required. Describe what you did or paste a link.');
+            return;
+        }
+
+        if (trimmed.length < MINIMUM_DELIVERABLE_LENGTH) {
+            setValidationError(
+                `Submission too brief (${trimmed.length}/${MINIMUM_DELIVERABLE_LENGTH} chars). ` +
+                'Provide a detailed description or link to demonstrate your work.'
+            );
             return;
         }
 
         setStatus('REVIEWING');
 
-        // Audit Simulation (3 seconds)
         let p = 0;
         const interval = setInterval(() => {
             p += Math.random() * 10;
@@ -32,7 +47,6 @@ export const ContractWorkspace: React.FC<ContractWorkspaceProps> = ({ task, onCo
                 clearInterval(interval);
                 setStatus('APPROVED');
                 triggerCelebration();
-                // Wait for celebration to finish before closing
                 setTimeout(onComplete, 2000);
             }
             setProgress(Math.min(p, 100));
@@ -119,10 +133,20 @@ export const ContractWorkspace: React.FC<ContractWorkspaceProps> = ({ task, onCo
                                 <label className="text-sm font-bold text-slate-200">Proof of Work</label>
                                 <textarea
                                     value={deliverables}
-                                    onChange={(e) => setDeliverables(e.target.value)}
-                                    placeholder="Paste link to artifact or describe your solution..."
-                                    className="w-full h-32 bg-black/30 border border-slate-700 rounded-lg p-4 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors font-mono resize-none"
+                                    onChange={(e) => { setDeliverables(e.target.value); setValidationError(''); }}
+                                    placeholder="Paste link to artifact or describe your solution in detail (min 50 characters)..."
+                                    className={`w-full h-32 bg-black/30 border rounded-lg p-4 text-sm text-white focus:outline-none transition-colors font-mono resize-none ${validationError ? 'border-red-500/70 focus:border-red-400' : 'border-slate-700 focus:border-emerald-500'
+                                        }`}
                                 />
+                                <div className="flex justify-between items-center">
+                                    <span className={`text-[10px] font-mono ${deliverables.trim().length >= MINIMUM_DELIVERABLE_LENGTH ? 'text-emerald-400' : 'text-slate-500'
+                                        }`}>
+                                        {deliverables.trim().length}/{MINIMUM_DELIVERABLE_LENGTH} chars
+                                    </span>
+                                    {validationError && (
+                                        <span className="text-[11px] text-red-400 font-bold">{validationError}</span>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4">
@@ -134,7 +158,11 @@ export const ContractWorkspace: React.FC<ContractWorkspaceProps> = ({ task, onCo
                                 </button>
                                 <button
                                     onClick={handleSubmit}
-                                    className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-lg shadow-emerald-900/20 flex items-center gap-2 transition-all hover:scale-105"
+                                    disabled={deliverables.trim().length < MINIMUM_DELIVERABLE_LENGTH}
+                                    className={`px-6 py-2 text-sm font-bold rounded-lg flex items-center gap-2 transition-all ${deliverables.trim().length >= MINIMUM_DELIVERABLE_LENGTH
+                                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 hover:scale-105'
+                                            : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                        }`}
                                 >
                                     <Send className="w-4 h-4" />
                                     SUBMIT FOR AUDIT
@@ -162,11 +190,11 @@ export const ContractWorkspace: React.FC<ContractWorkspaceProps> = ({ task, onCo
                                 </p>
                             </div>
 
-                            {/* Simulated Terminal Output */}
+                            {/* Review Status Feed */}
                             <div className="max-w-xs mx-auto bg-black/50 p-3 rounded font-mono text-[10px] text-left text-green-400/80 space-y-1">
-                                <div className="opacity-50">&gt; Initiating handshake...</div>
-                                {progress > 30 && <div className="opacity-70">&gt; Validating checksums...</div>}
-                                {progress > 60 && <div className="opacity-90">&gt; Scanning for quality metrics...</div>}
+                                <div className="opacity-50">&gt; Receiving submission...</div>
+                                {progress > 30 && <div className="opacity-70">&gt; Checking format and completeness...</div>}
+                                {progress > 60 && <div className="opacity-90">&gt; Recording deliverable to contract ledger...</div>}
                                 {progress > 90 && <div className="text-emerald-400">&gt; CONTRACT FULFILLED.</div>}
                             </div>
                         </div>

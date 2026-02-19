@@ -19,6 +19,7 @@ import { SagePrep } from "./components/learning/SagePrep";
 import AssessmentModule from "./components/AssessmentModule";
 import { LearnerMap } from "./components/learner/LearnerMap";
 import { WorldEngineDevConsole } from "./components/WorldEngine/DevConsole";
+import { SimulationDashboard } from "./components/SimulationDashboard";
 
 
 import Header from "./components/Header";
@@ -28,6 +29,7 @@ import { ActiveMission } from "./components/engines/ActiveMission";
 import type { LiveMission } from "./lib/MissionGenerator";
 import { supabase } from "./lib/supabase";
 import { RecommendationEngine } from "./services/RecommendationEngine";
+import type { UserProfile as EngineUserProfile, RecommendationResult } from "./types/EngineTypes";
 import { WorldEngine } from "./engines/world-engine/WorldEngine";
 import { SEED_GRAPH } from "./engines/world-engine/KnowledgeGraph";
 import type { LearnerProfile } from "./engines/world-engine/LearnerModel";
@@ -67,7 +69,7 @@ const APP_LEARNER_PROFILE: LearnerProfile = {
 
 
 // --- TYPES ---
-type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP" | "BLUEPRINT_MODE";
+type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP" | "BLUEPRINT_MODE" | "SIMULATION_ENGINE";
 
 
 export interface UserProfile {
@@ -229,14 +231,53 @@ const BreadcrumbHeader: React.FC<{ name: string, grade: string, passion: string,
 /* ==========================================================================
    COMPONENT: ONBOARDING WIZARD (Visual Choice Cards)
    ========================================================================== */
-type OnboardingStep = "NAME" | "GRADE" | "PASSION" | "MATCHING" | "AUTH";
+type OnboardingStep = "NAME" | "GRADE" | "PASSION" | "MATCHING" | "SQUAD_REVEAL" | "AUTH";
+
+const ONBOARDING_STORAGE_KEY = 'onboarding_progress';
+
+interface OnboardingDraft {
+  step: OnboardingStep;
+  name: string;
+  grade: string;
+  passion: string;
+  squad: string;
+}
+
+function loadOnboardingDraft(): OnboardingDraft | null {
+  try {
+    const raw = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<OnboardingDraft> & { savedAt?: number };
+    // TTL: 30 minutes — stale drafts auto-expire
+    const THIRTY_MINUTES = 30 * 60 * 1000;
+    if (parsed.savedAt && Date.now() - parsed.savedAt > THIRTY_MINUTES) {
+      localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+      return null;
+    }
+    if (parsed.step && parsed.name !== undefined) return parsed as OnboardingDraft;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveOnboardingDraft(draft: OnboardingDraft): void {
+  try {
+    localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify({ ...draft, savedAt: Date.now() }));
+  } catch { /* localStorage may be unavailable in some contexts */ }
+}
+
+function clearOnboardingDraft(): void {
+  try { localStorage.removeItem(ONBOARDING_STORAGE_KEY); } catch { /* noop */ }
+}
 
 const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) => void, onCancel: () => void }> = ({ onComplete, onCancel }) => {
-  const [step, setStep] = useState<OnboardingStep>("NAME");
-  const [name, setName] = useState("");
-  const [grade, setGrade] = useState("");
-  const [passion, setPassion] = useState("");
-  const [squad, setSquad] = useState("");
+  const draft = loadOnboardingDraft();
+  const [step, setStep] = useState<OnboardingStep>(draft?.step || "NAME");
+  const [name, setName] = useState(draft?.name || "");
+  const [grade, setGrade] = useState(draft?.grade || "");
+  const [passion, setPassion] = useState(draft?.passion || "");
+  const [squad, setSquad] = useState(draft?.squad || "");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
@@ -261,9 +302,21 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
     if (step === "GRADE") speak(`Nice to meet you, ${name}. What is your experience level?`);
     if (step === "PASSION") speak("Excellent. Now, what mission calls to you?");
     if (step === "MATCHING") speak("Initializing your squad. Stand by.");
+    if (step === "SQUAD_REVEAL") speak(`${name}, meet your squad. Lock in to start your first mission.`);
     if (step === "AUTH") speak("Final Step. Secure your Engine Key to save your progress.");
 
   }, [step, name]);
+
+  // 🛡️ SAFETY GUARD: Warn guests before leaving
+  useEffect(() => {
+    if (step === "SQUAD_REVEAL" || step === "AUTH") {
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+      };
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }
+  }, [step]);
 
   const handleNameSubmit = (e: React.KeyboardEvent) => { if (e.key === "Enter" && name.trim()) transitionTo("GRADE"); };
 
@@ -284,7 +337,7 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
       setTimeout(() => setMatchStatus("FOUND 1 HUMAN MATCH..."), 1000);
       setTimeout(() => setMatchStatus("RECRUITING AI AGENTS TO FILL SQUAD..."), 2000);
       setTimeout(() => {
-        transitionTo("AUTH");
+        transitionTo("SQUAD_REVEAL");
       }, 3500);
     }
   };
@@ -312,20 +365,20 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
 
       if (error) throw error;
 
-      console.log("✅ AUTH SUCCESS:", data.user?.id);
       onComplete({ name, grade, passion, squad, id: data.user?.id });
-    } catch (err: any) {
-      // 2. Fallback: If User Exists, Try Sign In
-      if (err.message?.includes("already registered") || err.message?.includes("User already exists")) {
-        console.log("⚠️ User exists, attempting login...");
+      clearOnboardingDraft();
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      if (errorMessage.includes("already registered") || errorMessage.includes("User already exists")) {
         const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
           email,
           password
         });
 
         if (!loginError && loginData.user) {
-          console.log("✅ LOGIN SUCCESS:", loginData.user.id);
           onComplete({ name, grade, passion, squad, id: loginData.user.id });
+          clearOnboardingDraft();
           return;
         } else {
           setAuthError(loginError?.message || "Login Failed. Check password.");
@@ -333,25 +386,92 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
         }
       }
 
-      console.error("Auth Fail:", err);
-      setAuthError(err.message || "Connection Failed. Try again.");
+      setAuthError(errorMessage || "Connection Failed. Try again.");
     }
   };
 
-  const transitionTo = (nextStep: OnboardingStep) => { setFade(true); setTimeout(() => { setStep(nextStep); setFade(false); }, 300); };
+  const transitionTo = (nextStep: OnboardingStep) => {
+    setFade(true);
+    setTimeout(() => {
+      setStep(nextStep);
+      setFade(false);
+      saveOnboardingDraft({ step: nextStep, name, grade, passion, squad });
+    }, 300);
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in p-6 font-sans">
       <div className="mb-8">
         <BreadcrumbHeader name={name} grade={grade} passion={passion} step={step} />
       </div>
-      <button onClick={onCancel} className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors">✕ ESC</button>
+      <button onClick={() => { clearOnboardingDraft(); onCancel(); }} className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors">✕ ESC</button>
 
       {step === "MATCHING" && (
         <div className="text-center">
           <div className="text-6xl mb-6 animate-bounce">🧬</div>
           <h2 className="text-3xl font-black text-white tracking-widest mb-2">BUILDING SQUAD</h2>
           <p className="text-green-400 font-mono text-sm uppercase animate-pulse">{matchStatus}</p>
+        </div>
+      )}
+
+      {step === "SQUAD_REVEAL" && (
+        <div className={`text-center w-full max-w-2xl transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
+          <div className="text-5xl mb-4">🎯</div>
+          <h1 className="text-3xl md:text-4xl font-black text-white mb-2">Your Squad is <span className="text-emerald-400">Ready</span></h1>
+          <p className="text-zinc-400 text-sm mb-8">You've been matched with teammates who share your mission.</p>
+
+          {/* SQUAD VISUALIZATION */}
+          <div className="bg-zinc-900/80 border border-emerald-500/20 rounded-2xl p-8 mb-8">
+            <h3 className="text-lg font-bold text-emerald-400 mb-6 tracking-wider uppercase">{squad}</h3>
+            <div className="flex justify-center gap-6 mb-6">
+              {/* YOU */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-2xl font-black text-white shadow-lg shadow-blue-500/30">
+                  {name.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-xs font-bold text-blue-400">YOU</span>
+                <span className="text-[10px] text-zinc-500">{name}</span>
+              </div>
+              {/* AI TEAMMATE 1 */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-violet-400 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/30">🤖</div>
+                <span className="text-xs font-bold text-purple-400">AI AGENT</span>
+                <span className="text-[10px] text-zinc-500">Sage-7</span>
+              </div>
+              {/* AI TEAMMATE 2 */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-yellow-400 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/30">🧠</div>
+                <span className="text-xs font-bold text-amber-400">AI MENTOR</span>
+                <span className="text-[10px] text-zinc-500">Oracle-3</span>
+              </div>
+              {/* HUMAN MATCH */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-600 to-green-400 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/30">👤</div>
+                <span className="text-xs font-bold text-emerald-400">HUMAN</span>
+                <span className="text-[10px] text-zinc-500">Matched — Pending</span>
+              </div>
+            </div>
+            <div className="text-[10px] text-zinc-600 font-mono border-t border-zinc-800 pt-4">
+              SQUAD STATUS: ASSEMBLED • FIRST MISSION: READY TO DEPLOY
+            </div>
+          </div>
+
+          {/* THE HOOK — CTA */}
+          <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-4 mb-6 text-left">
+            <div className="flex items-center gap-3 mb-1">
+              <span className="text-lg">🎯</span>
+              <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">First Mission Preview</span>
+            </div>
+            <h4 className="text-sm font-bold text-white">Neural Calibration</h4>
+            <p className="text-xs text-zinc-500">Discover your learning strengths and unlock your personalized path. ~5 min • +50 GP</p>
+          </div>
+          <button
+            onClick={() => transitionTo("AUTH")}
+            className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xl rounded-xl transition-all hover:scale-105 shadow-[0_0_30px_rgba(16,185,129,0.4)]"
+          >
+            🔒 LOCK IN YOUR SQUAD
+          </button>
+          <p className="mt-4 text-zinc-600 text-xs">Create your account to save your squad and start your first mission.</p>
         </div>
       )}
 
@@ -362,6 +482,17 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
             <h2 className="text-2xl md:text-3xl font-bold text-zinc-400 tracking-wide">press <span className="text-blue-400">Enter</span></h2>
           </div>
           <input autoFocus className="relative w-full bg-zinc-900 border border-white/10 rounded-xl px-8 py-6 text-2xl text-center text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 transition-all" placeholder="Your Name... [Enter]" value={name} onChange={e => setName(e.target.value)} onKeyDown={handleNameSubmit} />
+          {name.trim().length > 0 && (
+            <button
+              onClick={() => transitionTo("GRADE")}
+              className="mt-6 px-10 py-4 bg-blue-500 hover:bg-blue-400 text-black font-black text-lg rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(59,130,246,0.4)]"
+            >
+              Continue →
+            </button>
+          )}
+          {name.trim().length === 0 && (
+            <p className="mt-6 text-zinc-600 text-sm animate-pulse">Take your time. Enter your name above when you&apos;re ready.</p>
+          )}
         </div>
       )}
 
@@ -479,14 +610,12 @@ const App: React.FC = () => {
   const worldEngine = React.useMemo(() => new WorldEngine(learnerProfile, SEED_GRAPH), [learnerProfile]);
 
 
-  const [sagePrepContent, setSagePrepContent] = useState<any>(null); // Using any to reuse RecommendationResult structure loosely
+  const [sagePrepContent, setSagePrepContent] = useState<RecommendationResult | null>(null);
 
   const startSagePrep = (mission: LiveMission | Mission) => {
     setActiveMission(mission);
 
-    // Logic to generate card based on UserContext.gradeLevel
-    // Mock user for engine
-    const engineUser = {
+    const engineUser: EngineUserProfile = {
       id: 'current',
       name: userProfile?.name || 'User',
       archetype: 'Explorer',
@@ -497,8 +626,7 @@ const App: React.FC = () => {
       competencies: {}
     };
 
-    // We use the Recommendation Engine to get a "Prep" card
-    const rec = RecommendationEngine.recommendNext(engineUser as any);
+    const rec = RecommendationEngine.recommendNext(engineUser);
     setSagePrepContent(rec);
 
     setAppState("SAGE_PREP");
@@ -608,23 +736,24 @@ const App: React.FC = () => {
       });
       setAppState("MISSION_COMPLETE");
     } else {
-      console.error("Vault Sync Error:", error);
       alert("⚠️ VAULT SYNC DELAYED. Saving locally...\n\nPayment verified.");
     }
   };
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30 overflow-x-hidden">
-      {/* HEADER NAVIGATION */}
-      <div className="fixed top-0 left-0 w-full z-[1000] bg-black/80 backdrop-blur-md border-b border-white/5">
-        <Header
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          walletBalance={userProfile ? `$${userProfile.genesisPoints}` : undefined}
-          onToggleNeural={() => setShowCalibration(true)}
-          onOpenCommandCenter={() => setShowFounderModal(true)}
-        />
-      </div>
+      {/* HEADER NAVIGATION — hidden in full-page dashboard modes */}
+      {appState !== "SIMULATION_ENGINE" && appState !== "WORLD_ENGINE_DEV" && appState !== "BLUEPRINT_MODE" && (
+        <div className="fixed top-0 left-0 w-full z-[1000] bg-black/80 backdrop-blur-md border-b border-white/5">
+          <Header
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            walletBalance={userProfile ? `$${userProfile.genesisPoints}` : undefined}
+            onToggleNeural={() => setShowCalibration(true)}
+            onOpenCommandCenter={() => setShowFounderModal(true)}
+          />
+        </div>
+      )}
 
       {/* ERROR OVERLAY */}
       {error && (
@@ -700,6 +829,13 @@ const App: React.FC = () => {
                     className="px-6 py-6 bg-zinc-900 border border-blue-500/30 text-blue-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
                   >
                     📐 DEV: ARCHITECT BLUEPRINT
+                  </button>
+
+                  <button
+                    onClick={() => setAppState("SIMULATION_ENGINE")}
+                    className="px-6 py-6 bg-zinc-900 border border-red-500/30 text-red-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
+                  >
+                    🧪 DEV: SIMULATION ENGINE v1.1
                   </button>
                 </>
               )}
@@ -777,7 +913,6 @@ const App: React.FC = () => {
         <AssessmentModule
           onClose={() => setAppState("LANDING")}
           onComplete={(data, path) => {
-            console.log("Assessment Complete:", data, path);
 
             // 1. Update Profile Logic (Simulated)
             completeOnboarding({ ...data, grade: data.grade.toString(), passion: path.focus });
@@ -913,6 +1048,19 @@ const App: React.FC = () => {
           onExit={() => setAppState("LANDING")}
           engine={worldEngine}
         />
+      )}
+
+      {/* 🧪 SIMULATION ENGINE v1.1 */}
+      {appState === "SIMULATION_ENGINE" && (
+        <div className="relative">
+          <button
+            onClick={() => setAppState("LANDING")}
+            className="fixed top-4 right-4 z-50 px-4 py-2 bg-zinc-800 border border-white/10 text-zinc-400 hover:text-white rounded-lg font-mono text-xs transition-all"
+          >
+            ← EXIT TO LANDING
+          </button>
+          <SimulationDashboard />
+        </div>
       )}
     </div>
   );

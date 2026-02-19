@@ -81,6 +81,9 @@ export const ApprenticeQueue: React.FC<ApprenticeQueueProps> = ({ profile, onPro
     const [activeWorkspaceTask, setActiveWorkspaceTask] = React.useState<BountyTask | null>(null);
 
     const handleAcceptTask = (task: BountyTask) => {
+        // 0. Idempotency Guard: Prevent duplicate accepts
+        if (acceptedContracts.includes(task.id)) return;
+
         // 1. Atomic Check: Calibration Score
         if (profile.calibrationScore < 90) {
             alert(`🚫 CONTRACT REJECTED\n\nTRUST SCORE TOO LOW.\nRequired: 90%\nCurrent: ${profile.calibrationScore}%\n\nComplete more verified missions to increase trust.`);
@@ -133,13 +136,17 @@ export const ApprenticeQueue: React.FC<ApprenticeQueueProps> = ({ profile, onPro
             { colors: ['#10b981', '#fbbf24'], particleCount: 200 } // Emerald + Gold
         );
 
-        // 2. Update Profile & Earnings
+        // 2. Update Profile & Earnings (ONLY for CASH reward type)
         if (payoutResult.success && payoutResult.updatedProfile) {
-            const rewardCash = parseFloat(activeWorkspaceTask.rewardValue.replace('$', ''));
             const finalProfile = { ...payoutResult.updatedProfile };
 
-            if (!isNaN(rewardCash)) {
-                finalProfile.totalEarnings = (finalProfile.totalEarnings || 0) + rewardCash;
+            if (activeWorkspaceTask.rewardType === 'CASH') {
+                const cashMatch = activeWorkspaceTask.rewardValue.match(/\$([\d.]+)/);
+                const rewardCash = cashMatch ? parseFloat(cashMatch[1]) : 0;
+
+                if (rewardCash > 0 && !isNaN(rewardCash)) {
+                    finalProfile.totalEarnings = (finalProfile.totalEarnings || 0) + rewardCash;
+                }
             }
 
             // Sync to parent
@@ -177,6 +184,24 @@ export const ApprenticeQueue: React.FC<ApprenticeQueueProps> = ({ profile, onPro
                     Accept real-world contracts. Prove your competence. Get paid.
                 </p>
             </header>
+
+            {/* WARM DEMANDER: Empty state for users below all bounty tiers */}
+            {BOUNTY_LIST.filter(t => !completedContracts.includes(t.id)).every(t => userTierLevel < t.tier) && (
+                <div className="mb-6 p-6 bg-blue-950/30 border border-blue-500/20 rounded-xl text-center">
+                    <div className="text-3xl mb-3">🌱</div>
+                    <h3 className="text-lg font-bold text-blue-300 mb-2">
+                        Building Your Foundation
+                    </h3>
+                    <p className="text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+                        These contracts require verified skills you're still developing.
+                        That's not a wall — it's a path. Complete missions in the Academy
+                        to earn competencies and unlock real opportunities here.
+                    </p>
+                    <div className="mt-4 text-[10px] text-slate-500 font-mono uppercase tracking-wider">
+                        Current Tier: {profile.currentTier} • Next unlock at Tier {Math.min(...BOUNTY_LIST.map(t => t.tier))}
+                    </div>
+                </div>
+            )}
 
             <div className="space-y-4">
                 {BOUNTY_LIST.map((task) => {
@@ -270,7 +295,7 @@ export const ApprenticeQueue: React.FC<ApprenticeQueueProps> = ({ profile, onPro
                                         className={`mt-4 px-4 py-2 rounded text-sm font-bold flex items-center gap-2 transition-colors ${isLocked
                                             ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
                                             : isActive
-                                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20'
+                                                ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
                                                 : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20'
                                             }`}
                                     >
