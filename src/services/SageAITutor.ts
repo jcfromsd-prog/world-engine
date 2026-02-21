@@ -6,7 +6,7 @@
 import { z } from "zod";
 import { getGeminiModel } from "./GeminiService";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
-import { StructuredOutputParser } from "langchain/output_parsers";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import type { ContentNode, BloomLevel } from "../types/EngineTypes";
 
 export type HintLevel = "NUDGE" | "SCAFFOLD" | "DIRECT" | "SOLUTION";
