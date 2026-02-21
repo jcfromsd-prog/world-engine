@@ -8,11 +8,8 @@ import type {
     MasteryMap,
     MasteryGap
 } from './IntakeRegistry';
-import { SquadOrchestrator } from '../../engines/intake/SquadOrchestrator';
-import { PurposeLedger } from '../../services/PurposeLedger';
 
 export class IntakeEngine {
-    private currentQuestions: DiagnosticQuestion[] = [];
     private subjectLevels: Record<Subject, number> = { math: 5, ela: 5, logic: 5 }; // Start at grade 5
     private results: { questionId: string, correct: boolean }[] = [];
 
