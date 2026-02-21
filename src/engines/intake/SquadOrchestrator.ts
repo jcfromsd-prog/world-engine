@@ -59,6 +59,18 @@ export class SquadOrchestrator {
      * Enforcing Law 3: Competence Through Evidence
      */
     private static RUBRIC_REGISTRY: Record<string, { criteria: string, validate: (input: string) => boolean }> = {
+        'CCSS.MATH.1.OA.A.1': {
+            criteria: 'Use addition and subtraction within 20 to solve a contextual word problem by identifying the quantities and number sentence.',
+            validate: (input: string) => {
+                const normalized = input.toLowerCase().trim();
+                // Robust Regex: Matches any "X + Y = Z" or "X - Y = Z" within Grade 1 scope (0-20)
+                const equationMatch = normalized.match(/(\d+)\s*[+-]\s*(\d+)\s*=\s*(\d+)/);
+                if (!equationMatch) return false;
+                const [, left, right, result] = equationMatch.map(Number);
+                if (left > 20 || right > 20 || result > 20) return false;
+                return result === (left + right) || result === (left - right);
+            }
+        },
         'CCSS.MATH.4.NBT.A.1': {
             criteria: 'Demonstrate that a digit in one place represents ten times its right-side neighbor.',
             validate: (input) => {
