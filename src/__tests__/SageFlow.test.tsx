@@ -26,20 +26,23 @@ describe('SageFlow User Journey', () => {
         // 4. Verify Onboarding Transition
         // The NAME step heading is "Type your Name" (with Name in a styled span)
         await waitFor(() => {
-            expect(screen.getByText(/Type your/i)).toBeInTheDocument();
+            expect(screen.getByText(/What is 12 x 12\?/i)).toBeInTheDocument();
         }, { timeout: 2000 });
 
-        // 5. Simulate Typing Name
-        const input = screen.getByPlaceholderText(/Your Name/i);
-        fireEvent.change(input, { target: { value: 'Auto-Test-User' } });
+        // 5. Simulate Answering Math
+        fireEvent.click(screen.getByText(/144/i));
 
-        // 6. Simulate Pressing ENTER
-        fireEvent.keyDown(input, { key: 'Enter', code: 'Enter', charCode: 13 });
+        await waitFor(() => {
+            expect(screen.getByText(/DOMAIN: ELA • LEVEL 4/i)).toBeInTheDocument();
+        }, { timeout: 2000 });
+
+        // 6. Simulate Answering ELA
+        fireEvent.click(screen.getByText(/Quick/i));
 
         // 7. Verify Transition to Graduation/Calibration
         // Match "Calibrate Your Engine" (might be split across elements, so match unique word)
         await waitFor(() => {
-            expect(screen.getByText(/Calibrate/i)).toBeInTheDocument();
+            expect(screen.getByText(/DOMAIN: LOGIC • LEVEL 4/i)).toBeInTheDocument();
         }, { timeout: 2000 });
 
         // Test Passed if we reach here

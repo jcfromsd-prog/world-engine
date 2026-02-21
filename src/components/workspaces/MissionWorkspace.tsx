@@ -1,45 +1,60 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { SquadOrchestrator } from '../../engines/intake/SquadOrchestrator';
 
 interface MissionWorkspaceProps {
     mission: any;
-    onComplete: () => void;
+    onComplete: (qualityScore: number) => void;
     onCancel: () => void;
+    userGap?: string; // Passed from App state to allow contextual Sage comms
 }
 
-export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onComplete, onCancel }) => {
+export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onComplete, onCancel, userGap }) => {
     const [activeTab, setActiveTab] = useState<'BRIEFING' | 'WORKBENCH'>('BRIEFING');
     const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [feedback, setFeedback] = useState<string | null>(null);
+    const [squadMessage, setSquadMessage] = useState<{ sender: string, text: string } | null>(null);
+    const idleTimer = useRef<NodeJS.Timeout | null>(null);
 
-    // SIMULATED AI GRADER (The Brain)
-    const calculateQuality = useCallback((input: string) => {
-        let score = 0;
-        // 1. Length Check
-        if (input.length > 20) score += 30;
-        if (input.length > 50) score += 30;
+    // TRIGGER 1: Mission Start (Sage-7)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSquadMessage({
+                sender: 'SAGE-7',
+                text: `Calibration mission engaged: ${mission.title}. ${userGap ? `Targeting identified gap: ${userGap}.` : ''} Initialize Step 1.`
+            });
+            // Auto-clear after 8s
+            setTimeout(() => setSquadMessage(null), 8000);
+        }, 500);
 
-        // 2. Keyword Check (Context Aware)
-        const lower = input.toLowerCase();
-        if (mission.category === 'CODING' && (lower.includes('function') || lower.includes('return') || lower.includes('var') || lower.includes('const'))) score += 40;
-        if (mission.category === 'SCIENCE' && (lower.includes('observe') || lower.includes('measure') || lower.includes('fail') || lower.includes('data'))) score += 40;
-        if (mission.category === 'CREATIVE' && (lower.includes('feel') || lower.includes('color') || lower.includes('story') || lower.includes('create'))) score += 40;
+        return () => clearTimeout(timer);
+    }, [mission.title, userGap]);
 
-        return Math.min(score, 100); // Cap at 100
-    }, [mission.category]);
+    // TRIGGER 2: Idle > 90s (Sage-7)
+    useEffect(() => {
+        const resetIdle = () => {
+            if (idleTimer.current) clearTimeout(idleTimer.current);
+            idleTimer.current = setTimeout(() => {
+                setSquadMessage({
+                    sender: 'SAGE-7',
+                    text: `Efficiency drop detected. Hint: Follow the structure in Intel Data. Focus on ${mission.category === 'CODING' ? 'syntax precision' : 'data alignment'}.`
+                });
+                setTimeout(() => setSquadMessage(null), 8000);
+            }, 90000);
+        };
 
-    // LIVE QUALITY SCORE (Updates as user types)
-    const liveScore = useMemo(() => calculateQuality(content), [content, calculateQuality]);
+        resetIdle();
+        return () => { if (idleTimer.current) clearTimeout(idleTimer.current); };
+    }, [content, mission.category]);
 
-    // Get color and label based on score
-    const getScoreInfo = (score: number) => {
-        if (score >= 70) return { color: 'bg-green-500', label: 'Ready!', textColor: 'text-green-400' };
-        if (score >= 50) return { color: 'bg-yellow-500', label: 'Almost...', textColor: 'text-yellow-400' };
-        if (score >= 30) return { color: 'bg-orange-500', label: 'Keep going', textColor: 'text-orange-400' };
-        return { color: 'bg-zinc-600', label: 'Start typing...', textColor: 'text-zinc-500' };
-    };
+    // SIMULATED AI GRADER (The Brain) - DEPRECATED: Moving to SquadOrchestrator Rubrics
+    // const calculateQuality = useCallback((input: string) => { ... });
 
-    const scoreInfo = getScoreInfo(liveScore);
+    const scoreInfo = useMemo(() => {
+        if (!content.trim()) return { color: 'bg-zinc-600', label: 'IDLE', textColor: 'text-zinc-500' };
+        return { color: 'bg-emerald-500', label: 'DRAFT READY', textColor: 'text-emerald-400' };
+    }, [content]);
+
+    const liveScore = content.trim() ? 100 : 0;
 
     const uplinkData = (data: string) => {
         setContent(prev => {
@@ -53,24 +68,24 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
         if (!content.trim()) return;
 
         setIsSubmitting(true);
-        setFeedback(null); // Clear previous hints
+        setSquadMessage(null);
 
-        // SIMULATE AI THINKING TIME
+        // TRIGGER 3: Submission (Oracle-3) - Enhanced Verifier
         setTimeout(() => {
-            const score = calculateQuality(content);
+            const { passed, score, feedback } = SquadOrchestrator.evaluateSubmission(mission.standardId || mission.standard || 'DEFAULT', content);
             setIsSubmitting(false);
 
-            if (score < 50) {
-                // COACHING MODE (Pedagogical Feedback)
-                let tip = "Good start! But you need more detail.";
-                if (mission.category === 'CODING') tip = "Remember to check your variables!";
-                if (mission.category === 'SCIENCE') tip = "More data needed!";
-                if (mission.category === 'CREATIVE') tip = "Paint with words!";
-                if (content.length < 20) tip = "Too short! Expand your entry.";
-                setFeedback(tip);
+            if (!passed) {
+                setSquadMessage({
+                    sender: 'ORACLE-3',
+                    text: feedback
+                });
             } else {
-                // SUCCESS MODE (Legendary Validation)
-                onComplete();
+                setSquadMessage({
+                    sender: 'ORACLE-3',
+                    text: feedback
+                });
+                setTimeout(() => onComplete(score), 2000);
             }
         }, 1500);
     };
@@ -212,17 +227,27 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
 
                                 <textarea
                                     value={content}
-                                    onChange={(e) => { setContent(e.target.value); setFeedback(null); }}
+                                    onChange={(e) => { setContent(e.target.value); }}
                                     className="flex-1 bg-transparent p-6 text-zinc-300 font-mono focus:outline-none resize-none text-lg leading-relaxed"
-                                    placeholder={mission.category === 'CODING' ? '// FUNCTION SPECIFICATION\n// ========================\n// Name: \n// Input: \n// Output: \n// Logic:\n\nfunction solve() {\n  // Your code here\n}' : mission.category === 'SCIENCE' ? '# FIELD REPORT\n## Executive Summary:\n\n## Observations & Data Points:\n\n## Analysis & Recommendations:\n' : mission.category === 'CREATIVE' ? '# NARRATIVE DRAFT\n## Title:\n\n## Opening Hook:\n\n## Development:\n\n## Resolution:\n' : '# SUBMISSION\n## Summary:\n\n## Details:\n\n## Conclusion:\n'}
+                                    placeholder={mission.category === 'CODING' ? '// Name: \n// Input: \n// Output: \n// Logic:' : '# FIELD REPORT\n'}
                                     spellCheck="false"
                                 />
 
-                                {feedback && (
-                                    <div className="absolute bottom-24 left-6 right-6 bg-amber-900/95 border border-amber-500/50 text-white p-4 rounded-xl backdrop-blur-md shadow-xl animate-bounce-in">
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-2xl">💡</span>
-                                            <div><h4 className="font-bold text-amber-300 text-xs uppercase">Coach's Feedback</h4><p className="text-sm">{feedback}</p></div>
+                                {squadMessage && (
+                                    <div className="absolute bottom-24 left-6 right-6 bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex flex-col items-center">
+                                                <div className={`w-10 h-10 rounded bg-slate-800 border flex items-center justify-center font-black text-[10px] ${squadMessage.sender.startsWith('SAGE') ? 'border-purple-500 text-purple-400' : 'border-emerald-500 text-emerald-400'}`}>
+                                                    {squadMessage.sender.split('-')[0]}
+                                                </div>
+                                                <div className="text-[8px] font-mono text-slate-500 mt-1">{squadMessage.sender.split('-')[1]}</div>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-[10px] font-black tracking-widest text-slate-500 uppercase mb-1">Incoming Transmission</h4>
+                                                <p className="text-sm font-mono text-slate-200 leading-relaxed">
+                                                    {squadMessage.text}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -235,8 +260,8 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                                         <span className={`text-xs font-mono ${scoreInfo.textColor} min-w-[80px] text-right`}>{scoreInfo.label}</span>
                                     </div>
                                     <div className="flex justify-end">
-                                        <button onClick={handleSubmit} disabled={isSubmitting || !content.trim()} className={`px-8 py-3 rounded-xl font-bold uppercase tracking-widest transition-all ${content.trim() ? "bg-green-500 text-black hover:bg-green-400 hover:scale-105" : "bg-zinc-800 text-zinc-500 cursor-not-allowed"}`}>
-                                            {isSubmitting ? "Verifying Output..." : "Submit for Verification"}
+                                        <button onClick={handleSubmit} disabled={isSubmitting || !content.trim()} className={`px-8 py-3 rounded-xl font-bold uppercase tracking-widest transition-all ${content.trim() ? "bg-emerald-500 text-black hover:bg-emerald-400" : "bg-zinc-800 text-zinc-500"}`}>
+                                            {isSubmitting ? "Validing..." : "Commit Artifact"}
                                         </button>
                                     </div>
                                 </div>

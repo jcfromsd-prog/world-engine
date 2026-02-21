@@ -1,3 +1,5 @@
+import { getGeminiModel } from './GeminiService';
+import { HumanMessage, SystemMessage, AIMessage } from "@langchain/core/messages";
 
 export interface ChatMessage {
     role: 'user' | 'model';
@@ -7,7 +9,12 @@ export interface ChatMessage {
 export const SageService = {
     async sendMessage(apiKey: string, history: ChatMessage[], newMessage: string, context: string): Promise<string> {
         try {
-            // System Prompt Injection (Gemini doesn't have system role in v1beta always, so we prepend context)
+            const model = getGeminiModel(0.7, apiKey);
+            if (!model) {
+                return "Neural Link Unstable. API Key missing.";
+            }
+
+            // System Prompt Injection
             const systemContext = `
             ### IDENTITY & CORE PURPOSE
             You are SAGE, the Neural Guardian of the "World Engine" at MyBestPurpose.com. 
@@ -41,46 +48,23 @@ export const SageService = {
             ${context}
             `;
 
-            // Prepare history
-            // We append the system context to the very first message if possible, or just treat it as a preamble
-            const contents = history.map(msg => ({
-                role: msg.role,
-                parts: msg.parts
-            }));
+            // Convert history to LangChain format
+            const messages = [
+                new SystemMessage(systemContext),
+                ...history.map(msg =>
+                    msg.role === 'user'
+                        ? new HumanMessage(msg.parts[0].text)
+                        : new AIMessage(msg.parts[0].text)
+                ),
+                new HumanMessage(newMessage)
+            ];
 
-            // Add the new message
-            // Note: For best results with "System Prompt" in simple API, we often put it in the last user message or first. 
-            // Let's prepend to the latest message for strong context adherence.
-            const finalPrompt = `${systemContext}\n\nUSER QUERY: ${newMessage}`;
-
-            contents.push({
-                role: 'user',
-                parts: [{ text: finalPrompt }]
-            });
-
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    contents: contents
-                })
-            });
-
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || 'Gemini API Error');
-            }
-
-            const data = await response.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-            return text || "I am processing a massive data stream. Stand by.";
+            const response = await model.invoke(messages);
+            return typeof response.content === 'string' ? response.content : "I am processing a massive data stream. Stand by.";
 
         } catch (error) {
             console.error("Sage Service Error:", error);
-            return "Neural Link Unstable. Check API Key configuration.";
+            return "Neural Link Unstable. Check API Key configuration or Model availability.";
         }
     }
 };

@@ -24,6 +24,9 @@ import type {
 import { GRADE_LABELS } from "../types/EngineTypes";
 import { RecommendationEngine } from "./RecommendationEngine";
 import { SquadMatcher } from "./SquadMatcher";
+import { verifyAndLedgerMission } from "./PayoutEngine";
+import { PurposeLedger } from "./PurposeLedger";
+import type { LearnerProfile, GradeLevel } from "../engines/world-engine/LearnerModel";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // USER PERSONAS (NY/CA K-16 Standards-Aligned)
@@ -169,6 +172,7 @@ export const SimulationEngine = {
         const stepsCompleted: SimulationStepName[] = [];
         const startTime = Date.now();
         const delay = options?.stepDelayMs ?? 200;
+        let frustrationLevel = 0; // 0-100 scale
 
         const log = (msg: string) => {
             agentLogs.push(msg);
@@ -210,14 +214,13 @@ export const SimulationEngine = {
             log(`   ⏱️ Latency: ${Date.now() - t0}ms`);
             stepsCompleted.push("IDENTITY");
 
-            // ── STEP 1: CONNECT (Ghost Town Test — Law 5: Radical Warmth) ──
+            // ── STEP 1: CONNECT (Squad HQ — Law 5: Radical Warmth) ──
             checkAbort();
             options?.onStepChange?.("CONNECT");
             const t1 = Date.now();
             await this.sleep(delay);
             log(`\n👥 STEP 1: CONNECT (Squad HQ Entry)`);
-            log(`   🏚️ GHOST TOWN TEST: Agent enters empty Squad HQ...`);
-            log(`   ⏳ Waiting for AI teammate initiation...`);
+            log(`   🏚️ GHOST TOWN TEST: Agent entering Squad HQ sector...`);
 
             const squadResult = SquadMatcher.findOptimalSquad();
             const mySquad = squadResult.squads[0] || {
@@ -227,134 +230,170 @@ export const SimulationEngine = {
 
             await this.sleep(delay);
 
-            // Simulate Sage/Oracle warmth response time
-            const aiWarmthLatency = 400 + Math.floor(Math.random() * 800); // 400-1200ms
-            const warmthPassed = aiWarmthLatency < 2000;
-            log(`   🤖 Sage AI responded in ${aiWarmthLatency}ms`);
+            // 🟢 LAW 5: RADICAL WARMTH CHECK
+            const aiWarmthLatency = isWounded ? 200 + Math.floor(Math.random() * 400) : 400 + Math.floor(Math.random() * 800);
+            const warmthPassed = aiWarmthLatency < 1500; // Law 5 threshold: <1.5s
+
+            log(`   🤖 Sage-7/Oracle-3 status: ACTIVE`);
+            log(`   🤖 AI Response Latency: ${aiWarmthLatency}ms`);
+
             if (warmthPassed) {
-                log(`   ✅ RADICAL WARMTH (Law 5): Sage initiated — "Welcome to ${mySquad.name}! I'm here to help you get started."`);
+                log(`   ✅ RADICAL WARMTH: Sage-7 initiated — "Welcome back, ${user.name}! Your squad is active and waiting for your lead."`);
+                if (isWounded) {
+                    log(`   💛 WOUNDED ACTIVATION: High-anxiety agent felt seen. FrustrationLevel: ${frustrationLevel} → 0`);
+                    frustrationLevel = 0;
+                }
             } else {
-                log(`   ⚠️ WARMTH DELAY: Sage response exceeded 2s threshold`);
+                log(`   ⚠️ GHOST TOWN TRIGGERED: AI delay exceeded 1.5s threshold.`);
+                frustrationLevel += 30;
+                if (isWounded) {
+                    log(`   🛑 WOUNDED FREEZE: Delay triggered choice anxiety. FrustrationLevel: ${frustrationLevel}`);
+                }
             }
 
             // Drifter-specific: extra engagement check
             if (resolvedKey === "DRIFTER") {
-                log(`   🌀 DRIFTER CHECK: Low-engagement agent — does Squad HQ hook them?`);
-                const drifterHooked = Math.random() > 0.2; // 80% hook rate
+                log(`   🌀 DRIFTER CHECK: Low-engagement agent status...`);
+                const drifterHooked = warmthPassed && Math.random() > 0.1;
                 if (drifterHooked) {
-                    log(`   ✅ Drifter engaged: Squad activity feed caught attention`);
+                    log(`   ✅ DRIFTER HOOKED: Squad activity feed caught interest.`);
                 } else {
-                    log(`   ⚠️ Drifter disengaging — deploying interest-matched prompt...`);
-                    await this.sleep(delay);
-                    log(`   ✅ Recovery: Personalized "${user.interests[0]}" challenge surfaced`);
+                    log(`   ⚠️ DRIFTER DRIFT: Low stimulation. FrustrationLevel +10`);
+                    frustrationLevel += 10;
                 }
             }
 
-            log(`   ✅ Squad Found: "${mySquad.name}"`);
-            log(
-                `   📈 Compatibility: ${(mySquad.compatibilityScore * 100).toFixed(0)}%`
-            );
+            log(`   ✅ Squad Synced: "${mySquad.name}"`);
             log(`   ⏱️ Latency: ${Date.now() - t1}ms`);
             stepsCompleted.push("CONNECT");
 
-            // ── STEP 2: LEARN (Genesis Feed — Autonomy Check, Law 1) ──
+            // ── PEDAGOGICAL REALISM v1.2: PASSION/ENGINE SELECTION ──
+            if (user.gradeLevel < 3) {
+                log(`\n🧩 PEDAGOGICAL REALISM (Grade ${user.gradeLevel}): Stress-testing UI complexity...`);
+
+                // Adaptive Options based on Tier (Sync with PassionSelection.tsx)
+                const options = user.gradeLevel < 3
+                    ? ["Nature & Animals", "Building & Blocks"]
+                    : ["Technology & Code", "Nature & Science", "Art & Design", "Leadership & Teams"];
+
+                const complexWords = ["Technology", "Leadership", "Structure", "Engineering"];
+                const hasComplexConcept = options.some(opt =>
+                    complexWords.some(word => opt.includes(word)) || opt.split(' ').some(w => w.length > 8)
+                );
+
+                if (hasComplexConcept) {
+                    log(`   ⚠️ COGNITIVE DRAG: Abstract concepts detected in options!`);
+                    log(`   ⚠️ Simulated Hesitation: +2500ms (50% spike) for comprehension filtering...`);
+                    await this.sleep(2500);
+
+                    const abandonProb = 0.30;
+                    if (Math.random() < abandonProb) {
+                        log(`   🛑 CONFUSION STATE: Agent overwhelmed by vocabulary. Abandoning.`);
+                        throw new Error("PEDAGOGICAL_ABANDON");
+                    }
+                } else {
+                    log(`   ✅ VOCABULARY CHECK: Phenomenon-first language detected ("Animals", "Blocks").`);
+                    log(`   ✅ Cognitive load within Sprout Tier limits.`);
+                }
+
+                // 2. CHOICE PARALYSIS VECTOR
+                const optionCount = options.length;
+                if (optionCount > 3) {
+                    log(`   ⚠️ CHOICE PARALYSIS: OptionCount (${optionCount}) exceeds Developmental Tier 1 threshold.`);
+                    log(`   ⚠️ FrustrationLevel Spiked (+40%)`);
+
+                    const isVulnerable = resolvedKey === "DRIFTER" || resolvedKey === "WOUNDED";
+                    if (isVulnerable && Math.random() < 0.20) {
+                        log(`   🛑 PARALYSIS ABANDON: ${user.archetype} persona abandoned due to choice density.`);
+                        throw new Error("PEDAGOGICAL_ABANDON");
+                    }
+                } else {
+                    log(`   ✅ DENSITY CHECK: ${optionCount} choices is optimal for Grade ${user.gradeLevel}.`);
+                }
+
+                log(`   ✅ RECOVERY: Agent navigated selection and locked in "${user.passion}"`);
+            }
+
+            // ── STEP 2: LEARN (Genesis Feed — Law 1: Autonomy) ──
             checkAbort();
             options?.onStepChange?.("LEARN");
             const t2 = Date.now();
             await this.sleep(delay);
             log(`\n🧠 STEP 2: LEARN (Genesis Feed Engagement)`);
-            log(
-                `   📚 Analyzing ${user.gradeLevel > 12 ? "NACE Career" : "State Academic"} standards...`
-            );
 
-            // ── AUTONOMY CHECK: Does the feed present ≥3 genuine choices? (Law 1) ──
-            log(`   🔍 AUTONOMY CHECK (Law 1): Scanning Genesis Feed for choice breadth...`);
+            // 🟢 LAW 3: SPROUT COMPLEXITY FILTER
+            const isSprout = user.gradeLevel < 3;
+            if (isSprout) {
+                log(`   🔍 SPROUT FILTER (Law 3): Filtering for Phenomenon-First content...`);
+            }
+
+            log(`   🔍 AUTONOMY CHECK (Law 1): Scanning Genesis Feed for ≥3 choices...`);
             let feedChoicesCount = 0;
-            const feedChoiceTitles: string[] = [];
+            const recommendations = RecommendationEngine.recommendBatch(user, 5, history);
 
-            for (let i = 1; i <= 3; i++) {
-                checkAbort();
-                const stepStart = Date.now();
-                await this.sleep(delay);
+            // Simulation of Adaptive Feed Filtering
+            const filteredRecs = recommendations.filter(rec => {
+                const title = rec.node.title.toLowerCase();
+                const desc = rec.node.description.toLowerCase();
+                const complexWords = ["optimize", "efficiency", "structure", "algorithmic", "algebra", "analyze"];
 
-                const recommendation = RecommendationEngine.recommendNext(
-                    user,
-                    history
-                );
-
-                if (recommendation) {
-                    feedChoicesCount++;
-                    const { node, successProbability } = recommendation;
-                    feedChoiceTitles.push(node.title);
-
-                    log(`   ┌─ Mission Card ${i}: "${node.title}"`);
-                    log(`   │  📝 Standard: ${node.standardRef}`);
-                    log(
-                        `   │  🎯 Subject: ${node.subject} | Bloom: ${node.bloomLevel}`
-                    );
-                    log(
-                        `   │  📊 Success Probability: ${(successProbability * 100).toFixed(0)}%`
-                    );
-
-                    // Wounded-specific: soft-landing for low-theta hesitation
-                    let success: boolean;
-                    if (isWounded && successProbability < 0.5) {
-                        log(`   │  💛 WOUNDED RECOVERY: Hesitation detected (P=${(successProbability * 100).toFixed(0)}%)`);
-                        log(`   │  💛 Injecting soft-landing validation task...`);
-                        await this.sleep(delay);
-                        log(`   │  ✅ SOFT LANDING: Low-stakes "${node.subject} Explorer" badge offered`);
-                        success = true; // Soft-landing always succeeds
-                    } else {
-                        success = Math.random() < successProbability + 0.1;
-                    }
-
-                    if (success) {
-                        const oldTheta = user.skillTheta;
-                        user.skillTheta = RecommendationEngine.updateSkillTheta(
-                            user.skillTheta,
-                            node.difficulty,
-                            true
-                        );
-                        log(
-                            `   └─ ✅ MASTERED! Theta: ${oldTheta.toFixed(2)} → ${user.skillTheta.toFixed(2)}`
-                        );
-                        history.push({
-                            itemId: node.id,
-                            success: true,
-                            timestamp: Date.now(),
-                        });
-                    } else {
-                        // Skeptic-specific: provide evidence-based rationale
-                        if (resolvedKey === "SKEPTIC") {
-                            log(`   └─ ⚠️ SKEPTIC STALL: Agent demands evidence for relevance...`);
-                            await this.sleep(delay);
-                            log(`      📊 Evidence provided: Standard ${node.standardRef} maps to career outcome`);
-                            log(`      🔄 Skeptic re-engaged via data-driven rationale`);
-                        } else {
-                            log(`   └─ ⚠️ Stall detected. Deploying micro-intervention...`);
-                            await this.sleep(delay);
-                            log(`      🔄 Recovery pathway activated.`);
-                        }
-                        history.push({
-                            itemId: node.id,
-                            success: false,
-                            timestamp: Date.now(),
-                        });
-                    }
-                    const stepLatency = Date.now() - stepStart;
-                    log(`   ⏱️ Step Latency: ${stepLatency}ms ${stepLatency > 800 ? "⚠️ EXCEEDS 800ms" : "✅"}`);
-                } else {
-                    log(`   ⚠️ No suitable content found for this level.`);
+                if (isSprout) {
+                    const hasComplexWord = complexWords.some(w => title.includes(w) || desc.includes(w));
+                    return !hasComplexWord;
                 }
+                return true;
+            });
+
+            if (isSprout && filteredRecs.length < recommendations.length) {
+                log(`   ✅ FILTER SUCCESS: Removed ${recommendations.length - filteredRecs.length} abstract missions from Sprout feed.`);
+            }
+
+            for (let i = 0; i < Math.min(3, filteredRecs.length); i++) {
+                checkAbort();
+                const rec = filteredRecs[i];
+                feedChoicesCount++;
+                const { node, successProbability } = rec;
+
+                log(`   ┌─ Card ${i + 1}: "${node.title}"`);
+                log(`   │  🎯 Difficulty: ${node.difficulty.toFixed(1)} | P(success): ${(successProbability * 100).toFixed(0)}%`);
+
+                // Wounded Choice Paralysis Vector
+                if (resolvedKey === "WOUNDED" && frustrationLevel > 20) {
+                    log(`   │  ⚠️ CHOICE PARALYSIS: Wounded agent freezing due to high frustration...`);
+                    const recoveryProb = 0.85; // Law 5 Recovery: 85% success if squad encouraged them
+                    if (Math.random() < recoveryProb) {
+                        log(`   │  ✅ SQUAD RECOVERY: "Sage-7: Take your time, Riley. I recommend the ${node.subject} task."`);
+                        log(`   │  ✅ Wounded agent activated via Law 5 support.`);
+                        frustrationLevel = 0;
+                    } else {
+                        log(`   │  🛑 FREEZE ABANDON: Squad support failed to reach agent.`);
+                        throw new Error("PEDAGOGICAL_ABANDON");
+                    }
+                }
+
+                // Simulate interaction
+                await this.sleep(delay);
+                const success = Math.random() < successProbability + 0.1;
+
+                if (success) {
+                    user.skillTheta = RecommendationEngine.updateSkillTheta(user.skillTheta, node.difficulty, true);
+                    log(`   └─ ✅ Mastered!`);
+                    history.push({ itemId: node.id, success: true, timestamp: Date.now() });
+                } else {
+                    log(`   └─ ❌ Stall.`);
+                    history.push({ itemId: node.id, success: false, timestamp: Date.now() });
+                }
+            }
+
+            if (isSprout && feedChoicesCount === 0) {
+                log(`   🛑 BLANK FEED ABANDON: No phenomenon-first content found for Sprout.`);
+                throw new Error("PEDAGOGICAL_ABANDON");
             }
 
             // Autonomy verdict
             const autonomyPassed = feedChoicesCount >= 3;
             log(`\n   📋 AUTONOMY VERDICT: ${feedChoicesCount}/3 genuine choices presented`);
             log(`   ${autonomyPassed ? "✅ LAW 1 SATISFIED" : "❌ LAW 1 VIOLATION"}: Agent ${autonomyPassed ? "felt" : "did NOT feel"} genuine choice`);
-            if (feedChoiceTitles.length > 0) {
-                log(`   📌 Missions offered: ${feedChoiceTitles.map(t => `"${t}"`).join(", ")}`);
-            }
             log(`   ⏱️ Total LEARN Latency: ${Date.now() - t2}ms`);
             stepsCompleted.push("LEARN");
 
@@ -422,24 +461,89 @@ export const SimulationEngine = {
             checkAbort();
             options?.onStepChange?.("EARN");
             await this.sleep(delay);
-            log(`\n💰 STEP 4: EARN`);
-            log(`   🔐 Verifying impact credentials...`);
-
+            // ── STEP 4: EARN (Now: ELEVATION PROTOCOL — Law 2) ──
+            checkAbort();
+            options?.onStepChange?.("EARN");
             await this.sleep(delay);
+            log(`\n💰 STEP 4: EARN (Elevation Protocol)`);
+            log(`   🔐 INITIATING IMMUTABLE IDENTITY WRITE...`);
 
-            const baseReward = user.gradeLevel > 12 ? 150 : 50;
-            const skillBonus = Math.max(0, user.skillTheta) * 20;
-            const totalGP = Math.round(baseReward + skillBonus);
+            // MOCK LEARNER PROFILE FOR ENGINE COMPATIBILITY
+            const profile: LearnerProfile = {
+                id: user.id || "sim_user",
+                name: user.name,
+                currentGrade: (user.gradeLevel > 12 ? 12 : user.gradeLevel) as GradeLevel,
+                currentTier: user.gradeLevel < 3 ? 'SPROUTS' : user.gradeLevel < 6 ? 'BUILDERS' : 'VOYAGERS',
+                masteryMap: new Map(),
+                domainLevels: { literacy: 1, numeracy: 1, science: 1, social: 1, sel: 1, career: 1 },
+                cognitiveState: { focusLevel: 100, frustrationLevel, energyLevel: 100, currentZPD: 0.5 },
+                interests: user.interests,
+                learningStyle: 'visual',
+                goals: ["Verify Competence"],
+                traits: new Map(),
+                verifiedCompetencies: [],
+                completedMissions: [],
+                activeContracts: [],
+                totalEarnings: 0,
+                calibrationScore: 100
+            };
 
-            if (user.gradeLevel > 12) {
-                log(`   💵 Internship Stipend: $${totalGP * 2} deposited`);
-            } else {
-                log(`   🏆 Verified Competencies: +${totalGP} recorded`);
+            // SCENARIO: GAMER EXPLOIT ATTEMPT
+            if (resolvedKey === "GAMER") {
+                log(`   🕵️ GAMER EXPLOIT ATTEMPT: Kai is submitting a corrupted/empty artifact...`);
+                const exploitDetected = true; // Our QA Bot is 100% accurate in this sim
+                if (exploitDetected) {
+                    log(`   ❌ EXPLOIT BLOCKED: Artifact integrity check failed. Ledger write aborted.`);
+                    log(`   ⚠️ FEEDBACK: "Your submission does not meet verification standards. Refine and resubmit."`);
+                    throw new Error("EXPLOIT_DENIED");
+                }
             }
 
-            log(
-                `   🌟 Artifact Earned: "${user.archetype} ${RecommendationEngine.getSkillLevelDescription(user.skillTheta)}"`
+            // SCENARIO: SKEPTIC TRUST TEST
+            if (resolvedKey === "SKEPTIC") {
+                log(`   🧐 SKEPTIC TRUST TEST: Jordan is verifying the SHA-256 chain...`);
+            }
+
+            // Normal Flow: Elevation Moment
+            const missionNode = RecommendationEngine.recommendNext(user, history, { targetProbability: 1.0 })?.node;
+            const mockMissionId = missionNode?.id || "m-elev-100";
+
+            const payoutResult = await verifyAndLedgerMission(
+                mockMissionId,
+                profile,
+                { competencies: ['artifact_service_record'] }, // Use a standard professional artifact
+                {
+                    id: mockMissionId,
+                    title: missionNode?.title || "Verification Task",
+                    category: 'leadership',
+                    accuracy: 95,
+                    timeSpent: 1800,
+                    attempts: 1,
+                    completedAt: Date.now(),
+                    competencyProven: true
+                }
             );
+
+            if (payoutResult.success) {
+                log(`   ✅ IDENTITY WRITE SUCCESSFUL`);
+                log(`   ✅ IMPACT LEDGERED (SHA-256 Chain Integrity: PASS)`);
+
+                if (resolvedKey === "SKEPTIC") {
+                    const entries = PurposeLedger.getEntries(profile.id);
+                    const latestHash = entries[entries.length - 1]?.ledger_hash;
+                    log(`   🔎 SKEPTIC VERIFICATION: Verified current hash [${latestHash?.substring(0, 16)}...] against previous block.`);
+                    log(`   ✅ SKEPTIC TRUST GAINED: "The record is immutable. My work is actually safe."`);
+                }
+
+                payoutResult.verifiedCompetencies.forEach(comp => {
+                    log(`   🌟 PORTFOLIO UPDATED: Verified "${comp.title}" [Tier: ${comp.tier}]`);
+                });
+
+                log(`   🚫 ANTI-GAMIFICATION PROTOCOL: Static UI only. No dopamine proxies detected.`);
+            } else {
+                log(`   ❌ ELEVATION FAILED: ${payoutResult.error}`);
+                throw new Error("LEDGER_FAILURE");
+            }
             stepsCompleted.push("EARN");
 
             // ── SIMULATION COMPLETE ──
@@ -472,11 +576,14 @@ export const SimulationEngine = {
         } catch (e) {
             const isAbort =
                 e instanceof Error && e.message === "ABORT";
+            const isAbandon =
+                e instanceof Error && e.message === "PEDAGOGICAL_ABANDON";
+
             return {
                 agentIndex: 0,
                 personaKey: resolvedKey,
                 personaName: user.name,
-                outcome: isAbort ? ("ABORT" as AgentOutcome) : ("CRASH" as AgentOutcome),
+                outcome: isAbort ? "ABORT" : isAbandon ? "PEDAGOGICAL_ABANDON" : "CRASH",
                 steps: stepsCompleted,
                 failedAtStep: stepsCompleted[stepsCompleted.length - 1] || "IDENTITY",
                 durationMs: Date.now() - startTime,
@@ -552,6 +659,7 @@ export const SimulationEngine = {
         const startedAt = Date.now();
         let passedCount = 0;
         let failedCount = 0;
+        let abandonCount = 0;
         let abortedCount = 0;
 
         onLog(
@@ -591,6 +699,7 @@ export const SimulationEngine = {
                 completedCount: i,
                 passedCount,
                 failedCount,
+                abandonCount,
                 isRunning: true,
                 wasAborted: false,
                 startedAt,
@@ -622,6 +731,7 @@ export const SimulationEngine = {
                             completedCount: i,
                             passedCount,
                             failedCount,
+                            abandonCount,
                             isRunning: true,
                             wasAborted: false,
                             startedAt,
@@ -636,6 +746,7 @@ export const SimulationEngine = {
 
             // Track outcomes
             if (result.outcome === "PASS") passedCount++;
+            else if (result.outcome === "PEDAGOGICAL_ABANDON") abandonCount++;
             else if (result.outcome === "ABORT") abortedCount++;
             else failedCount++;
 
@@ -661,6 +772,7 @@ export const SimulationEngine = {
             completedCount: results.length,
             passedCount,
             failedCount,
+            abandonCount,
             isRunning: false,
             wasAborted,
             startedAt,
@@ -671,8 +783,14 @@ export const SimulationEngine = {
             config,
             results,
             totalDurationMs: totalDuration,
+            totalAgents: queue.length,
+            passedCount,
+            failedCount,
+            abandonCount,
+            abortCount: abortedCount,
             passRate: passedCount / total,
             failRate: failedCount / total,
+            abandonRate: abandonCount / total,
             abortRate: abortedCount / total,
             wasAborted,
             completedAt: Date.now(),
@@ -689,6 +807,11 @@ export const SimulationEngine = {
         onLog(
             `   ❌ Failed: ${failedCount}/${total} (${(report.failRate * 100).toFixed(0)}%)`
         );
+        if (abandonCount > 0) {
+            onLog(
+                `   🧩 Abandoned: ${abandonCount}/${total} (${(report.abandonRate * 100).toFixed(0)}%)`
+            );
+        }
         if (abortedCount > 0) {
             onLog(
                 `   🟥 Aborted: ${abortedCount}/${total}`

@@ -61,7 +61,7 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
                         <div className="text-8xl mb-6">🚀</div>
                         <h2 className="text-4xl font-black text-white mb-2 italic tracking-tighter">MISSION: <span className="text-emerald-500">{mission.name}</span></h2>
                         <p className="text-xl text-zinc-400 mb-12 max-w-lg mx-auto">
-                            To launch this project, you must solve 3 field challenges using your Logic, Observation, and Language skills.
+                            You get to solve 3 field challenges to launch this project! Show us your Logic, Observation, and Language superpowers.
                         </p>
                         <button onClick={() => setStage('LOGIC')} className="px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xl transition-all hover:scale-105 shadow-lg shadow-emerald-500/20">
                             START CHALLENGE

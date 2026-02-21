@@ -125,9 +125,9 @@ export const GRADE_LABELS: Record<number, string> = {
 
 export type SimulationStepName = "IDENTITY" | "CONNECT" | "LEARN" | "SOLVE" | "EARN" | "COMPLETE";
 
-export type StressVector = "ADVERSARIAL" | "RAGE_QUIT" | "SLOW_NETWORK" | "REFRESH_MID_FLOW" | "NONE";
+export type StressVector = "ADVERSARIAL" | "RAGE_QUIT" | "SLOW_NETWORK" | "REFRESH_MID_FLOW" | "EXPLOIT_ATTEMPTS" | "TRUST_VERIFICATION" | "NONE";
 
-export type AgentOutcome = "PASS" | "FAIL" | "ABORT" | "CRASH";
+export type AgentOutcome = "PASS" | "FAIL" | "ABORT" | "CRASH" | "PEDAGOGICAL_ABANDON";
 
 /**
  * SIMULATION BATCH CONFIG
@@ -169,8 +169,10 @@ export interface SimulationProgress {
     completedCount: number;
     /** Agents passed so far */
     passedCount: number;
-    /** Agents failed so far */
+    /** Agents failed (crashed/technical) so far */
     failedCount: number;
+    /** Agents abandoned for pedagogical reasons */
+    abandonCount: number;
     /** Whether the batch is still running */
     isRunning: boolean;
     /** Whether the batch was aborted */
@@ -202,8 +204,15 @@ export interface SimulationBatchReport {
     config: SimulationBatchConfig;
     results: SimulationAgentResult[];
     totalDurationMs: number;
+    totalAgents: number;
+    passedCount: number;
+    failedCount: number;
+    abandonCount: number;
+    abortCount: number;
     passRate: number;
     failRate: number;
+    /** Rate of pedagogical abandonment */
+    abandonRate: number;
     abortRate: number;
     wasAborted: boolean;
     completedAt: number;

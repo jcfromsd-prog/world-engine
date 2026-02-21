@@ -8,7 +8,7 @@
    6. BLUEPRINT: 4 Engines Grid & Parallel Pathway Hero
    7. ARCHITECTURE: Permanent Breadcrumbs Layer (No Overwriting)
    ========================================================================== */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FounderCommandPanel } from "./components/dashboard/FounderCommandPanel";
 import { MissionWorkspace } from "./components/workspaces/MissionWorkspace";
 import { SwarmDashboard } from "./components/admin/SwarmDashboard";
@@ -16,10 +16,14 @@ import { MasterTeacherDashboard } from "./components/admin/MasterTeacherDashboar
 import { CalibrationModal } from "./components/dashboard/CalibrationModal";
 import { GenesisFeed } from "./components/feed/GenesisFeed";
 import { SagePrep } from "./components/learning/SagePrep";
-import AssessmentModule from "./components/AssessmentModule";
 import { LearnerMap } from "./components/learner/LearnerMap";
 import { WorldEngineDevConsole } from "./components/WorldEngine/DevConsole";
 import { SimulationDashboard } from "./components/SimulationDashboard";
+import { PassionSelection } from "./components/PassionSelection";
+import { ElevationMoment } from "./components/ElevationMoment";
+import { IntakeFlow } from "./components/intake/IntakeFlow";
+import type { MasteryMap } from "./engines/intake/IntakeRegistry";
+import { StandardsGapGraph } from "./engines/intake/StandardsGapGraph";
 
 
 import Header from "./components/Header";
@@ -69,7 +73,7 @@ const APP_LEARNER_PROFILE: LearnerProfile = {
 
 
 // --- TYPES ---
-type AppState = "LANDING" | "ONBOARDING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP" | "BLUEPRINT_MODE" | "SIMULATION_ENGINE";
+type AppState = "LANDING" | "ONBOARDING" | "SQUAD_BRIEFING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP" | "BLUEPRINT_MODE" | "SIMULATION_ENGINE";
 
 
 export interface UserProfile {
@@ -285,27 +289,57 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
   const [matchStatus, setMatchStatus] = useState("SEARCHING GLOBAL NETWORK...");
 
   // 🔊 VOICE SYNTHESIS
+  // 🔊 VOICE SYNTHESIS CONFIG
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+
   useEffect(() => {
-    const speak = (text: string) => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.1;
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = voices.find(v => v.name.includes("Google US English") || v.name.includes("Samantha"));
-        if (preferred) utterance.voice = preferred;
-        window.speechSynthesis.speak(utterance);
-      }
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      // Priority: Google US English -> Microsoft Zira -> Samantha -> Default
+      const preferred = voices.find(v => v.name.includes("Google US English"))
+        || voices.find(v => v.name.includes("Microsoft Zira"))
+        || voices.find(v => v.name.includes("Samantha"));
+
+      if (preferred) voiceRef.current = preferred;
     };
 
-    if (step === "NAME") speak("Welcome, Explorer. I am Sage. What should I call you?");
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
+
+  const speak = (text: string) => {
+    if (!('speechSynthesis' in window)) return;
+
+    // Tiny delay to ensure voices are ready if called immediately on mount
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.05; // "Quicker but not too fast"
+    utterance.pitch = 1.0; // Natural pitch
+
+    if (voiceRef.current) {
+      utterance.voice = voiceRef.current;
+    } else {
+      // Fallback attempt just in case
+      const voices = window.speechSynthesis.getVoices();
+      const fallback = voices.find(v => v.name.includes("Google US English")) || voices.find(v => v.name.includes("Microsoft Zira"));
+      if (fallback) utterance.voice = fallback;
+    }
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // 🗣️ SAGE SPEAKS ON STEP CHANGE
+  useEffect(() => {
+    if (step === "NAME" && !name) speak("Welcome, Explorer. I am Sage. What should I call you?");
     if (step === "GRADE") speak(`Nice to meet you, ${name}. What is your experience level?`);
-    if (step === "PASSION") speak("Excellent. Now, what mission calls to you?");
+    if (step === "PASSION") speak("Nice, that choice unlocks new potential. Now, what mission calls to you?");
     if (step === "MATCHING") speak("Initializing your squad. Stand by.");
     if (step === "SQUAD_REVEAL") speak(`${name}, meet your squad. Lock in to start your first mission.`);
     if (step === "AUTH") speak("Final Step. Secure your Engine Key to save your progress.");
 
-  }, [step, name]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]); // Removed 'name' dependency to prevent re-speaking while typing/dictating
 
   // 🛡️ SAFETY GUARD: Warn guests before leaving
   useEffect(() => {
@@ -390,6 +424,91 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
     }
   };
 
+  const [isListening, setIsListening] = useState(false);
+  const [voiceModeEnabled, setVoiceModeEnabled] = useState(false); // Explicit User Opt-In
+  const [voiceToast, setVoiceToast] = useState<string | null>(null);
+
+  // 🎤 GLOBAL VOICE LISTENER FOR SELECTION
+  useEffect(() => {
+    if ((step !== "GRADE" && step !== "PASSION") || !voiceModeEnabled) {
+      setIsListening(false);
+      return;
+    }
+
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Voice commands are not supported in this browser.");
+      setVoiceModeEnabled(false);
+      return;
+    }
+
+    // @ts-expect-error - SpeechRecognition is experimental
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => {
+      // Auto-restart if mode is still on (keep listening)
+      if (voiceModeEnabled) recognition.start();
+      else setIsListening(false);
+    };
+
+    recognition.onresult = (event: any) => {
+      const last = event.results.length - 1;
+      const transcript = event.results[last][0].transcript.toLowerCase().trim();
+
+      setVoiceToast(`🎤 Heard: "${transcript}"`);
+      setTimeout(() => setVoiceToast(null), 3000);
+
+      // 🎤 GLOBAL COMMANDS
+      if (transcript.includes("back") || transcript.includes("go back") || transcript.includes("undo")) {
+        setVoiceToast("↩️ Going Back...");
+        goBack();
+        return;
+      }
+
+      // GRADE MAPPING
+      if (step === "GRADE") {
+        if (["2", "two", "sprouts", "kindergarten", "k", "one", "1"].some(k => transcript.includes(k))) handleSelection("GRADE", "2|Sprouts|K-2|🌱");
+        if (["5", "five", "builders", "three", "3", "four", "4"].some(k => transcript.includes(k))) handleSelection("GRADE", "5|Builders|3-5|🛠️");
+        if (["8", "eight", "trailblazers", "six", "6", "seven", "7"].some(k => transcript.includes(k))) handleSelection("GRADE", "8|Trailblazers|6-8|🌲");
+        if (["12", "twelve", "explorers", "high school", "nine", "9", "ten", "10", "eleven", "11"].some(k => transcript.includes(k))) handleSelection("GRADE", "12|Explorers|9-12|🧭");
+        if (["16", "sixteen", "voyagers", "college", "university"].some(k => transcript.includes(k))) handleSelection("GRADE", "16|Voyagers|College+|🚀");
+      }
+
+      // PASSION MAPPING
+      if (step === "PASSION") {
+        if (["code", "coding", "tech", "computer"].some(k => transcript.includes(k))) handleSelection("PASSION", "CODING|Tech & Code|Building Future|💻");
+        if (["science", "nature", "biology", "planet"].some(k => transcript.includes(k))) handleSelection("PASSION", "SCIENCE|Nature|Protect Planet|🌿");
+        if (["art", "design", "creative", "draw"].some(k => transcript.includes(k))) handleSelection("PASSION", "CREATIVE|Art & Design|Create Beauty|🎨");
+        if (["leader", "business", "money", "team"].some(k => transcript.includes(k))) handleSelection("PASSION", "LEADERSHIP|Leadership|Guide Teams|🤝");
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch (e) {
+      console.warn("Speech recognition already started", e);
+    }
+
+    return () => {
+      recognition.stop();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, voiceModeEnabled]);
+
+  const goBack = () => {
+    setFade(true);
+    setTimeout(() => {
+      if (step === "GRADE") setStep("NAME");
+      if (step === "PASSION") setStep("GRADE");
+      if (step === "MATCHING") setStep("PASSION");
+      setFade(false);
+    }, 300);
+  };
+
   const transitionTo = (nextStep: OnboardingStep) => {
     setFade(true);
     setTimeout(() => {
@@ -405,6 +524,23 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
         <BreadcrumbHeader name={name} grade={grade} passion={passion} step={step} />
       </div>
       <button onClick={() => { clearOnboardingDraft(); onCancel(); }} className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors">✕ ESC</button>
+
+      {/* 🎤 VOICE TOGGLE */}
+      {(step === "GRADE" || step === "PASSION") && (
+        <button
+          onClick={() => setVoiceModeEnabled(!voiceModeEnabled)}
+          className={`absolute top-6 right-24 flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${voiceModeEnabled ? "bg-red-500/20 border-red-500 text-red-500 animate-pulse" : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:text-white"}`}
+        >
+          <span>{voiceModeEnabled ? "🎤 ON" : "🎤 OFF"}</span>
+        </button>
+      )}
+
+      {/* 🗣️ VOICE TOAST */}
+      {voiceToast && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md text-white px-6 py-3 rounded-full border border-white/20 animate-fade-in-up z-50 shadow-2xl">
+          {voiceToast}
+        </div>
+      )}
 
       {step === "MATCHING" && (
         <div className="text-center">
@@ -481,7 +617,38 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
             <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">Type your <span className="text-orange-500">Name</span></h1>
             <h2 className="text-2xl md:text-3xl font-bold text-zinc-400 tracking-wide">press <span className="text-blue-400">Enter</span></h2>
           </div>
-          <input autoFocus className="relative w-full bg-zinc-900 border border-white/10 rounded-xl px-8 py-6 text-2xl text-center text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 transition-all" placeholder="Your Name... [Enter]" value={name} onChange={e => setName(e.target.value)} onKeyDown={handleNameSubmit} />
+          <div className="relative w-full">
+            <input
+              autoFocus
+              className="w-full bg-zinc-900 border border-white/10 rounded-xl px-8 py-6 text-2xl text-center text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 transition-all pr-16"
+              placeholder="Your Name... [Enter]"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onKeyDown={handleNameSubmit}
+            />
+            <button
+              onClick={() => {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                  // @ts-expect-error - SpeechRecognition is experimental and not in all TS libs
+                  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                  const recognition = new SpeechRecognition();
+                  recognition.lang = 'en-US';
+                  recognition.start();
+                  recognition.onresult = (event: any) => {
+                    const transcript = event.results[0][0].transcript;
+                    setName(transcript);
+                    // Optional: auto-submit if confident? For now let them verify.
+                  };
+                } else {
+                  alert("Speech recognition not supported in this browser.");
+                }
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-zinc-500 hover:text-white transition-colors"
+              title="Speak your name"
+            >
+              🎤
+            </button>
+          </div>
           {name.trim().length > 0 && (
             <button
               onClick={() => transitionTo("GRADE")}
@@ -496,9 +663,22 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
         </div>
       )}
 
+      {/* 🔙 BACK BUTTON */}
+      {(step === "GRADE" || step === "PASSION") && (
+        <button
+          onClick={goBack}
+          className="absolute top-6 left-6 flex items-center gap-2 text-zinc-500 hover:text-white transition-colors"
+        >
+          <span>← Back</span>
+        </button>
+      )}
+
       {step === "GRADE" && (
         <div className={`w-full max-w-5xl transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
-          <h1 className="text-4xl font-black text-white text-center mb-10">Calibrate Your <span className="text-purple-400">Engine</span></h1>
+          <h1 className="text-4xl font-black text-white text-center mb-10">
+            Calibrate Your <span className="text-purple-400">Engine</span>
+            {isListening && <span className="ml-4 text-sm font-mono text-red-500 animate-pulse">● LISTENING</span>}
+          </h1>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {["2|Sprouts|K-2|🌱", "5|Builders|3-5|🛠️", "8|Trailblazers|6-8|🌲", "12|Explorers|9-12|🧭", "16|Voyagers|College+|🚀"].map(g => {
               const [val, title, sub, icon] = g.split("|");
@@ -513,19 +693,11 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
       )}
 
       {step === "PASSION" && (
-        <div className={`w-full max-w-5xl transition-opacity duration-300 ${fade ? "opacity-0" : "opacity-100"}`}>
-          <h1 className="text-4xl font-black text-white text-center mb-10">Select Your <span className="text-green-400">Primary Engine</span></h1>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {["CODING|Tech & Code|Building Future|💻", "SCIENCE|Nature|Protect Planet|🌿", "CREATIVE|Art & Design|Create Beauty|🎨", "LEADERSHIP|Leadership|Guide Teams|🤝"].map(p => {
-              const [val, title, sub, icon] = p.split("|");
-              return (
-                <button key={val} onClick={() => handleSelection("PASSION", val)} className="group p-8 bg-zinc-900/50 border border-white/10 rounded-3xl hover:bg-zinc-800 hover:border-yellow-400 hover:-translate-y-2 transition-all">
-                  <div className="text-5xl mb-4">{icon}</div><h3 className="text-xl font-bold text-white">{title}</h3><p className="text-xs text-zinc-400">{sub}</p>
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        <PassionSelection
+          grade={parseInt(grade.split('|')[0]) || 8}
+          onSelect={(val) => handleSelection("PASSION", val)}
+          isListening={isListening}
+        />
       )}
 
       {step === "AUTH" && (
@@ -559,6 +731,16 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
             className="w-full mt-8 py-5 bg-blue-500 hover:bg-blue-400 text-black font-black text-xl rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(59,130,246,0.5)]"
           >
             CONFIRM IDENTITY 🚀
+          </button>
+
+          <button
+            onClick={() => {
+              onComplete({ name: name || "Test Pilot", grade: grade || "8", passion: passion || "CODING", squad: "ALPHA-1", id: "temp-test-id-" + Date.now() });
+              clearOnboardingDraft();
+            }}
+            className="mt-4 text-xs text-zinc-600 underline hover:text-red-400"
+          >
+            [DEV: BYPASS AUTH]
           </button>
         </div>
       )}
@@ -596,7 +778,12 @@ const ViralShareModal: React.FC<{ mission: Mission, earnings: number, onClose: (
    ========================================================================== */
 const App: React.FC = () => {
   // 0. GLOBAL STATE
-  const [appState, setAppState] = useState<AppState>("LANDING");
+  const [appState, setAppState] = useState<AppState>(() => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/architect/blueprint') {
+      return "BLUEPRINT_MODE";
+    }
+    return "LANDING";
+  });
 
   // GOD MODE: Check if founder mode is enabled
   const [learnerProfile, setLearnerProfile] = useState<LearnerProfile>(() => {
@@ -609,8 +796,29 @@ const App: React.FC = () => {
   // --- WORLD ENGINE INSTANCE ---
   const worldEngine = React.useMemo(() => new WorldEngine(learnerProfile, SEED_GRAPH), [learnerProfile]);
 
-
+  const [masteryMap, setMasteryMap] = useState<MasteryMap | null>(null);
+  const [gapGraph, setGapGraph] = useState<StandardsGapGraph | null>(null);
   const [sagePrepContent, setSagePrepContent] = useState<RecommendationResult | null>(null);
+
+  const availableMissions = React.useMemo(() => {
+    // 1. Filter by grade level
+    const grade = learnerProfile.currentGrade || 10;
+    const gradeMissions = MISSION_DB.filter((m: any) => grade >= m.minGrade && grade <= m.maxGrade);
+
+    // 2. Identify Targeted Missions (Targeting gaps detected in intake)
+    if (masteryMap && masteryMap.gaps.length > 0) {
+      const gapStandardIds = masteryMap.gaps.map(g => g.standardId);
+      const targeted = gradeMissions.filter((m: any) => gapStandardIds.includes(m.standardId));
+
+      // If we have targeted missions, prioritize them at the top of the feed
+      if (targeted.length > 0) {
+        const others = gradeMissions.filter((m: any) => !gapStandardIds.includes(m.standardId));
+        return [...targeted, ...others].slice(0, 3); // Return limited "Genesis Feed"
+      }
+    }
+
+    return gradeMissions.slice(0, 3);
+  }, [learnerProfile.currentGrade, masteryMap]);
 
   const startSagePrep = (mission: LiveMission | Mission) => {
     setActiveMission(mission);
@@ -646,11 +854,7 @@ const App: React.FC = () => {
 
   // --- SWARM & MASTER TEACHER LISTENER ---
   useEffect(() => {
-    // 1. URL ROUTING LISTENER
-    if (window.location.pathname === '/architect/blueprint') {
-      setAppState("BLUEPRINT_MODE");
-    }
-
+    // 1. KEYBOARD LISTENERS
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's')) {
         e.preventDefault();
@@ -686,7 +890,7 @@ const App: React.FC = () => {
       calibrationScore: 0,
       id: profile.id // Capture the Real Vault ID
     });
-    setAppState("CHOICE_SELECTION");
+    setAppState("SQUAD_BRIEFING");
   };
 
   const handleMissionSelect = (mission: LiveMission | string) => {
@@ -811,34 +1015,11 @@ const App: React.FC = () => {
               <span className="text-amber-400 font-bold">Verified Contributor</span>.
             </p>
             <div className="flex flex-wrap justify-center gap-6 mb-24">
-              <button onClick={() => setAppState("ONBOARDING")} className="px-12 py-6 bg-white text-black font-black text-xl rounded-2xl hover:bg-blue-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+              <button onClick={() => setAppState("ASSESSMENT")} className="px-12 py-6 bg-white text-black font-black text-xl rounded-2xl hover:bg-emerald-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
                 🚀 START YOUR ENGINE
               </button>
 
-              {import.meta.env.DEV && (
-                <>
-                  <button
-                    onClick={() => setAppState("WORLD_ENGINE_DEV")}
-                    className="px-6 py-6 bg-zinc-900 border border-green-500/30 text-green-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
-                  >
-                    🛠️ DEV: WORLD ENGINE
-                  </button>
 
-                  <button
-                    onClick={() => setAppState("BLUEPRINT_MODE")}
-                    className="px-6 py-6 bg-zinc-900 border border-blue-500/30 text-blue-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
-                  >
-                    📐 DEV: ARCHITECT BLUEPRINT
-                  </button>
-
-                  <button
-                    onClick={() => setAppState("SIMULATION_ENGINE")}
-                    className="px-6 py-6 bg-zinc-900 border border-red-500/30 text-red-400 font-mono text-sm rounded-2xl hover:bg-zinc-800 transition-all"
-                  >
-                    🧪 DEV: SIMULATION ENGINE v1.1
-                  </button>
-                </>
-              )}
             </div>
 
             <EnginesGrid
@@ -908,25 +1089,92 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* 🧪 ASSESSMENT MODULE (The Missing Link) */}
+      {/* 🧬 INTELLIGENT INTAKE (Phase 1 & 2) */}
       {appState === "ASSESSMENT" && (
-        <AssessmentModule
-          onClose={() => setAppState("LANDING")}
-          onComplete={(data, path) => {
-
-            // 1. Update Profile Logic (Simulated)
-            completeOnboarding({ ...data, grade: data.grade.toString(), passion: path.focus });
-
-            // 2. Conditional Routing (The Fix)
-            // K-5 => Learner Map
-            // 6+ => Squad HQ / Choice Selection
-            if (data.grade <= 5) {
-              setAppState("LEARNER_MAP");
-            } else {
-              setAppState("CHOICE_SELECTION");
-            }
+        <IntakeFlow
+          userId={userProfile?.id || "temp-explorer"}
+          onCancel={() => setAppState("LANDING")}
+          onComplete={(map) => {
+            setMasteryMap(map);
+            setGapGraph(new StandardsGapGraph(map));
+            // Auto-complete onboarding with determined grade
+            const avgGrade = Math.round(Object.values(map.zpd).reduce((a, b) => a + b, 0) / 3);
+            completeOnboarding({
+              name: "Authenticated Explorer",
+              grade: avgGrade.toString(),
+              passion: "TECH",
+              squad: "Alpha Squad"
+            });
           }}
         />
+      )}
+
+      {/* 🚁 SQUAD BRIEFING (The Hangar) */}
+      {appState === "SQUAD_BRIEFING" && (
+        <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col items-center justify-center p-6 animate-fade-in">
+          {/* BACKGROUND FX */}
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614728853913-1e32005e307a?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10 pointer-events-none mix-blend-screen"></div>
+
+          <div className="relative z-10 max-w-4xl w-full text-center">
+            <div className="mb-12">
+              <h1 className="text-5xl md:text-7xl font-black text-white mb-4 tracking-tighter">SQUAD <span className="text-emerald-500">ASSEMBLED</span></h1>
+              <p className="text-xl text-zinc-400 max-w-2xl mx-auto">Your team is online. The network is waiting. Verify your skills to unlock the global feed.</p>
+            </div>
+
+            {/* SQUAD GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+              {/* USER */}
+              <div className="p-8 bg-zinc-900/80 border border-blue-500/30 rounded-3xl backdrop-blur-md relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">👤</div>
+                <h3 className="text-xl font-black text-white uppercase">{userProfile?.name}</h3>
+                <p className="text-xs text-blue-400 font-bold uppercase tracking-widest mt-1">SQUAD LEADER</p>
+              </div>
+              {/* SAGE */}
+              <div className="p-8 bg-zinc-900/60 border border-white/5 rounded-3xl backdrop-blur-md relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
+                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🤖</div>
+                <h3 className="text-xl font-black text-white">SAGE</h3>
+                <p className="text-xs text-purple-400 font-bold uppercase tracking-widest mt-1">AI ARCHITECT</p>
+              </div>
+              {/* ORACLE */}
+              <div className="p-8 bg-zinc-900/60 border border-white/5 rounded-3xl backdrop-blur-md relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
+                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🧠</div>
+                <h3 className="text-xl font-black text-white">ORACLE</h3>
+                <p className="text-xs text-amber-400 font-bold uppercase tracking-widest mt-1">STRATEGIC COMMS</p>
+              </div>
+            </div>
+
+            {/* ACTION CARD */}
+            <div className="bg-black/40 border border-emerald-500/50 rounded-3xl p-8 max-w-2xl mx-auto backdrop-blur-xl shadow-[0_0_50px_rgba(16,185,129,0.1)]">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs ring-1 ring-emerald-500/50">1</span>
+                  <span className="text-zinc-400 font-mono text-sm uppercase tracking-widest">Initial Objective</span>
+                </div>
+                <span className="px-3 py-1 bg-emerald-900/30 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20 rounded-full animate-pulse">Ready to Start</span>
+              </div>
+              <h2 className="text-3xl font-black text-white mb-2">NEURAL CALIBRATION</h2>
+              <p className="text-zinc-400 text-sm mb-8">
+                Before we can assign you high-value contracts, we need to verify your engine's baseline.
+                Solve 3 logic puzzles to prove your readiness.
+              </p>
+              <button
+                onClick={() => setAppState("ASSESSMENT")}
+                className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xl rounded-2xl transition-all hover:scale-[1.02] shadow-xl shadow-emerald-500/20"
+              >
+                🚀 LAUNCH CALIBRATION
+              </button>
+            </div>
+
+            <div className="mt-8 flex justify-center gap-4 text-xs font-mono text-zinc-600">
+              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> MARKETPLACE: LOCKED</span>
+              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> GENESIS FEED: OFFLINE</span>
+              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> SQUAD COMMS: SECURE</span>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* 🚀 LEARNER MAP (K-5 Environment) */}
@@ -1001,6 +1249,7 @@ const App: React.FC = () => {
                 onCalibrate={() => setShowCalibration(true)}
                 profile={learnerProfile}
                 onProfileUpdate={setLearnerProfile}
+                availableMissions={availableMissions}
               />
             </div>
           </div>
@@ -1011,7 +1260,14 @@ const App: React.FC = () => {
       {appState === "MISSION_WORKSPACE" && activeMission && (
         <MissionWorkspace
           mission={activeMission}
-          onComplete={() => attemptPayout(activeMission)}
+          userGap={masteryMap?.gaps[0]?.description} // First gap context
+          onComplete={async (_qualityScore) => {
+            const missionStandardId = (activeMission as any).standardId || (activeMission as any).standard;
+            if (gapGraph && missionStandardId) {
+              await gapGraph.recordMastery(missionStandardId, userProfile?.id || 'anon');
+            }
+            attemptPayout(activeMission);
+          }}
           onCancel={() => setAppState("CHOICE_SELECTION")}
         />
       )}
@@ -1062,6 +1318,8 @@ const App: React.FC = () => {
           <SimulationDashboard />
         </div>
       )}
+
+      <ElevationMoment />
     </div>
   );
 };

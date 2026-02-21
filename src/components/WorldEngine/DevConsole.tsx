@@ -1,10 +1,11 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import type { KnowledgeNode } from '../../engines/world-engine/KnowledgeGraph';
 import { WorldEngine } from '../../engines/world-engine/WorldEngine';
 
-import { OpenClawSystem } from '../../systems/OpenClaw';
 import { devTelemetry, type LogicPhase } from '../../engines/logic-link/ObservabilityLayer';
+import { SimulationEngine } from '../../services/SimulationEngine';
+import type { SimulationProgress } from '../../types/EngineTypes';
 
 // --- STYLES ---
 const CARD_STYLE = "bg-zinc-900 border border-white/10 rounded-xl p-6 mb-4";
@@ -30,7 +31,72 @@ export const WorldEngineDevConsole: React.FC<{
     const [pulseStage, setPulseStage] = useState<0 | 1 | 2 | 3 | 4>(0); // 0=Idle, 1=Goal, 2=Action, 3=Check, 4=Payoff
     const [lastEventStatus, setLastEventStatus] = useState<'success' | 'failure' | 'neutral'>('neutral');
     const [logs, setLogs] = useState<string[]>(["System Initialized."]);
-    const [isClawRunning, setIsClawRunning] = useState(false);
+
+    // SIMULATION ENGINE STATE
+    const [simState, setSimState] = useState<{
+        isRunning: boolean;
+        progress: SimulationProgress | null;
+        abortController: AbortController | null;
+    }>({
+        isRunning: false,
+        progress: null,
+        abortController: null
+    });
+
+    const consoleRef = React.useRef<HTMLDivElement>(null);
+
+    // Auto-scroll logs
+    React.useEffect(() => {
+        if (consoleRef.current) {
+            consoleRef.current.scrollTop = 0; // Newest at top or bottom? actually we map logs differently.
+            // My map logic is {logs.map...}. 
+            // If I prepending logs: setLogs(prev => [msg, ...prev]), then newest is at TOP.
+        }
+    }, [logs]);
+
+    const runBatchSimulation = async () => {
+        const ac = new AbortController();
+        setSimState({
+            isRunning: true,
+            progress: null,
+            abortController: ac
+        });
+
+        addLog(`[SIM] 🚀 Starting Batch Simulation (50 Agents)...`);
+
+        try {
+            const report = await SimulationEngine.runBatch({
+                agentCount: 50,
+                target: "Curriculum Validation",
+                stressVectors: ["SLOW_NETWORK", "NONE"], // Using valid StressVector types
+                signal: ac.signal,
+                stepDelayMs: 50 // Fast mode
+            }, {
+                onProgress: (p) => {
+                    setSimState(prev => ({ ...prev, progress: p }));
+                },
+                onLog: (msg) => {
+                    addLog(`[SIM] ${msg}`);
+                },
+                onAgentComplete: () => {
+                    // Optional: could log specific failures here
+                }
+            });
+
+            addLog(`[SIM] 🏁 Batch Complete. Pass Rate: ${(report.passRate * 100).toFixed(1)}%`);
+        } catch (e) {
+            addLog(`[SIM] ❌ Batch Error: ${e}`);
+        } finally {
+            setSimState(prev => ({ ...prev, isRunning: false, abortController: null }));
+        }
+    };
+
+    const cancelSimulation = () => {
+        if (simState.abortController) {
+            simState.abortController.abort();
+            addLog(`[SIM] 🛑 User requesting abort...`);
+        }
+    };
 
     // REAL TELEMETRY BRIDGE
     React.useEffect(() => {
@@ -55,10 +121,8 @@ export const WorldEngineDevConsole: React.FC<{
     }, []);
 
     const addLog = React.useCallback((msg: string) => {
-        setLogs(prev => [msg, ...prev].slice(0, 20));
+        setLogs(prev => [msg, ...prev].slice(0, 100)); // Log buffer 100
     }, []);
-
-    const openClaw = useMemo(() => new OpenClawSystem(engine, addLog), [engine, addLog]);
 
     // Refresh recommendations whenever 'tick' changes (tick is incremented on task completion/reset)
     void tick; // consumed to satisfy lint — triggers re-render
@@ -97,72 +161,63 @@ export const WorldEngineDevConsole: React.FC<{
                     </button>
                 </div>
 
-                {/* 🤖 OPENCLAW CONTROL - RELOCATED TO TOP */}
+                {/* 🤖 SIMULATION BATCH CONTROL (v2.0) */}
                 <div className="w-full mb-8 p-4 bg-green-900/10 border border-green-500/30 rounded-xl">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-neon-green font-mono text-xl font-bold flex items-center gap-2">
-                            <span>🤖</span> OPENCLAW SWARM CONTROL
+                            <span>🧪</span> SIMULATION ENGINE v2.0
                         </h3>
                         <div className="flex gap-2">
-                            <button
-                                onClick={() => { openClaw.startSwarm(); setIsClawRunning(true); }}
-                                disabled={isClawRunning}
-                                className="px-6 py-2 bg-green-500 text-black font-bold rounded hover:bg-green-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                START SWARM
-                            </button>
-                            <button
-                                onClick={() => { openClaw.stopSwarm(); setIsClawRunning(false); }}
-                                disabled={!isClawRunning}
-                                className="px-6 py-2 bg-red-500/20 text-red-500 border border-red-500 font-bold rounded hover:bg-red-500 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                STOP SWARM
-                            </button>
+                            {simState.isRunning ? (
+                                <button
+                                    onClick={cancelSimulation}
+                                    className="px-6 py-2 bg-red-500/20 text-red-500 border border-red-500 font-bold rounded hover:bg-red-500 hover:text-white transition-colors"
+                                >
+                                    ABORT BATCH
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={runBatchSimulation}
+                                    className="px-6 py-2 bg-green-500 text-black font-bold rounded hover:bg-green-400 transition-colors"
+                                >
+                                    RUN BATCH (×50 AGENTS)
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    <div className="flex gap-4 mb-4 items-center">
-                        <span className="text-zinc-500 font-mono text-sm self-center">SPEED:</span>
-                        {[1000, 200, 0].map((speed) => (
-                            <button
-                                key={speed}
-                                onClick={() => openClaw.setSpeed(speed)}
-                                className="px-3 py-1 bg-zinc-800 text-white rounded text-xs font-mono hover:bg-zinc-700 focus:bg-green-500/20 focus:text-green-400 focus:border-green-500 border border-transparent"
-                            >
-                                {speed === 1000 ? '1x (1s)' : speed === 200 ? 'TURBO (200ms)' : 'INSTANT (0ms)'}
-                            </button>
-                        ))}
-
-                        {/* ⚠️ RESET / SEED BUTTON */}
-                        {process.env.NODE_ENV !== 'production' && (
-                            <div className="flex items-center ml-4 pl-4 border-l border-white/10">
-                                <button
-                                    aria-label="Reset curriculum and reseed data"
-                                    onClick={async () => {
-                                        if (!window.confirm("Hard Reset & Reseed Curriculum? This cannot be undone.")) return;
-                                        try {
-                                            addLog(`[SYSTEM] ⚠️ Initiating Reset...`);
-                                            engine.resetProgress();
-                                            addLog(`[SYSTEM] ✅ Curriculum Reseeded. Ready to Swarm.`);
-                                            setTick(t => t + 1); // Force re-render
-                                        } catch (error: any) {
-                                            addLog(`[SYSTEM] ❌ Reset Failed: ${error.message}`);
-                                        }
-                                    }}
-                                    className="px-3 py-1 text-xs font-mono font-bold border rounded transition-all text-red-400 bg-red-500/10 border-red-500/50 hover:bg-red-500/20 cursor-pointer"
-                                >
-                                    [ ⚠️ RESET DATA ]
-                                </button>
+                    {/* PROGRESS BAR */}
+                    {simState.progress && (
+                        <div className="mb-4 space-y-2">
+                            <div className="flex justify-between text-xs font-mono text-zinc-400">
+                                <span>
+                                    AGENT {simState.progress.currentAgent}/{simState.progress.totalAgents}: {simState.progress.agentName}
+                                </span>
+                                <span>
+                                    {Math.round(simState.progress.progressPercent * 100)}% | ETA: {(simState.progress.estimatedRemainingMs / 1000).toFixed(0)}s
+                                </span>
                             </div>
-                        )}
-                    </div>
+                            <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-green-500 transition-all duration-300"
+                                    style={{ width: `${simState.progress.progressPercent * 100}%` }}
+                                />
+                            </div>
+                            <div className="flex gap-4 text-xs font-mono">
+                                <span className="text-green-400">PASSED: {simState.progress.passedCount}</span>
+                                <span className="text-red-400">FAILED: {simState.progress.failedCount}</span>
+                                <span className="text-zinc-500">STAGE: {simState.progress.currentStep}</span>
+                            </div>
+                        </div>
+                    )}
 
-                    <div className="h-24 bg-black border border-green-500/10 rounded p-2 font-mono text-xs text-green-500/80 overflow-y-auto">
-                        {logs.filter(l => l.includes('[CLAW]')).map((log, i) => (
+                    {/* LOGS */}
+                    <div className="h-32 bg-black border border-green-500/10 rounded p-2 font-mono text-xs text-green-500/80 overflow-y-auto" ref={consoleRef}>
+                        {logs.filter(l => l.includes('[SIM]')).map((log, i) => (
                             <div key={i}>{log}</div>
                         ))}
-                        {logs.filter(l => l.includes('[CLAW]')).length === 0 && (
-                            <div className="text-zinc-700 italic">Agent waiting for command...</div>
+                        {logs.filter(l => l.includes('[SIM]')).length === 0 && (
+                            <div className="text-zinc-700 italic">System Ready. Awaiting Batch Command...</div>
                         )}
                     </div>
                 </div>

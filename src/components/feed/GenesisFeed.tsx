@@ -11,12 +11,13 @@ interface GenesisFeedProps {
     onCalibrate: () => void;
     profile: LearnerProfile;
     onProfileUpdate?: (profile: LearnerProfile) => void;
+    availableMissions?: any[]; // The filtered list from App.tsx
 }
 
 type CategoryFilter = 'ALL' | 'CODING' | 'CREATIVE' | 'SCIENCE' | 'LEADERSHIP';
 type FeedMode = 'GENESIS' | 'MARKETPLACE';
 
-export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userTrack, onCalibrate, profile }) => {
+export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userTrack, onCalibrate, profile, availableMissions }) => {
     const [missions, setMissions] = useState<LiveMission[]>([]);
     const [filter, setFilter] = useState<CategoryFilter>('ALL');
     const [feedMode, setFeedMode] = useState<FeedMode>('GENESIS');
@@ -109,7 +110,11 @@ export const GenesisFeed: React.FC<GenesisFeedProps> = ({ onMissionSelect, userT
         return () => clearInterval(interval);
     }, [sortMissions]);
 
-    const filteredMissions = missions.filter(m =>
+    const displayMissions = availableMissions && availableMissions.length > 0
+        ? availableMissions
+        : missions;
+
+    const filteredMissions = displayMissions.filter(m =>
         (filter === 'ALL' || m.category === filter) && m.status !== 'CLAIMED'
     );
 

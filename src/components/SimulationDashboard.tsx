@@ -23,7 +23,6 @@ import type {
     SimulationBatchReport,
     StressVector,
 } from "../types/EngineTypes";
-import { GRADE_LABELS } from "../types/EngineTypes";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -46,7 +45,7 @@ const getLogType = (msg: string): SimulationLog["type"] => {
         return "success";
     if (msg.includes("⚠️") || msg.includes("Stall") || msg.includes("FAIL"))
         return "warning";
-    if (msg.includes("🟥") || msg.includes("CRASH") || msg.includes("ABORT"))
+    if (msg.includes("🟥") || msg.includes("CRASH") || msg.includes("ABORT") || msg.includes("🛑") || msg.includes("Abandoned"))
         return "error";
     return "info";
 };
@@ -218,16 +217,16 @@ export const SimulationDashboard: React.FC = () => {
                             <span>
                                 {progress.isRunning
                                     ? `ETA: ${formatMs(progress.estimatedRemainingMs)}`
-                                    : `Total: ${formatMs(Date.now() - progress.startedAt)}`}
+                                    : `Total: ${formatMs((report?.completedAt || progress.startedAt) - progress.startedAt)}`}
                             </span>
                         </div>
                         <div className="w-full h-4 bg-zinc-800 rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full transition-all duration-300 ${progress.wasAborted
-                                        ? "bg-red-500"
-                                        : progress.isRunning
-                                            ? "bg-gradient-to-r from-blue-500 to-cyan-400"
-                                            : "bg-gradient-to-r from-emerald-500 to-green-400"
+                                    ? "bg-red-500"
+                                    : progress.isRunning
+                                        ? "bg-gradient-to-r from-blue-500 to-cyan-400"
+                                        : "bg-gradient-to-r from-emerald-500 to-green-400"
                                     }`}
                                 style={{ width: `${Math.round(progress.progressPercent * 100)}%` }}
                             />
@@ -253,6 +252,12 @@ export const SimulationDashboard: React.FC = () => {
                                 {progress.failedCount}
                             </div>
                             <div className="text-[10px] text-zinc-500 font-mono">FAILED</div>
+                        </div>
+                        <div className="bg-zinc-800/50 rounded-lg p-3 text-center">
+                            <div className="text-2xl font-black text-amber-500">
+                                {progress.abandonCount}
+                            </div>
+                            <div className="text-[10px] text-zinc-500 font-mono">ABANDONED</div>
                         </div>
                         <div className="bg-zinc-800/50 rounded-lg p-3 text-center">
                             <div className={`text-2xl font-black ${STEP_COLORS[progress.currentStep] || "text-white"}`}>
@@ -376,8 +381,8 @@ export const SimulationDashboard: React.FC = () => {
                                                     )
                                                 }
                                                 className={`px-3 py-1 rounded-lg text-xs font-mono transition-all ${stressVectors.includes(sv)
-                                                        ? "bg-red-900/50 border border-red-500/50 text-red-400"
-                                                        : "bg-zinc-800 border border-white/5 text-zinc-500"
+                                                    ? "bg-red-900/50 border border-red-500/50 text-red-400"
+                                                    : "bg-zinc-800 border border-white/5 text-zinc-500"
                                                     }`}
                                             >
                                                 {sv}
@@ -427,10 +432,10 @@ export const SimulationDashboard: React.FC = () => {
                                     <div
                                         key={r.agentIndex}
                                         className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono ${r.outcome === "PASS"
-                                                ? "bg-emerald-900/20 border border-emerald-500/10"
-                                                : r.outcome === "ABORT"
-                                                    ? "bg-red-900/20 border border-red-500/10"
-                                                    : "bg-yellow-900/20 border border-yellow-500/10"
+                                            ? "bg-emerald-900/20 border border-emerald-500/10"
+                                            : r.outcome === "ABORT" || r.outcome === "PEDAGOGICAL_ABANDON"
+                                                ? "bg-red-900/20 border border-red-500/10"
+                                                : "bg-yellow-900/20 border border-yellow-500/10"
                                             }`}
                                     >
                                         <span className="text-zinc-300 truncate mr-2">
@@ -440,12 +445,12 @@ export const SimulationDashboard: React.FC = () => {
                                             className={
                                                 r.outcome === "PASS"
                                                     ? "text-emerald-400"
-                                                    : r.outcome === "ABORT"
+                                                    : r.outcome === "ABORT" || r.outcome === "PEDAGOGICAL_ABANDON"
                                                         ? "text-red-400"
                                                         : "text-yellow-400"
                                             }
                                         >
-                                            {r.outcome === "PASS" ? "✅" : r.outcome === "ABORT" ? "🟥" : "❌"}{" "}
+                                            {r.outcome === "PASS" ? "✅" : (r.outcome === "ABORT" || r.outcome === "PEDAGOGICAL_ABANDON") ? "🟥" : "❌"}{" "}
                                             {r.outcome}
                                         </span>
                                     </div>
@@ -481,6 +486,12 @@ export const SimulationDashboard: React.FC = () => {
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
+                                    <span className="text-zinc-400">Abandon Rate:</span>
+                                    <span className="text-amber-400 font-bold">
+                                        {(report.abandonRate * 100).toFixed(0)}%
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
                                     <span className="text-zinc-400">Agents:</span>
                                     <span className="text-zinc-300">{report.results.length}</span>
                                 </div>
@@ -511,10 +522,10 @@ export const SimulationDashboard: React.FC = () => {
                             </span>
                             <div
                                 className={`h-3 w-3 rounded-full ${mode === "RUNNING"
-                                        ? "bg-green-500 animate-pulse"
-                                        : mode === "COMPLETE"
-                                            ? "bg-blue-500"
-                                            : "bg-zinc-600"
+                                    ? "bg-green-500 animate-pulse"
+                                    : mode === "COMPLETE"
+                                        ? "bg-blue-500"
+                                        : "bg-zinc-600"
                                     }`}
                             />
                         </div>

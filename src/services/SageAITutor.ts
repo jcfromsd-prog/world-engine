@@ -3,6 +3,10 @@
    Provides scaffolded hints, evaluates responses, and ensures learning outcomes
    ========================================================================== */
 
+import { z } from "zod";
+import { getGeminiModel } from "./GeminiService";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+import { StructuredOutputParser } from "langchain/output_parsers";
 import type { ContentNode, BloomLevel } from "../types/EngineTypes";
 
 export type HintLevel = "NUDGE" | "SCAFFOLD" | "DIRECT" | "SOLUTION";
@@ -73,6 +77,68 @@ export const SageAITutor = {
         const hint = this.buildHintMessage(level, bloomLevel, gradeLevel, previousHintsGiven);
 
         return hint;
+    },
+
+    /**
+     * Generate an AI-powered hint using Gemini 3.1 Pro
+     * Falls back to deterministic logic if API key is missing or error occurs.
+     */
+    async generateAIHint(config: HintConfig): Promise<HintResult> {
+        try {
+            const model = getGeminiModel(0.4); // Lower temperature for more precise hints
+            if (!model) {
+                return this.generateHint(config);
+            }
+
+            // Define Schema
+            const parser = StructuredOutputParser.fromZodSchema(
+                z.object({
+                    level: z.enum(["NUDGE", "SCAFFOLD", "DIRECT", "SOLUTION"]),
+                    message: z.string(),
+                    encouragement: z.string(),
+                    nextSteps: z.array(z.string()),
+                    relatedConcepts: z.array(z.string()).optional(),
+                    visualAid: z.string().optional(),
+                    audioEnabled: z.boolean().optional()
+                })
+            );
+
+            const formatInstructions = parser.getFormatInstructions();
+
+            const systemPrompt = `
+            You are SAGE, an expert AI Tutor.
+            Your goal is to provide a helpful hint to a student based on their struggle context.
+            
+            RULES:
+            1. Adapt to their Grade Level (${config.gradeLevel}).
+            2. Respect the Bloom's Taxonomy Level (${config.bloomLevel}).
+            3. Do NOT give the answer unless the hint level is SOLUTION.
+            4. Be encouraging but precise.
+            
+            RESPONSE FORMAT:
+            ${formatInstructions}
+            `;
+
+            const userPrompt = `
+            Context:
+            - Subject: ${config.subject}
+            - Current Attempt: ${config.currentAttempt}
+            - Time Spent: ${config.timeSpentSeconds} seconds
+            - Previous Hints: ${JSON.stringify(config.previousHintsGiven)}
+            `;
+
+            const response = await model.invoke([
+                new SystemMessage(systemPrompt),
+                new HumanMessage(userPrompt)
+            ]);
+
+            const parsedResult = await parser.parse(response.content as string);
+            return parsedResult as HintResult;
+
+        } catch (error) {
+            console.error("SageAI Hint Generation Failed:", error);
+            return this.generateHint(config); // Fallback
+        }
     },
 
     /**

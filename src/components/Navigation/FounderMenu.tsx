@@ -69,11 +69,11 @@ export const FounderMenu: React.FC<FounderMenuProps> = ({
                             className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-purple-900/40 hover:to-transparent border border-transparent hover:border-purple-500/30 group transition-all w-full text-left"
                         >
                             <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
-                                💻
+                                🧪
                             </div>
                             <div>
-                                <div className="text-sm font-bold text-slate-200 group-hover:text-purple-400 transition-colors">Command Terminal</div>
-                                <div className="text-[10px] text-slate-500 group-hover:text-purple-400/60">Access System Override</div>
+                                <div className="text-sm font-bold text-slate-200 group-hover:text-purple-400 transition-colors">Simulation Control</div>
+                                <div className="text-[10px] text-slate-500 group-hover:text-purple-400/60">Run Batch & View Logs</div>
                             </div>
                         </button>
 

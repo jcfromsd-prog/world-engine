@@ -149,6 +149,7 @@ export interface Mission {
     // Progress
     estimatedTime: number;      // Minutes
     checkpoints: number;        // Save points within mission
+    standardId?: string;
 }
 
 // ----------------- ECONOMY SYSTEM -----------------

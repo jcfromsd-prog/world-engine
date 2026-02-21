@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Lock, Briefcase, ChevronRight, CheckCircle } from 'lucide-react';
 import type { LearnerProfile } from '../../engines/world-engine/LearnerModel';
 import { ContractWorkspace } from './ContractWorkspace';
-import { processMissionSuccess } from '../../engines/PayoutEngine';
+import { verifyAndLedgerMission } from '../../services/PayoutEngine';
 
 // Priority: define tiers and SDI mapping
 const TIER_LEVELS: Record<string, number> = {
@@ -39,7 +39,7 @@ const BOUNTY_LIST: BountyTask[] = [
         title: 'Beta Test: Physics Engine Collision Bug',
         description: 'Verify collision detection reliability in the new module. Report edge cases.',
         rewardType: 'VERIFICATION',
-        rewardValue: '+50 XP',
+        rewardValue: 'Logic Artifact #882',
         client: 'Simulacra Systems',
         tags: ['QA', 'Physics', 'Bug Hunt'],
         requiredArtifacts: []
@@ -50,7 +50,7 @@ const BOUNTY_LIST: BountyTask[] = [
         title: 'Data Cleanup: NGSS Tagging',
         description: 'Review and tag 50 curriculum items with appropriate NGSS standards.',
         rewardType: 'ARTIFACT',
-        rewardValue: 'Portfolio Token',
+        rewardValue: 'Portfolio Token [NGSS]',
         client: 'Global Education Initiative',
         tags: ['Data Science', 'Education', 'NLP'],
         requiredArtifacts: []
@@ -64,7 +64,7 @@ const BOUNTY_LIST: BountyTask[] = [
         rewardValue: '$50.00',
         client: 'TechFlow Inc.',
         tags: ['React', 'Performance', 'Engineering'],
-        requiredArtifacts: ['cert.python.basic'] // MOCK REQUIREMENT
+        requiredArtifacts: ['cert.python.basic']
     }
 ];
 
@@ -113,13 +113,13 @@ export const ApprenticeQueue: React.FC<ApprenticeQueueProps> = ({ profile, onPro
         setActiveWorkspaceTask(task);
     };
 
-    const handleContractComplete = () => {
+    const handleContractComplete = async () => {
         if (!activeWorkspaceTask) return;
 
         const taskId = activeWorkspaceTask.id;
 
-        // 1. Process Payout (Identity + Artifacts)
-        const payoutResult = processMissionSuccess(
+        // 1. Process Payout (Identity + Artifacts) — NOW VERIFIED & LEDGERED
+        const result = await verifyAndLedgerMission(
             `contract_${taskId}`,
             profile,
             { competencies: ['artifact_service_record'] },
@@ -132,13 +132,12 @@ export const ApprenticeQueue: React.FC<ApprenticeQueueProps> = ({ profile, onPro
                 attempts: 1,
                 completedAt: Date.now(),
                 competencyProven: true
-            },
-            { colors: ['#10b981', '#fbbf24'], particleCount: 200 } // Emerald + Gold
+            }
         );
 
-        // 2. Update Profile & Earnings (ONLY for CASH reward type)
-        if (payoutResult.success && payoutResult.updatedProfile) {
-            const finalProfile = { ...payoutResult.updatedProfile };
+        // 2. Update Profile & Earnings
+        if (result.success && result.updatedProfile) {
+            const finalProfile = { ...result.updatedProfile };
 
             if (activeWorkspaceTask.rewardType === 'CASH') {
                 const cashMatch = activeWorkspaceTask.rewardValue.match(/\$([\d.]+)/);
@@ -160,8 +159,8 @@ export const ApprenticeQueue: React.FC<ApprenticeQueueProps> = ({ profile, onPro
         setCompletedContracts(prev => [...prev, taskId]);
         setActiveWorkspaceTask(null);
 
-        // Final Toast
-        alert(`💰 PAYOUT RECEIVED: ${activeWorkspaceTask.rewardValue}\n\nEscrow released. Reputation increased.`);
+        // Final Record Entry Log (Removing gamified 'payout' language where possible)
+        console.log(`[ApprenticeQueue] Contract ${taskId} inscribed in Purpose Ledger.`);
     };
 
     return (

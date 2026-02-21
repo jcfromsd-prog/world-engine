@@ -4,6 +4,7 @@
    ========================================================================== */
 import React, { useState, useMemo } from 'react';
 import { SimulationEngine } from '../../services/SimulationEngine';
+import type { SimulationProgress } from '../../types/EngineTypes';
 import { masterTeacher, GHOST_CLASSROOM } from '../../lib/masterTeacher';
 import { auditEngine, AUDIT_PROFILES } from '../../services/AuditEngine';
 import type { AuditResult } from '../../services/AuditEngine';
@@ -32,7 +33,51 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
     const [logs, setLogs] = useState<string[]>([]);
     const [isRunning, setIsRunning] = useState(false);
     const [metrics, setMetrics] = useState({ logic: 64, agents: 92, optimization: 45 });
-    const [activeTab, setActiveTab] = useState<'COMMAND' | 'SIMULATE' | 'LOGS' | 'AUDIT'>('COMMAND');
+    const [activeTab, setActiveTab] = useState<'COMMAND' | 'BATCH' | 'PERSONAS' | 'LOGS' | 'AUDIT'>('COMMAND');
+
+    // SIMULATION ENGINE STATE
+    const [simState, setSimState] = useState<{
+        isRunning: boolean;
+        progress: SimulationProgress | null;
+        abortController: AbortController | null;
+    }>({
+        isRunning: false,
+        progress: null,
+        abortController: null
+    });
+
+    const runBatchSimulation = async () => {
+        const ac = new AbortController();
+        setSimState({ isRunning: true, progress: null, abortController: ac });
+        setActiveTab('BATCH');
+        setLogs(prev => ['🚀 STARTING BATCH SIMULATION (50 AGENTS)...', ...prev]);
+
+        try {
+            await SimulationEngine.runBatch({
+                agentCount: 50,
+                target: "Founder Panel Launch",
+                stressVectors: ["NONE"],
+                signal: ac.signal,
+                stepDelayMs: 50
+            }, {
+                onProgress: (p) => setSimState(prev => ({ ...prev, progress: p })),
+                onLog: (msg) => setLogs(prev => [`[SIM] ${msg}`, ...prev].slice(0, 100)),
+                onAgentComplete: () => { }
+            });
+            setLogs(prev => ['🏁 BATCH COMPLETE', ...prev]);
+        } catch (e) {
+            setLogs(prev => [`❌ BATCH ABORTED Or FAILED: ${e}`, ...prev]);
+        } finally {
+            setSimState(prev => ({ ...prev, isRunning: false, abortController: null }));
+        }
+    };
+
+    const cancelSimulation = () => {
+        if (simState.abortController) {
+            simState.abortController.abort();
+            setLogs(prev => ['🛑 ABORT REQUEST SENT...', ...prev]);
+        }
+    };
 
     // Audit State
     const [auditState, setAuditState] = useState<Record<string, Record<AuditStep, StepState>>>({});
@@ -225,7 +270,7 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
 
                 {/* TAB NAV */}
                 <div className="flex border-b border-white/5 bg-zinc-900/50">
-                    {(['COMMAND', 'SIMULATE', 'LOGS', 'AUDIT'] as const).map(tab => (
+                    {(['COMMAND', 'BATCH', 'PERSONAS', 'LOGS', 'AUDIT'] as const).map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -234,7 +279,12 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
                                 : 'text-zinc-600 hover:text-zinc-400'
                                 }`}
                         >
-                            {tab === 'COMMAND' && '🎛️ '}{tab === 'SIMULATE' && '👤 '}{tab === 'LOGS' && '📋 '}{tab === 'AUDIT' && '🛡️ '}{tab}
+                            {tab === 'COMMAND' && '🎛️ '}
+                            {tab === 'BATCH' && '🧪 '}
+                            {tab === 'PERSONAS' && '👤 '}
+                            {tab === 'LOGS' && '📋 '}
+                            {tab === 'AUDIT' && '🛡️ '}
+                            {tab}
                         </button>
                     ))}
                 </div>
@@ -356,8 +406,77 @@ export const FounderCommandPanel: React.FC<FounderCommandPanelProps> = ({
                         </div>
                     )}
 
-                    {/* SIMULATE TAB */}
-                    {activeTab === 'SIMULATE' && (
+                    {/* BATCH SIMULATION TAB */}
+                    {activeTab === 'BATCH' && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 className="text-xs font-bold text-zinc-600 uppercase tracking-widest mb-1">🧪 BATCH SIMULATION ENGINE</h3>
+                                    <p className="text-xs text-zinc-500">Run 50 parallel agents to stress test the entire platform.</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    {simState.isRunning ? (
+                                        <button
+                                            onClick={cancelSimulation}
+                                            className="px-6 py-2 bg-red-500/20 text-red-500 border border-red-500 font-bold rounded hover:bg-red-500 hover:text-white transition-colors"
+                                        >
+                                            ABORT BATCH
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={runBatchSimulation}
+                                            className="px-6 py-2 bg-green-500 text-black font-bold rounded hover:bg-green-400 transition-colors"
+                                        >
+                                            RUN BATCH (×50)
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* PROGRESS BAR */}
+                            {simState.progress && (
+                                <div className="p-4 bg-zinc-900/50 border border-white/10 rounded-xl space-y-2">
+                                    <div className="flex justify-between text-xs font-mono text-zinc-400">
+                                        <span>
+                                            AGENT {simState.progress.currentAgent}/{simState.progress.totalAgents}: {simState.progress.agentName}
+                                        </span>
+                                        <span>
+                                            {Math.round(simState.progress.progressPercent * 100)}% | ETA: {(simState.progress.estimatedRemainingMs / 1000).toFixed(0)}s
+                                        </span>
+                                    </div>
+                                    <div className="h-4 bg-zinc-800 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300 relative"
+                                            style={{ width: `${simState.progress.progressPercent * 100}%` }}
+                                        >
+                                            <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-4 text-xs font-mono pt-2">
+                                        <span className="text-green-400 bg-green-900/20 px-2 py-1 rounded">PASSED: {simState.progress.passedCount}</span>
+                                        <span className="text-red-400 bg-red-900/20 px-2 py-1 rounded">FAILED: {simState.progress.failedCount}</span>
+                                        <span className="text-zinc-400">STAGE: {simState.progress.currentStep}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* LOGS PREVIEW */}
+                            <div className="font-mono text-xs leading-relaxed space-y-1 bg-black p-4 rounded-xl border border-white/5 min-h-[300px] max-h-[400px] overflow-y-auto">
+                                {logs.length === 0 ? (
+                                    <div className="text-zinc-700 italic text-center py-10">System Ready.</div>
+                                ) : (
+                                    logs.map((log, i) => (
+                                        <div key={i} className={log.includes('❌') ? 'text-red-400' : log.includes('✅') || log.includes('Pas') ? 'text-green-400' : 'text-zinc-500'}>
+                                            {log}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* PERSONAS TAB (Renamed from SIMULATE) */}
+                    {activeTab === 'PERSONAS' && (
                         <div className="space-y-6">
                             <h3 className="text-xs font-bold text-zinc-600 uppercase tracking-widest mb-4">👤 SIMULATE AS USER</h3>
                             <p className="text-sm text-zinc-500 mb-6">Click a persona to reload the app as that user type. Useful for testing the experience from different perspectives.</p>
@@ -543,16 +662,15 @@ interface FounderBadgeProps {
 
 export const FounderBadge: React.FC<FounderBadgeProps> = ({ systemHealth, onClick }) => {
     const statusEmoji = systemHealth >= 70 ? '🟢' : systemHealth >= 40 ? '🟡' : '🔴';
-    const statusText = systemHealth >= 70 ? 'OPTIMIZED' : systemHealth >= 40 ? 'TUNING' : 'NEEDS WORK';
 
     return (
         <button
             onClick={onClick}
-            className="group px-4 py-2 bg-zinc-900 border border-purple-500/30 text-xs font-bold text-white uppercase rounded-lg hover:bg-purple-900/30 hover:border-purple-400 transition-all flex items-center gap-2 shadow-lg shadow-purple-500/10"
+            className="group px-4 py-2 bg-zinc-900 border border-green-500/30 text-xs font-bold text-white uppercase rounded-lg hover:bg-green-900/30 hover:border-green-400 transition-all flex items-center gap-2 shadow-lg shadow-green-500/10"
         >
-            <span className="text-purple-400">⌘</span>
-            <span>FOUNDER: {statusEmoji} {systemHealth}% {statusText}</span>
-            <span className="text-zinc-600 group-hover:text-purple-400 transition-colors">▶</span>
+            <span className="text-green-400 animate-pulse">🛠️</span>
+            <span>DEV CONSOLE {statusEmoji} </span>
+            <span className="text-zinc-600 group-hover:text-green-400 transition-colors">▶</span>
         </button>
     );
 };
