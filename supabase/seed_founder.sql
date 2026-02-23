@@ -17,7 +17,7 @@ BEGIN
           INSERT INTO public.company_bounties (company_id, title, description, reward_amount, difficulty, category, status)
           VALUES 
             (target_id, 'Biodiversity Survey', 'Analyze Sector 7 field data.', 200, 'Medium', 'Science', 'LIVE'),
-            (target_id, 'Fix Navbar CSS', 'Align dropdown menus.', 180, 'Easy', 'Coding', 'LIVE'),
+            (target_id, 'Fix Navbar CSS', 'Align dropdown menus.', 200, 'Easy', 'Coding', 'LIVE'),
             (target_id, 'Design App Icon', 'Create vector assets.', 200, 'Hard', 'Creative', 'LIVE');
       END IF;
   END LOOP;

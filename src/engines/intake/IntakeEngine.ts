@@ -103,13 +103,8 @@ export class IntakeEngine {
 
         subjects.forEach(subject => {
             const level = this.subjectLevels[subject];
-            // Identify gaps: Any standard below the target level that was missed, 
-            // or standard exactly at the current level that hasn't been mastered.
             Object.entries(CA_STANDARDS_REGISTRY).forEach(([id, meta]) => {
                 if (meta.subject === subject && meta.grade <= level) {
-                    // In a real IRT, we'd check if they missed a lower level question
-                    // For this engine, we'll flag standards at and slightly above their ZPD as "Next Competencies"
-                    // and any missed questions as "Gaps"
                     const missed = this.results.find(r => {
                         const q = DIAGNOSTIC_QUESTIONS.find(dq => dq.id === r.questionId);
                         return q?.standardId === id && !r.correct;

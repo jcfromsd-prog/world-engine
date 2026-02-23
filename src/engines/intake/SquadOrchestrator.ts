@@ -1,5 +1,5 @@
-
 import type { Squad, SquadMember } from '../../engine/types';
+import { supabase } from '../../lib/supabase';
 
 export interface VirtualSquadmate extends SquadMember {
     roleProfile: string;
@@ -105,6 +105,24 @@ export class SquadOrchestrator {
         const passed = rubric.validate(content);
 
         if (passed) {
+            // Trigger asynchronous persistence flow
+            supabase.auth.getUser().then(({ data: { user } }) => {
+                if (user) {
+                    supabase.from('submissions').insert({
+                        user_id: user.id,
+                        standard_id: standardId,
+                        content: content,
+                        passed: true
+                    }).then();
+
+                    supabase.from('reputation_ledger').insert({
+                        user_id: user.id,
+                        delta_gp: 10,
+                        reason: `Standard mastery: ${standardId}`
+                    }).then();
+                }
+            });
+
             return {
                 passed: true,
                 score: 100,
