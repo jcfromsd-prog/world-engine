@@ -2,6 +2,8 @@ import {
     DIAGNOSTIC_QUESTIONS,
     CA_STANDARDS_REGISTRY,
 } from './IntakeRegistry';
+import { supabase } from '../../lib/supabase';
+
 import type {
     Subject,
     DiagnosticQuestion,
@@ -40,8 +42,9 @@ export class IntakeEngine {
 
     /**
      * Process response and adjust difficulty (+1/-1)
+     * Persists real-time wins to Supabase as Artifacts of Knowledge.
      */
-    public submitResponse(questionId: string, optionIndex: number): boolean {
+    public async submitResponse(userId: string, questionId: string, optionIndex: number): Promise<boolean> {
         const question = DIAGNOSTIC_QUESTIONS.find(q => q.id === questionId);
         if (!question) return false;
 
@@ -51,8 +54,37 @@ export class IntakeEngine {
         // IRT Adjustment: +1 for correct, -1 for incorrect
         if (isCorrect) {
             this.subjectLevels[question.subject] = Math.min(12, this.subjectLevels[question.subject] + 1);
+
+            // ATOMIC EDIT: Real-time persistence using known exact schemas
+            try {
+                await supabase.from('submissions').insert({
+                    user_id: userId,
+                    content: {
+                        question_id: question.id,
+                        standard_id: question.standardId,
+                        subject: question.subject
+                    },
+                    status: 'validated'
+                });
+
+                await supabase.from('reputation_ledger').insert({
+                    user_id: userId,
+                    delta: 10,
+                    reason: 'validation_earned'
+                });
+            } catch (error) {
+                console.error("VISION COMPLIANCE ERROR: Failure to etch Artifact of Knowledge.", error);
+            }
         } else {
             this.subjectLevels[question.subject] = Math.max(1, this.subjectLevels[question.subject] - 1);
+        }
+
+        // Cache for instant UI continuity: Save subjectLevels/results to localStorage
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('mbp_intake_state', JSON.stringify({
+                subjectLevels: this.subjectLevels,
+                results: this.results
+            }));
         }
 
         return isCorrect;

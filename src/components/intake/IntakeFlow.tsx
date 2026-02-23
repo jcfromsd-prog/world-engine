@@ -23,11 +23,11 @@ export const IntakeFlow: React.FC<IntakeFlowProps> = ({ onComplete, onCancel, us
         setCurrentQuestion(engine.getNextQuestion());
     }, [engine]);
 
-    const handleAnswer = (optionIndex: number) => {
+    const handleAnswer = async (optionIndex: number) => {
         if (!currentQuestion || isProcessing) return;
 
         setIsProcessing(true);
-        engine.submitResponse(currentQuestion.id, optionIndex);
+        await engine.submitResponse(userId, currentQuestion.id, optionIndex);
 
         // Brief stall for "Data Processing" feel
         setTimeout(() => {
