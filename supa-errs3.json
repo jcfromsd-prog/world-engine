@@ -1,0 +1,5 @@
+{
+  "test_null_node_success": "invalid input value for enum submission_status: \"success\"",
+  "test_null_node_approved": "invalid input value for enum submission_status: \"approved\"",
+  "test_no_node": "invalid input value for enum submission_status: \"approved\""
+}

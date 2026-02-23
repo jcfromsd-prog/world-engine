@@ -39,6 +39,7 @@ import { SEED_GRAPH } from "./engines/world-engine/KnowledgeGraph";
 import type { LearnerProfile } from "./engines/world-engine/LearnerModel";
 import BlueprintCanvas from "./architect/components/BlueprintCanvas";
 import BlueprintErrorBoundary from "./architect/components/BlueprintErrorBoundary";
+import { useAuth } from './hooks/useAuth';
 
 // --- MOCK PROFILE FOR APP-LEVEL ENGINE ---
 const APP_LEARNER_PROFILE: LearnerProfile = {
@@ -382,44 +383,49 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
 
     try {
       setMatchStatus("SECURING VAULT CONNECTION...");
-      // 1. Try Sign Up
-      const { data, error } = await supabase.auth.signUp({
+      setAuthError(""); // Clear previous errors
+
+      // 1. Try Log In First
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-            grade: grade,
-            passion: passion,
-            squad: squad,
-            is_child_account: true
-          }
-        }
+        password
       });
 
-      if (error) throw error;
-
-      onComplete({ name, grade, passion, squad, id: data.user?.id });
-      clearOnboardingDraft();
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-
-      if (errorMessage.includes("already registered") || errorMessage.includes("User already exists")) {
-        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (!loginError && loginData.user) {
-          onComplete({ name, grade, passion, squad, id: loginData.user.id });
-          clearOnboardingDraft();
-          return;
-        } else {
-          setAuthError(loginError?.message || "Login Failed. Check password.");
-          return;
-        }
+      if (!loginError && loginData.user) {
+        onComplete({ name, grade, passion, squad, id: loginData.user.id });
+        clearOnboardingDraft();
+        return;
       }
 
+      // If login error is standard "Invalid login credentials", try signing up.
+      // E.g. User doesn't exist yet.
+      if (loginError && loginError.message.includes("Invalid login credentials")) {
+        // 2. Try Sign Up
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+              grade: grade,
+              passion: passion,
+              squad: squad,
+              is_child_account: true
+            }
+          }
+        });
+
+        if (signUpError) throw signUpError;
+        onComplete({ name, grade, passion, squad, id: signUpData.user?.id });
+        clearOnboardingDraft();
+        return;
+      }
+
+      // If it wasn't a standard 'invalid credentials' error, surface the real error
+      throw loginError;
+
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       setAuthError(errorMessage || "Connection Failed. Try again.");
     }
   };
@@ -777,6 +783,8 @@ const ViralShareModal: React.FC<{ mission: Mission, earnings: number, onClose: (
    MAIN APP (The Engine)
    ========================================================================== */
 const App: React.FC = () => {
+  const { supabaseUser } = useAuth();
+
   // 0. GLOBAL STATE
   const [appState, setAppState] = useState<AppState>(() => {
     if (typeof window !== 'undefined' && window.location.pathname === '/architect/blueprint') {
@@ -1015,7 +1023,7 @@ const App: React.FC = () => {
               <span className="text-amber-400 font-bold">Verified Contributor</span>.
             </p>
             <div className="flex flex-wrap justify-center gap-6 mb-24">
-              <button onClick={() => setAppState("ASSESSMENT")} className="px-12 py-6 bg-white text-black font-black text-xl rounded-2xl hover:bg-emerald-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+              <button onClick={() => setAppState("ONBOARDING")} className="px-12 py-6 bg-white text-black font-black text-xl rounded-2xl hover:bg-emerald-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
                 🚀 START YOUR ENGINE
               </button>
 
@@ -1027,7 +1035,7 @@ const App: React.FC = () => {
               onLearnClick={() => {
                 // LOGIC: Check if calibrated. For now, we assume uncalibrated to force the flow as requested in Scenario A.
                 // In a real scenario, check userProfile.completedMissions or similar.
-                setAppState("ASSESSMENT");
+                setAppState("ONBOARDING");
               }}
             />
           </div>
@@ -1092,7 +1100,7 @@ const App: React.FC = () => {
       {/* 🧬 INTELLIGENT INTAKE (Phase 1 & 2) */}
       {appState === "ASSESSMENT" && (
         <IntakeFlow
-          userId={userProfile?.id || "temp-explorer"}
+          userId={supabaseUser?.id || userProfile?.id || "temp-explorer"}
           onCancel={() => setAppState("LANDING")}
           onComplete={(map) => {
             setMasteryMap(map);
@@ -1289,9 +1297,11 @@ const App: React.FC = () => {
           systemHealth={Math.round(systemBalance / 50000 * 100)}
           onOpenCommand={() => setShowFounderModal(true)}
           onOpenDiscovery={() => setShowCalibration(true)}
-          onReset={() => {
+          onReset={async () => {
             if (typeof window !== "undefined") {
               localStorage.clear();
+              // Make sure to also nuke the Supabase session token if imported!
+              await supabase.auth.signOut();
               window.location.reload();
             }
           }}

@@ -54,26 +54,37 @@ export class IntakeEngine {
         // IRT Adjustment: +1 for correct, -1 for incorrect
         if (isCorrect) {
             this.subjectLevels[question.subject] = Math.min(12, this.subjectLevels[question.subject] + 1);
-
             // ATOMIC EDIT: Real-time persistence using known exact schemas
-            try {
-                await supabase.from('submissions').insert({
-                    user_id: userId,
-                    content: {
-                        question_id: question.id,
-                        standard_id: question.standardId,
-                        subject: question.subject
-                    },
-                    status: 'validated'
-                });
+            // Only push to Supabase if userId is a valid UUID (meaning they have an auth account). 
+            // Otherwise, we skip to avoid 400 Bad Request.
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
 
-                await supabase.from('reputation_ledger').insert({
-                    user_id: userId,
-                    delta: 10,
-                    reason: 'validation_earned'
-                });
-            } catch (error) {
-                console.error("VISION COMPLIANCE ERROR: Failure to etch Artifact of Knowledge.", error);
+            if (isUUID) {
+                try {
+                    const subRes = await supabase.from('submissions').insert({
+                        user_id: userId,
+                        content: {
+                            question_id: question.id,
+                            standard_id: question.standardId,
+                            subject: question.subject
+                        },
+                        status: 'validated'
+                    });
+                    if (subRes.error) {
+                        console.error("SUPABASE SUBMISSIONS ERROR:", subRes.error.message, subRes.error.details, subRes.error.hint);
+                    }
+
+                    const repRes = await supabase.from('reputation_ledger').insert({
+                        user_id: userId,
+                        delta: 10,
+                        reason: 'validation_earned'
+                    });
+                    if (repRes.error) {
+                        console.error("SUPABASE REPUTATION ERROR:", repRes.error.message, repRes.error.details, repRes.error.hint);
+                    }
+                } catch (error) {
+                    console.error("VISION COMPLIANCE ERROR: Failure to etch Artifact of Knowledge.", error);
+                }
             }
         } else {
             this.subjectLevels[question.subject] = Math.max(1, this.subjectLevels[question.subject] - 1);

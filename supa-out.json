@@ -1,0 +1,81 @@
+{
+  "submissions": {
+    "submission_id": {
+      "default": "gen_random_uuid()",
+      "description": "Note:\nThis is a Primary Key.<pk/>",
+      "format": "uuid",
+      "type": "string"
+    },
+    "user_id": {
+      "description": "Note:\nThis is a Foreign Key to `users.user_id`.<fk table='users' column='user_id'/>",
+      "format": "uuid",
+      "type": "string"
+    },
+    "node_id": {
+      "description": "Note:\nThis is a Foreign Key to `nodes.node_id`.<fk table='nodes' column='node_id'/>",
+      "format": "uuid",
+      "type": "string"
+    },
+    "content": {
+      "format": "jsonb"
+    },
+    "status": {
+      "default": "pending",
+      "enum": [
+        "pending",
+        "in_swarm",
+        "validated",
+        "failed",
+        "escalated"
+      ],
+      "format": "public.submission_status",
+      "type": "string"
+    },
+    "consensus_score": {
+      "format": "numeric",
+      "type": "number"
+    },
+    "submitted_at": {
+      "default": "timezone('utc'::text, now())",
+      "format": "timestamp with time zone",
+      "type": "string"
+    }
+  },
+  "reputation_ledger": {
+    "ledger_id": {
+      "default": "gen_random_uuid()",
+      "description": "Note:\nThis is a Primary Key.<pk/>",
+      "format": "uuid",
+      "type": "string"
+    },
+    "user_id": {
+      "description": "Note:\nThis is a Foreign Key to `users.user_id`.<fk table='users' column='user_id'/>",
+      "format": "uuid",
+      "type": "string"
+    },
+    "delta": {
+      "format": "numeric",
+      "type": "number"
+    },
+    "reason": {
+      "enum": [
+        "validation_earned",
+        "stake_deducted",
+        "project_roi",
+        "mentor_bonus",
+        "escalation_penalty"
+      ],
+      "format": "public.reputation_reason",
+      "type": "string"
+    },
+    "related_id": {
+      "format": "uuid",
+      "type": "string"
+    },
+    "logged_at": {
+      "default": "timezone('utc'::text, now())",
+      "format": "timestamp with time zone",
+      "type": "string"
+    }
+  }
+}

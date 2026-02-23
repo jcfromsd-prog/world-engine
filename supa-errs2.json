@@ -1,0 +1,18 @@
+{
+  "test1": {
+    "subErr": "invalid input syntax for type uuid: \"test\"",
+    "repErr": "insert or update on table \"reputation_ledger\" violates foreign key constraint \"reputation_ledger_user_id_fkey\""
+  },
+  "test2": {
+    "subErr": "Could not find the 'content_payload' column of 'submissions' in the schema cache",
+    "repErr": "invalid input value for enum reputation_reason: \"bad_enum\""
+  },
+  "test3": {
+    "subErr": "Could not find the 'content_payload' column of 'submissions' in the schema cache",
+    "repErr": "invalid input value for enum reputation_reason: \"diagnostic_solve_success\""
+  },
+  "test4": {
+    "subErr": "Could not find the 'content_payload' column of 'submissions' in the schema cache",
+    "repErr": "insert or update on table \"reputation_ledger\" violates foreign key constraint \"reputation_ledger_user_id_fkey\""
+  }
+}

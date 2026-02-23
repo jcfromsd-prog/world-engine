@@ -1,0 +1,14 @@
+{
+  "submissionsError": {
+    "code": "22P02",
+    "details": null,
+    "hint": null,
+    "message": "invalid input syntax for type uuid: \"test\""
+  },
+  "reputationError": {
+    "code": "23503",
+    "details": "Key (user_id)=(123e4567-e89b-12d3-a456-426614174000) is not present in table \"users\".",
+    "hint": null,
+    "message": "insert or update on table \"reputation_ledger\" violates foreign key constraint \"reputation_ledger_user_id_fkey\""
+  }
+}
