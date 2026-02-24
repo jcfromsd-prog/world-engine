@@ -74,7 +74,7 @@ const APP_LEARNER_PROFILE: LearnerProfile = {
 
 
 // --- TYPES ---
-type AppState = "LANDING" | "ONBOARDING" | "SQUAD_BRIEFING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP" | "BLUEPRINT_MODE" | "SIMULATION_ENGINE";
+type AppState = "LANDING" | "ONBOARDING" | "SQUAD_BRIEFING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP" | "BLUEPRINT_MODE" | "SIMULATION_ENGINE" | "SWARM_DASHBOARD";
 
 
 export interface UserProfile {
@@ -1297,6 +1297,7 @@ const App: React.FC = () => {
           systemHealth={Math.round(systemBalance / 50000 * 100)}
           onOpenCommand={() => setShowFounderModal(true)}
           onOpenDiscovery={() => setShowCalibration(true)}
+          onOpenSwarmMenu={() => setAppState("SWARM_DASHBOARD")}
           onReset={async () => {
             if (typeof window !== "undefined") {
               localStorage.clear();
@@ -1327,6 +1328,11 @@ const App: React.FC = () => {
           </button>
           <SimulationDashboard />
         </div>
+      )}
+
+      {/* 🐝 SWARM DASHBOARD (Validation UI) */}
+      {appState === "SWARM_DASHBOARD" && (
+        <SwarmDashboard onClose={() => setAppState("LANDING")} />
       )}
 
       <ElevationMoment />

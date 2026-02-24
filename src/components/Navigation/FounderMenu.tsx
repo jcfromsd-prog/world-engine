@@ -5,6 +5,7 @@ interface FounderMenuProps {
     systemHealth: number;
     onOpenCommand: () => void;
     onOpenDiscovery: () => void;
+    onOpenSwarmMenu: () => void;
     onReset: () => void;
 }
 
@@ -12,6 +13,7 @@ export const FounderMenu: React.FC<FounderMenuProps> = ({
     systemHealth,
     onOpenCommand,
     onOpenDiscovery,
+    onOpenSwarmMenu,
     onReset
 }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -77,10 +79,24 @@ export const FounderMenu: React.FC<FounderMenuProps> = ({
                             </div>
                         </button>
 
+                        {/* 3. SWARM DASHBOARD (NEW) */}
+                        <button
+                            onClick={() => { onOpenSwarmMenu(); setIsOpen(false); }}
+                            className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-emerald-900/40 hover:to-transparent border border-transparent hover:border-emerald-500/30 group transition-all w-full text-left"
+                        >
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                                🐝
+                            </div>
+                            <div>
+                                <div className="text-sm font-bold text-slate-200 group-hover:text-emerald-400 transition-colors">Swarm Dashboard</div>
+                                <div className="text-[10px] text-slate-500 group-hover:text-emerald-400/60">Live Consensus & Reputation</div>
+                            </div>
+                        </button>
+
                         {/* Divider */}
                         <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-1" />
 
-                        {/* 3. LOG OUT (Safe Exit) */}
+                        {/* 4. LOG OUT (Safe Exit) */}
                         <button
                             onClick={() => {
                                 if (window.confirm("Sign out of current session?")) {
