@@ -1,11 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { IntakeEngine } from '../../engines/intake/IntakeEngine';
 import type { DiagnosticQuestion, MasteryMap } from '../../engines/intake/IntakeRegistry';
+import { calculateAgeTier } from '../../engines/intake/IntakeRegistry';
 import { SquadOrchestrator } from '../../engines/intake/SquadOrchestrator';
 import { PurposeLedger } from '../../services/PurposeLedger';
 import { emitAssessmentElevation } from '../../services/PayoutEngine';
 import { Shield, CheckCircle2, ChevronRight, Activity, Brain } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 interface IntakeFlowProps {
     onComplete: (masteryMap: MasteryMap) => void;
@@ -30,9 +31,9 @@ export const IntakeFlow: React.FC<IntakeFlowProps> = ({ onComplete, onCancel, us
         await engine.submitResponse(userId, currentQuestion.id, optionIndex);
 
         // Brief stall for "Data Processing" feel
-        setTimeout(() => {
+        setTimeout(async () => {
             if (engine.isComplete()) {
-                handleFinish();
+                await handleFinish();
             } else {
                 setCurrentQuestion(engine.getNextQuestion());
                 setProgress((prev) => prev + 10);
@@ -44,6 +45,11 @@ export const IntakeFlow: React.FC<IntakeFlowProps> = ({ onComplete, onCancel, us
     const handleFinish = async () => {
         const masteryMap = engine.generateMasteryMap();
 
+        // Eligibility Gate: Compute Age Tier based on ZPD
+        const avgGrade = Math.round(Object.values(masteryMap.zpd).reduce((a, b) => a + b, 0) / 3);
+        const ageTier = calculateAgeTier(avgGrade);
+        masteryMap.ageTier = ageTier;
+
         // Phase 3: Squad Orchestration
         const orchestrator = new SquadOrchestrator();
         await orchestrator.orchestrateSquad(userId);
@@ -52,7 +58,7 @@ export const IntakeFlow: React.FC<IntakeFlowProps> = ({ onComplete, onCancel, us
         await PurposeLedger.addEntry({
             user_id: userId,
             mission_id: 'SYSTEM_INTAKE_001',
-            verified_outputs: ['SkillGraph Assessment Complete', 'CA Standards Mapped'],
+            verified_outputs: ['SkillGraph Assessment Complete', 'CA Standards Mapped', `Tier ${ageTier} Verified`],
             impact_metrics: {
                 portfolio_items_added: 0,
                 skills_demonstrated: Object.keys(masteryMap.zpd),
@@ -60,6 +66,22 @@ export const IntakeFlow: React.FC<IntakeFlowProps> = ({ onComplete, onCancel, us
                 engine_progress: { impact_to_legend: 1.0 }
             }
         });
+
+        // Supabase: Upsert Age Tier into the valid users record
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+        if (isUUID) {
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .update({ age_tier: ageTier })
+                    .eq('id', userId);
+
+                if (error) console.error("TIER SYNC ERROR:", error.message);
+                else console.log(`[Eligibility Gate] User ${userId} locked to Tier ${ageTier}`);
+            } catch (err) {
+                console.error("TIER SYNC ERROR - FATAL", err);
+            }
+        }
 
         emitAssessmentElevation(masteryMap);
         onComplete(masteryMap);

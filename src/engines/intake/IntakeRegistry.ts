@@ -1,5 +1,7 @@
-
 export type Subject = 'math' | 'ela' | 'logic';
+
+// Phase 3: Intelligence Swarm - Age Tiers mapped to Supabase users.age_tier (1-5)
+export type AgeTier = 1 | 2 | 3 | 4 | 5;
 
 export interface DiagnosticQuestion {
     id: string;
@@ -24,12 +26,22 @@ export interface MasteryMap {
     gaps: MasteryGap[];
     nextCompetencies: string[];
     confidenceScore: number;
+    ageTier?: AgeTier; // Injected during Engine completion
     graduationProjection?: {
         creditsCompleted: number;
         creditsRemaining: number;
         estimatedCompletion: string;
     };
 }
+
+// Utility function to convert raw average grade (1-12) to Swarm Age Tier (1-5)
+export const calculateAgeTier = (averageGrade: number): AgeTier => {
+    if (averageGrade <= 3) return 1;       // Tier 1: Sprouts (Grades 1-3)
+    if (averageGrade <= 6) return 2;       // Tier 2: Explorers (Grades 4-6)
+    if (averageGrade <= 8) return 3;       // Tier 3: Builders (Grades 7-8)
+    if (averageGrade <= 10) return 4;      // Tier 4: Architects (Grades 9-10)
+    return 5;                              // Tier 5: Voyagers (Grades 11-12+)
+};
 
 export const CA_STANDARDS_REGISTRY: Record<string, { description: string, subject: Subject, grade: number }> = {
     // MATH
