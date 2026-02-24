@@ -6,9 +6,9 @@ import { Shield, Activity, Star, Inbox, History, CheckCircle2, ChevronRight, XCi
 // Database Interfaces
 interface UserProfile {
     id: string;
-    age_tier: number | null;
-    reputation_score: number;
-    apathy_index: number;
+    current_tier: number | null;
+    reputation_tokens: number;
+    cognitive_tier: number;
     swarm_validator_level: number;
 }
 
@@ -72,7 +72,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
             // Fetch Profile
             const { data: userProfile } = await supabase
                 .from('users')
-                .select('id, age_tier, reputation_score, apathy_index, swarm_validator_level')
+                .select('id, current_tier, reputation_tokens, cognitive_tier, swarm_validator_level')
                 .eq('id', uid)
                 .single();
 
@@ -126,7 +126,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                     submission_id: selectedSubmission.id,
                     validator_id: profile.id,
                     score: voteScore,
-                    weight_applied: profile.reputation_score > 0 ? profile.reputation_score : 1
+                    weight_applied: profile.reputation_tokens > 0 ? profile.reputation_tokens : 1
                 });
 
             if (error) {
@@ -184,18 +184,18 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Operation Tier</span>
                             <div className="flex items-end gap-2">
-                                <span className="text-5xl font-black text-white">{profile.age_tier || 1}</span>
+                                <span className="text-5xl font-black text-white">{profile.current_tier || 1}</span>
                                 <span className="text-slate-600 font-semibold pb-1">/ 5</span>
                             </div>
                             <div className="w-full h-1.5 bg-slate-800 rounded-full mt-4 overflow-hidden">
-                                <div className="h-full bg-emerald-500" style={{ width: `${((profile.age_tier || 1) / 5) * 100}%` }} />
+                                <div className="h-full bg-emerald-500" style={{ width: `${((profile.current_tier || 1) / 5) * 100}%` }} />
                             </div>
                         </div>
 
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Reputation Ledger</span>
                             <div className="text-4xl font-black text-emerald-400">
-                                {profile.reputation_score.toFixed(1)}
+                                {profile.reputation_tokens.toFixed(1)}
                             </div>
                             <span className="text-xs font-mono text-emerald-500/70 mt-2 flex items-center gap-1">
                                 <Activity className="w-3 h-3" /> System Weight Active
@@ -205,12 +205,12 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                             <div className="flex justify-between items-center mb-2">
                                 <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Apathy Index</span>
-                                <span className="text-xs font-mono font-bold text-slate-400">{profile.apathy_index.toFixed(2)}</span>
+                                <span className="text-xs font-mono font-bold text-slate-400">{profile.cognitive_tier.toFixed(2)}</span>
                             </div>
                             <div className="w-full h-2 bg-slate-800 rounded-full mt-2 overflow-hidden flex">
                                 <div className="h-full transition-all" style={{
-                                    width: `${profile.apathy_index * 100}%`,
-                                    backgroundColor: profile.apathy_index < 0.3 ? '#10b981' : profile.apathy_index > 0.7 ? '#ef4444' : '#f59e0b'
+                                    width: `${profile.cognitive_tier * 100}%`,
+                                    backgroundColor: profile.cognitive_tier < 0.3 ? '#10b981' : profile.cognitive_tier > 0.7 ? '#ef4444' : '#f59e0b'
                                 }} />
                             </div>
                             <span className="text-[10px] text-slate-600 mt-3 block">High apathy restricts validator influence.</span>
