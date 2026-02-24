@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Activity, Star, Inbox, History, CheckCircle2, ChevronRight, XCircle, Clock } from 'lucide-react';
+import { Shield, Activity, Star, Inbox, History, CheckCircle2, ChevronRight, XCircle, Clock, Loader2 } from 'lucide-react';
 
-// Database Interfaces
+// =============================================
+// WORLD ENGINE - SwarmDashboard.tsx
+// Perfectly aligned to live SQL (2-24-2026)
+// =============================================
+
 interface UserProfile {
     id: string;
-    current_tier: number | null;
-    reputation_tokens: number;
-    cognitive_tier: number;
+    age_tier: number | null;
+    current_tier: number;
+    reputation_score: number;
+    apathy_index: number;
     swarm_validator_level: number;
 }
 
@@ -21,40 +26,42 @@ interface Submission {
     consensus_score: number;
     created_at: string;
     updated_at: string;
-    nodes?: { skill_domain: string | null }; // Joined data
+    nodes?: { skill_domain: string | null };
 }
 
 interface LedgerEntry {
     id: string;
     delta: number;
     reason: string;
+    related_submission: string | null;
     created_at: string;
 }
 
 export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [mySubmissions, setMySubmissions] = useState<Submission[]>([]);
-    const [inbox, setInbox] = useState<Submission[]>([]); // Active votes
+    const [inbox, setInbox] = useState<Submission[]>([]);
     const [ledger, setLedger] = useState<LedgerEntry[]>([]);
     const [activeTab, setActiveTab] = useState<'submissions' | 'inbox' | 'ledger'>('submissions');
     const [isLoading, setIsLoading] = useState(true);
-
+    const [error, setError] = useState<string | null>(null);
     const [voteModalOpen, setVoteModalOpen] = useState(false);
     const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
     const [voteScore, setVoteScore] = useState<number>(0.5);
+    const [isSubmittingVote, setIsSubmittingVote] = useState(false);
 
     useEffect(() => {
         loadDashboardData();
-        // Setup Real-time subscriptions
-        const subSubmissions = supabase.channel('submissions_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, () => {
-                loadDashboardData();
-            }).subscribe();
 
-        const subLedger = supabase.channel('ledger_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'reputation_ledger' }, () => {
-                loadDashboardData();
-            }).subscribe();
+        const subSubmissions = supabase
+            .channel('submissions_changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, loadDashboardData)
+            .subscribe();
+
+        const subLedger = supabase
+            .channel('ledger_changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'reputation_ledger' }, loadDashboardData)
+            .subscribe();
 
         return () => {
             supabase.removeChannel(subSubmissions);
@@ -64,85 +71,87 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
 
     const loadDashboardData = async () => {
         setIsLoading(true);
+        setError(null);
         try {
             const { data: authData } = await supabase.auth.getUser();
-            if (!authData.user) return;
+            if (!authData.user) {
+                setError('Authentication failed. Please log in again.');
+                return;
+            }
             const uid = authData.user.id;
 
-            // Fetch Profile
-            const { data: userProfile } = await supabase
+            // Profile
+            const { data: userProfile, error: profileErr } = await supabase
                 .from('users')
-                .select('id, current_tier, reputation_tokens, cognitive_tier, swarm_validator_level')
+                .select('id, age_tier, current_tier, reputation_score, apathy_index, swarm_validator_level')
                 .eq('id', uid)
                 .single();
 
+            if (profileErr) throw profileErr;
             if (userProfile) setProfile(userProfile);
 
-            // Fetch My Submissions (Join with nodes to get skill_domain)
+            // My Submissions
             const { data: subs } = await supabase
                 .from('submissions')
                 .select('*, nodes(skill_domain)')
                 .eq('user_id', uid)
                 .order('created_at', { ascending: false });
-
             if (subs) setMySubmissions(subs as unknown as Submission[]);
 
-            // Fetch Ledger
+            // Ledger
             const { data: ledgerEntries } = await supabase
                 .from('reputation_ledger')
                 .select('*')
                 .eq('user_id', uid)
                 .order('created_at', { ascending: false })
                 .limit(10);
+            if (ledgerEntries) setLedger(ledgerEntries as unknown as LedgerEntry[]);
 
-            if (ledgerEntries) setLedger(ledgerEntries);
-
-            // Fetch Inbox (Items to vote on if validator level >= 1)
+            // Inbox (validator only)
             if (userProfile && userProfile.swarm_validator_level >= 1) {
                 const { data: inboxSubs } = await supabase
                     .from('submissions')
                     .select('*, nodes(skill_domain)')
                     .eq('status', 'active_vote')
-                    .neq('user_id', uid) // Don't vote on your own
+                    .neq('user_id', uid)
                     .order('created_at', { ascending: false });
-
                 if (inboxSubs) setInbox(inboxSubs as unknown as Submission[]);
             }
-
-        } catch (error) {
-            console.error("Dashboard Load Error:", error);
+        } catch (err: any) {
+            console.error('Dashboard Load Error:', err);
+            setError(err?.message || 'Unexpected error loading Swarm data.');
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleSubmitVote = async () => {
-        if (!selectedSubmission || !profile) return;
-
+        if (!selectedSubmission || !profile || isSubmittingVote) return;
+        setIsSubmittingVote(true);
         try {
-            const { error } = await supabase
-                .from('swarm_votes')
-                .insert({
-                    submission_id: selectedSubmission.id,
-                    validator_id: profile.id,
-                    score: voteScore,
-                    weight_applied: profile.reputation_tokens > 0 ? profile.reputation_tokens : 1
-                });
+            const { error } = await supabase.from('swarm_votes').insert({
+                submission_id: selectedSubmission.id,
+                validator_id: profile.id,
+                score: voteScore,
+                weight_applied: profile.reputation_score > 0 ? profile.reputation_score : 1,
+            });
 
             if (error) {
-                if (error.message.includes("prevent double-voting") || error.code === '23505') {
-                    alert("You have already voted on this submission.");
+                if (error.code === '23505') {
+                    alert('You have already voted on this submission.');
                 } else {
-                    console.error("Vote Error:", error);
-                    alert("Failed to submit vote.");
+                    alert(`Vote failed: ${error.message}`);
                 }
             } else {
                 setVoteModalOpen(false);
                 setSelectedSubmission(null);
-                loadDashboardData(); // Refresh UI to trigger the PG Trigger consensus update
+                setVoteScore(0.5);
+                await loadDashboardData(); // triggers RPC + real-time update
             }
         } catch (err) {
             console.error(err);
+        } finally {
+            setIsSubmittingVote(false);
         }
     };
 
@@ -155,32 +164,51 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
         }
     };
 
-    if (isLoading) return (
-        <div className="fixed inset-0 z-[200] bg-slate-950 flex items-center justify-center font-mono">
-            <div className="text-emerald-500 animate-pulse text-xl">Connecting to Intelligence Swarm...</div>
-        </div>
-    );
+    if (isLoading) {
+        return (
+            <div className="fixed inset-0 z-[200] bg-slate-950 flex items-center justify-center font-mono">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                    <div className="text-emerald-500 animate-pulse text-xl tracking-widest">Connecting to Intelligence Swarm...</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="fixed inset-0 z-[200] bg-slate-950 flex items-center justify-center font-mono p-8">
+                <div className="text-center">
+                    <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                    <p className="text-red-400 text-sm">{error}</p>
+                    <button onClick={loadDashboardData} className="mt-4 px-6 py-2 bg-slate-800 text-slate-300 rounded-lg text-sm hover:bg-slate-700 transition-colors">
+                        Retry Connection
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 z-[200] bg-slate-950 text-slate-200 font-sans overflow-y-auto w-full custom-scrollbar">
             <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8 pb-24 relative">
-
-                {/* Close Button Header */}
+                {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-2xl font-black text-white tracking-widest uppercase flex items-center gap-3">
                         <Shield className="w-8 h-8 text-emerald-400" />
                         Intelligence Swarm Dashboard
                     </h1>
                     {onClose && (
-                        <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
+                        <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors font-mono text-sm">
                             [ TERMINATE LINK ]
                         </button>
                     )}
                 </div>
 
-                {/* 1. HERO SWARM PROFILE */}
+                {/* HERO PROFILE */}
                 {profile && (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {/* Tier */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Operation Tier</span>
                             <div className="flex items-end gap-2">
@@ -192,30 +220,31 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                             </div>
                         </div>
 
+                        {/* Reputation */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Reputation Ledger</span>
-                            <div className="text-4xl font-black text-emerald-400">
-                                {profile.reputation_tokens.toFixed(1)}
-                            </div>
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Reputation Score</span>
+                            <div className="text-4xl font-black text-emerald-400">{profile.reputation_score.toFixed(1)}</div>
                             <span className="text-xs font-mono text-emerald-500/70 mt-2 flex items-center gap-1">
                                 <Activity className="w-3 h-3" /> System Weight Active
                             </span>
                         </div>
 
+                        {/* Apathy */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                             <div className="flex justify-between items-center mb-2">
                                 <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Apathy Index</span>
-                                <span className="text-xs font-mono font-bold text-slate-400">{profile.cognitive_tier.toFixed(2)}</span>
+                                <span className="text-xs font-mono font-bold text-slate-400">{profile.apathy_index.toFixed(2)}</span>
                             </div>
                             <div className="w-full h-2 bg-slate-800 rounded-full mt-2 overflow-hidden flex">
                                 <div className="h-full transition-all" style={{
-                                    width: `${profile.cognitive_tier * 100}%`,
-                                    backgroundColor: profile.cognitive_tier < 0.3 ? '#10b981' : profile.cognitive_tier > 0.7 ? '#ef4444' : '#f59e0b'
+                                    width: `${profile.apathy_index * 100}%`,
+                                    backgroundColor: profile.apathy_index < 0.3 ? '#10b981' : profile.apathy_index > 0.7 ? '#ef4444' : '#f59e0b'
                                 }} />
                             </div>
                             <span className="text-[10px] text-slate-600 mt-3 block">High apathy restricts validator influence.</span>
                         </div>
 
+                        {/* Validator */}
                         <div className="relative bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden">
                             {profile.swarm_validator_level >= 1 && (
                                 <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-bl-full flex items-start justify-end p-2 border-b border-l border-blue-500/20">
@@ -223,49 +252,31 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                                 </div>
                             )}
                             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Validator Protocol</span>
-                            <div className="text-3xl font-black text-white flex items-center gap-2">
-                                Lvl. {profile.swarm_validator_level}
-                            </div>
-                            {profile.swarm_validator_level > 0 ? (
+                            <div className="text-3xl font-black text-white">Lvl. {profile.swarm_validator_level}</div>
+                            {profile.swarm_validator_level >= 1 ? (
                                 <span className="text-xs font-mono text-blue-400 mt-2 font-bold tracking-tight">Active Consensus Node</span>
                             ) : (
-                                <span className="text-xs font-mono text-slate-500 mt-2 tracking-tight">Observer Status</span>
+                                <span className="text-xs font-mono text-slate-500 mt-2 tracking-tight">Reach Level 1 to validate</span>
                             )}
                         </div>
                     </div>
                 )}
 
-                {/* MAIN DASHBOARD TABS */}
+                {/* TABS */}
                 <div className="flex gap-4 border-b border-slate-800 pb-px">
-                    <button
-                        onClick={() => setActiveTab('submissions')}
-                        className={`pb-4 px-2 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'submissions' ? 'text-white border-emerald-500' : 'text-slate-500 border-transparent hover:text-slate-300'}`}
-                    >
-                        My Submissions
-                    </button>
+                    <button onClick={() => setActiveTab('submissions')} className={`pb-4 px-2 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'submissions' ? 'text-white border-emerald-500' : 'text-slate-500 border-transparent hover:text-slate-300'}`}>My Submissions</button>
                     {profile && profile.swarm_validator_level >= 1 && (
-                        <button
-                            onClick={() => setActiveTab('inbox')}
-                            className={`pb-4 px-2 text-sm font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 ${activeTab === 'inbox' ? 'text-white border-blue-500' : 'text-slate-500 border-transparent hover:text-slate-300'}`}
-                        >
-                            Inbox Queue
-                            {inbox.length > 0 && (
-                                <span className="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full">{inbox.length}</span>
-                            )}
+                        <button onClick={() => setActiveTab('inbox')} className={`pb-4 px-2 text-sm font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 ${activeTab === 'inbox' ? 'text-white border-blue-500' : 'text-slate-500 border-transparent hover:text-slate-300'}`}>
+                            <Inbox className="w-4 h-4" /> Inbox Queue {inbox.length > 0 && <span className="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full">{inbox.length}</span>}
                         </button>
                     )}
-                    <button
-                        onClick={() => setActiveTab('ledger')}
-                        className={`pb-4 px-2 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'ledger' ? 'text-white border-emerald-500' : 'text-slate-500 border-transparent hover:text-slate-300'}`}
-                    >
-                        Ledger
-                    </button>
+                    <button onClick={() => setActiveTab('ledger')} className={`pb-4 px-2 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'ledger' ? 'text-white border-emerald-500' : 'text-slate-500 border-transparent hover:text-slate-300'}`}>Ledger</button>
                 </div>
 
-                {/* TAB CONTENT: SUBMISSIONS */}
+                {/* TAB CONTENT */}
                 <AnimatePresence mode="wait">
                     {activeTab === 'submissions' && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+                        <motion.div key="submissions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
                             {mySubmissions.length === 0 ? (
                                 <div className="p-12 border border-dashed border-slate-800 rounded-2xl text-center">
                                     <Clock className="w-12 h-12 text-slate-700 mx-auto mb-4" />
@@ -302,9 +313,8 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                         </motion.div>
                     )}
 
-                    {/* TAB CONTENT: INBOX */}
                     {activeTab === 'inbox' && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+                        <motion.div key="inbox" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
                             {inbox.length === 0 ? (
                                 <div className="p-12 border border-dashed border-slate-800 rounded-2xl text-center">
                                     <CheckCircle2 className="w-12 h-12 text-slate-700 mx-auto mb-4" />
@@ -334,9 +344,8 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                         </motion.div>
                     )}
 
-                    {/* TAB CONTENT: LEDGER */}
                     {activeTab === 'ledger' && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-2">
+                        <motion.div key="ledger" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-2">
                             {ledger.length === 0 ? (
                                 <div className="p-12 border border-dashed border-slate-800 rounded-2xl text-center">
                                     <History className="w-12 h-12 text-slate-700 mx-auto mb-4" />
@@ -365,15 +374,12 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
             {/* VOTE MODAL */}
             <AnimatePresence>
                 {voteModalOpen && selectedSubmission && (
-                    <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-                    >
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                         <motion.div
                             initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
                             className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] relative"
                         >
-                            <button onClick={() => { setVoteModalOpen(false); setSelectedSubmission(null); }} className="absolute top-4 right-4 text-slate-500 hover:text-white">
+                            <button disabled={isSubmittingVote} onClick={() => { setVoteModalOpen(false); setSelectedSubmission(null); setVoteScore(0.5); }} className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors disabled:opacity-50">
                                 <XCircle className="w-6 h-6" />
                             </button>
 
@@ -408,7 +414,8 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                                     min="0" max="1" step="0.05"
                                     value={voteScore}
                                     onChange={(e) => setVoteScore(parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                    disabled={isSubmittingVote}
+                                    className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500 disabled:opacity-50"
                                 />
                                 <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-2 font-bold">
                                     <span>REJECT (0%)</span>
@@ -419,9 +426,17 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
 
                             <button
                                 onClick={handleSubmitVote}
-                                className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)]"
+                                disabled={isSubmittingVote}
+                                className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] disabled:shadow-none flex items-center justify-center gap-3"
                             >
-                                Submit Cryptographic Vote
+                                {isSubmittingVote ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Transmitting...
+                                    </>
+                                ) : (
+                                    'Submit Cryptographic Vote'
+                                )}
                             </button>
                         </motion.div>
                     </motion.div>
