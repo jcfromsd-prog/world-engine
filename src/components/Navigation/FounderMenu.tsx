@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FounderBadge } from '../dashboard/FounderCommandPanel';
+import { supabase } from '../../lib/supabase';
 
 interface FounderMenuProps {
     systemHealth: number;
@@ -95,6 +96,8 @@ export const FounderMenu: React.FC<FounderMenuProps> = ({
 
                         {/* Divider */}
                         <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-1" />
+
+
 
                         {/* 4. LOG OUT (Safe Exit) */}
                         <button
