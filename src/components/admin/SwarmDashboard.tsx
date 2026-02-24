@@ -129,20 +129,33 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
         if (!selectedSubmission || !profile || isSubmittingVote) return;
         setIsSubmittingVote(true);
         try {
-            const { error } = await supabase.from('swarm_votes').insert({
+            // Updated to use confidence_weight instead of weight_applied based on schema audit
+            const { error: voteError } = await supabase.from('swarm_votes').insert({
                 submission_id: selectedSubmission.id,
                 validator_id: profile.user_id,
                 score: voteScore,
-                weight_applied: profile.reputation_tokens > 0 ? profile.reputation_tokens : 1, // Uses reputation_tokens
+                confidence_weight: profile.reputation_tokens > 0 ? profile.reputation_tokens : 1,
             });
 
-            if (error) {
-                if (error.code === '23505') {
+            if (voteError) {
+                if (voteError.code === '23505') {
                     alert('You have already voted on this submission.');
                 } else {
-                    alert(`Vote failed: ${error.message}`);
+                    alert(`Vote failed: ${voteError.message}`);
                 }
             } else {
+                // SUCCESS: Award the validator reputation for casting the vote
+                const { error: rpcError } = await supabase.rpc('award_reputation_delta', {
+                    p_user_id: profile.user_id,
+                    p_delta: 10,
+                    p_reason: 'validation_earned',
+                    p_submission_id: selectedSubmission.id
+                });
+
+                if (rpcError) {
+                    console.error("Failed to sync validator reputation reward:", rpcError);
+                }
+
                 setVoteModalOpen(false);
                 setSelectedSubmission(null);
                 setVoteScore(0.5);
