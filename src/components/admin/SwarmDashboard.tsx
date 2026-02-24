@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Activity, Star, Inbox, History, CheckCircle2, ChevronRight, XCircle, Clock, Loader2 } from 'lucide-react';
-
-// =============================================
-// WORLD ENGINE - SwarmDashboard.tsx
-// Perfectly aligned to live SQL (2-24-2026)
-// =============================================
+import { Shield, Activity, Inbox, History, CheckCircle2, ChevronRight, XCircle, Clock, Loader2 } from 'lucide-react';
 
 interface UserProfile {
-    id: string;
-    age_tier: number | null;
-    current_tier: number;
-    reputation_score: number;
-    apathy_index: number;
+    user_id: string; // Ground truth field
+    current_tier: number | null; // Ground truth field
+    reputation_tokens: number; // Ground truth field
+    cognitive_tier: number; // Ground truth field
     swarm_validator_level: number;
 }
 
@@ -22,7 +16,7 @@ interface Submission {
     user_id: string;
     node_id: string;
     stake_tokens: number;
-    status: 'pending' | 'active_vote' | 'approved' | 'rejected';
+    status: 'pending' | 'in_swarm' | 'approved' | 'rejected'; // Ground truth field 'in_swarm'
     consensus_score: number;
     created_at: string;
     updated_at: string;
@@ -80,14 +74,14 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
             }
             const uid = authData.user.id;
 
-            // Profile
+            // Profile - Uses user_id and EXACT fields
             const { data: userProfile, error: profileErr } = await supabase
                 .from('users')
-                .select('id, age_tier, current_tier, reputation_score, apathy_index, swarm_validator_level')
-                .eq('id', uid)
+                .select('user_id, current_tier, reputation_tokens, cognitive_tier, swarm_validator_level')
+                .eq('user_id', uid)
                 .single();
 
-            if (profileErr) throw profileErr;
+            if (profileErr && profileErr.code !== 'PGRST116') throw profileErr;
             if (userProfile) setProfile(userProfile);
 
             // My Submissions
@@ -107,12 +101,12 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                 .limit(10);
             if (ledgerEntries) setLedger(ledgerEntries as unknown as LedgerEntry[]);
 
-            // Inbox (validator only)
+            // Inbox (validator only) - uses IN_SWARM status
             if (userProfile && userProfile.swarm_validator_level >= 1) {
                 const { data: inboxSubs } = await supabase
                     .from('submissions')
                     .select('*, nodes(skill_domain)')
-                    .eq('status', 'active_vote')
+                    .eq('status', 'in_swarm')
                     .neq('user_id', uid)
                     .order('created_at', { ascending: false });
                 if (inboxSubs) setInbox(inboxSubs as unknown as Submission[]);
@@ -131,9 +125,9 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
         try {
             const { error } = await supabase.from('swarm_votes').insert({
                 submission_id: selectedSubmission.id,
-                validator_id: profile.id,
+                validator_id: profile.user_id,
                 score: voteScore,
-                weight_applied: profile.reputation_score > 0 ? profile.reputation_score : 1,
+                weight_applied: profile.reputation_tokens > 0 ? profile.reputation_tokens : 1, // Uses reputation_tokens
             });
 
             if (error) {
@@ -146,7 +140,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                 setVoteModalOpen(false);
                 setSelectedSubmission(null);
                 setVoteScore(0.5);
-                await loadDashboardData(); // triggers RPC + real-time update
+                await loadDashboardData();
             }
         } catch (err) {
             console.error(err);
@@ -159,7 +153,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
         switch (status) {
             case 'approved': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
             case 'rejected': return 'bg-red-500/10 text-red-400 border-red-500/20';
-            case 'active_vote': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            case 'in_swarm': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
             default: return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
         }
     };
@@ -192,7 +186,6 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
     return (
         <div className="fixed inset-0 z-[200] bg-slate-950 text-slate-200 font-sans overflow-y-auto w-full custom-scrollbar">
             <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8 pb-24 relative">
-                {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-2xl font-black text-white tracking-widest uppercase flex items-center gap-3">
                         <Shield className="w-8 h-8 text-emerald-400" />
@@ -205,10 +198,8 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                     )}
                 </div>
 
-                {/* HERO PROFILE */}
                 {profile && (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {/* Tier */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Operation Tier</span>
                             <div className="flex items-end gap-2">
@@ -220,31 +211,28 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                             </div>
                         </div>
 
-                        {/* Reputation */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Reputation Score</span>
-                            <div className="text-4xl font-black text-emerald-400">{profile.reputation_score.toFixed(1)}</div>
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Reputation Tokens</span>
+                            <div className="text-4xl font-black text-emerald-400">{profile.reputation_tokens.toFixed(1)}</div>
                             <span className="text-xs font-mono text-emerald-500/70 mt-2 flex items-center gap-1">
                                 <Activity className="w-3 h-3" /> System Weight Active
                             </span>
                         </div>
 
-                        {/* Apathy */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Apathy Index</span>
-                                <span className="text-xs font-mono font-bold text-slate-400">{profile.apathy_index.toFixed(2)}</span>
+                                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Cognitive Tier</span>
+                                <span className="text-xs font-mono font-bold text-slate-400">{profile.cognitive_tier.toFixed(2)}</span>
                             </div>
                             <div className="w-full h-2 bg-slate-800 rounded-full mt-2 overflow-hidden flex">
                                 <div className="h-full transition-all" style={{
-                                    width: `${profile.apathy_index * 100}%`,
-                                    backgroundColor: profile.apathy_index < 0.3 ? '#10b981' : profile.apathy_index > 0.7 ? '#ef4444' : '#f59e0b'
+                                    width: `${profile.cognitive_tier * 100}%`,
+                                    backgroundColor: profile.cognitive_tier < 0.3 ? '#10b981' : profile.cognitive_tier > 0.7 ? '#ef4444' : '#f59e0b'
                                 }} />
                             </div>
                             <span className="text-[10px] text-slate-600 mt-3 block">High apathy restricts validator influence.</span>
                         </div>
 
-                        {/* Validator */}
                         <div className="relative bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden">
                             {profile.swarm_validator_level >= 1 && (
                                 <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-bl-full flex items-start justify-end p-2 border-b border-l border-blue-500/20">
@@ -262,7 +250,6 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                     </div>
                 )}
 
-                {/* TABS */}
                 <div className="flex gap-4 border-b border-slate-800 pb-px">
                     <button onClick={() => setActiveTab('submissions')} className={`pb-4 px-2 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'submissions' ? 'text-white border-emerald-500' : 'text-slate-500 border-transparent hover:text-slate-300'}`}>My Submissions</button>
                     {profile && profile.swarm_validator_level >= 1 && (
@@ -273,7 +260,6 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                     <button onClick={() => setActiveTab('ledger')} className={`pb-4 px-2 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'ledger' ? 'text-white border-emerald-500' : 'text-slate-500 border-transparent hover:text-slate-300'}`}>Ledger</button>
                 </div>
 
-                {/* TAB CONTENT */}
                 <AnimatePresence mode="wait">
                     {activeTab === 'submissions' && (
                         <motion.div key="submissions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
@@ -371,7 +357,6 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                 </AnimatePresence>
             </div>
 
-            {/* VOTE MODAL */}
             <AnimatePresence>
                 {voteModalOpen && selectedSubmission && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
