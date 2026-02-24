@@ -68,51 +68,26 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
         setError(null);
         try {
             const { data: authData, error: authErr } = await supabase.auth.getUser();
-            let uid = authData?.user?.id;
-            let validatorLvl = 0;
+            if (authErr || !authData.user) {
+                setError('Authentication failed. Please log in again.');
+                return;
+            }
+            const uid = authData.user.id;
 
-            // DEV HOTFIX: Bypass authentication error for viewing dashboard
-            if (!uid || authErr) {
-                console.warn("Dev mode: Bypassing authentication for Swarm Dashboard");
-                uid = "00000000-0000-0000-0000-000000000000";
+            // Profile - Uses user_id and EXACT fields
+            const { data: userProfile, error: profileErr } = await supabase
+                .from('users')
+                .select('user_id, current_tier, reputation_tokens, cognitive_tier, swarm_validator_level')
+                .eq('user_id', uid)
+                .single();
 
-                validatorLvl = 3;
-                // Set mock profile for dev viewing
-                setProfile({
-                    user_id: uid,
-                    current_tier: 5,
-                    reputation_tokens: 1540,
-                    cognitive_tier: 0.85,
-                    swarm_validator_level: validatorLvl
-                });
-            } else {
-                // Profile - Uses user_id and EXACT fields
-                const { data: userProfile, error: profileErr } = await supabase
-                    .from('users')
-                    .select('user_id, current_tier, reputation_tokens, cognitive_tier, swarm_validator_level')
-                    .eq('user_id', uid)
-                    .single();
+            // 42P01 is relation does not exist; 42703 is column does not exist
+            if (profileErr && profileErr.code !== 'PGRST116' && profileErr.code !== '42703' && profileErr.code !== '42P01') {
+                throw profileErr;
+            }
 
-                // 42P01 is relation does not exist; 42703 is column does not exist
-                if (profileErr && profileErr.code !== 'PGRST116' && profileErr.code !== '42703' && profileErr.code !== '42P01') {
-                    throw profileErr;
-                }
-
-                if (userProfile) {
-                    setProfile(userProfile);
-                    validatorLvl = userProfile.swarm_validator_level || 0;
-                } else if (!userProfile && (profileErr?.code === '42703' || profileErr?.code === '42P01' || profileErr?.code === 'PGRST116')) {
-                    // Fallback if users table doesn't have user_id, or user doesnt exist but we are signed in
-                    console.warn(`Users table issue: ${profileErr?.message}. Falling back to mock DEV profile.`);
-                    validatorLvl = 3;
-                    setProfile({
-                        user_id: uid,
-                        current_tier: 5,
-                        reputation_tokens: 1540,
-                        cognitive_tier: 0.85,
-                        swarm_validator_level: validatorLvl
-                    });
-                }
+            if (userProfile) {
+                setProfile(userProfile);
             }
 
             // My Submissions
@@ -133,7 +108,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
             if (ledgerEntries) setLedger(ledgerEntries as unknown as LedgerEntry[]);
 
             // Inbox (validator only) - uses IN_SWARM status
-            if (validatorLvl >= 1) {
+            if (userProfile && userProfile.swarm_validator_level >= 1) {
                 const { data: inboxSubs } = await supabase
                     .from('submissions')
                     .select('*, nodes(skill_domain)')
@@ -143,19 +118,8 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                 if (inboxSubs) setInbox(inboxSubs as unknown as Submission[]);
             }
         } catch (err: any) {
-            console.warn('Dashboard Load Error... Enforcing God Mode Fallback:', err);
-
-            // Hard fallback instead of error state
-            setProfile({
-                user_id: "00000000-0000-0000-0000-000000000000",
-                current_tier: 5,
-                reputation_tokens: 1540,
-                cognitive_tier: 0.85,
-                swarm_validator_level: 3
-            });
-            setMySubmissions([]);
-            setInbox([]);
-            setLedger([]);
+            console.error('Dashboard Load Error:', err);
+            setError(err?.message || 'Unexpected error loading Swarm data.');
         } finally {
             setIsLoading(false);
         }
