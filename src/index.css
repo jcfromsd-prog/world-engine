@@ -445,3 +445,216 @@ h4 {
   outline: none;
   box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.5);
 }
+
+/* ============================================================================
+   MBP v2 DESIGN SYSTEM — Neural Graph & Premium Landing
+   ============================================================================ */
+
+/* --- Extended CSS Variables --- */
+:root {
+  --mbp-neural-cyan: #00e5ff;
+  --mbp-neural-purple: #b000ff;
+  --mbp-neural-emerald: #00ff88;
+  --mbp-neural-gold: #ffc107;
+  --mbp-neural-pink: #ff0080;
+  --mbp-surface-elevated: rgba(16, 16, 24, 0.85);
+  --mbp-surface-glass: rgba(255, 255, 255, 0.03);
+  --mbp-glow-radius: 600px;
+}
+
+/* --- Keyframe: Float (Gentle vertical hover) --- */
+@keyframes mbp-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+.animate-mbp-float {
+  animation: mbp-float 6s ease-in-out infinite;
+}
+
+/* --- Keyframe: Fade In Up (Content reveal) --- */
+@keyframes mbp-fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-mbp-fadeInUp {
+  animation: mbp-fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-mbp-fadeInUp-delay-1 {
+  animation: mbp-fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+  opacity: 0;
+}
+
+.animate-mbp-fadeInUp-delay-2 {
+  animation: mbp-fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+  opacity: 0;
+}
+
+.animate-mbp-fadeInUp-delay-3 {
+  animation: mbp-fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards;
+  opacity: 0;
+}
+
+/* --- Keyframe: Orbit Pulse (Neural node breathing) --- */
+@keyframes mbp-orbitPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px var(--color, var(--mbp-neural-cyan)),
+                0 0 24px color-mix(in srgb, var(--color, var(--mbp-neural-cyan)) 40%, transparent);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 16px var(--color, var(--mbp-neural-cyan)),
+                0 0 48px color-mix(in srgb, var(--color, var(--mbp-neural-cyan)) 60%, transparent);
+    transform: scale(1.08);
+  }
+}
+
+.animate-mbp-orbit {
+  animation: mbp-orbitPulse 3s ease-in-out infinite;
+}
+
+/* --- Keyframe: Neural Node Glow (SVG circles) --- */
+@keyframes mbp-nodeGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 12px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 24px currentColor);
+  }
+}
+
+.animate-mbp-nodeGlow {
+  animation: mbp-nodeGlow 4s ease-in-out infinite;
+}
+
+/* --- Keyframe: Line Draw (SVG path reveal) --- */
+@keyframes mbp-lineDraw {
+  from {
+    stroke-dashoffset: var(--path-length, 300);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* --- Neural Graph Container --- */
+.mbp-neural-graph {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mbp-neural-graph svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Card Variants --- */
+.mbp-card-elevated {
+  background: var(--mbp-surface-elevated);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mbp-card-elevated:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.6),
+              0 0 0 1px rgba(255, 255, 255, 0.05);
+  transform: translateY(-4px);
+}
+
+/* --- Ambient Glow Background (Hero enhancement) --- */
+.mbp-ambient-glow {
+  position: absolute;
+  width: var(--mbp-glow-radius);
+  height: var(--mbp-glow-radius);
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.mbp-ambient-glow--cyan {
+  background: var(--mbp-neural-cyan);
+}
+
+.mbp-ambient-glow--purple {
+  background: var(--mbp-neural-purple);
+}
+
+.mbp-ambient-glow--emerald {
+  background: var(--mbp-neural-emerald);
+}
+
+/* --- Stat Pill (for metric displays) --- */
+.mbp-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-body);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.mbp-stat-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* --- Score Ring (circular progress indicator) --- */
+.mbp-score-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mbp-score-ring svg {
+  transform: rotate(-90deg);
+}
+
+.mbp-score-ring__value {
+  position: absolute;
+  font-weight: 900;
+  font-family: var(--font-heading);
+}
+
+/* --- Kinetic Grid Background (optional hero texture) --- */
+.mbp-kinetic-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* --- Responsive Overrides --- */
+@media (max-width: 768px) {
+  .mbp-ambient-glow {
+    --mbp-glow-radius: 300px;
+    filter: blur(80px);
+  }
+}

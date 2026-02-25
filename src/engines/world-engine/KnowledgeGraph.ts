@@ -159,6 +159,14 @@ export class KnowledgeGraph {
         });
         return result;
     }
+
+    /**
+     * Returns ALL nodes in the graph as an array.
+     * Used by NeuralGraph and other visualization components.
+     */
+    public getAllNodes(): KnowledgeNode[] {
+        return Array.from(this.nodes.values());
+    }
 }
 
 // ============================================================================

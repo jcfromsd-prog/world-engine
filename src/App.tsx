@@ -40,6 +40,8 @@ import type { LearnerProfile } from "./engines/world-engine/LearnerModel";
 import BlueprintCanvas from "./architect/components/BlueprintCanvas";
 import BlueprintErrorBoundary from "./architect/components/BlueprintErrorBoundary";
 import { useAuth } from './hooks/useAuth';
+import { NeuralGraph } from './components/NeuralGraph';
+import type { SkillNode, SkillEdge } from './components/NeuralGraph';
 
 // --- MOCK PROFILE FOR APP-LEVEL ENGINE ---
 const APP_LEARNER_PROFILE: LearnerProfile = {
@@ -1006,38 +1008,104 @@ const App: React.FC = () => {
 
       {/* 🚀 LANDING PAGE */}
       {appState === "LANDING" && (
-        <div className="relative pt-24">
+        <div className="relative pt-24 mbp-kinetic-grid">
+          {/* Ambient Glow Orbs */}
+          <div className="mbp-ambient-glow mbp-ambient-glow--cyan" style={{ top: '-10%', left: '20%' }} />
+          <div className="mbp-ambient-glow mbp-ambient-glow--purple" style={{ top: '30%', right: '10%' }} />
+          <div className="mbp-ambient-glow mbp-ambient-glow--emerald" style={{ bottom: '10%', left: '40%' }} />
+
           <div className="absolute top-0 left-0 w-full h-screen bg-gradient-to-b from-blue-900/20 via-black to-black -z-10"></div>
-          <div className="max-w-6xl mx-auto pt-16 pb-40 px-6 text-center">
+          <div className="max-w-7xl mx-auto pt-16 pb-40 px-6">
 
-            <h1 className="text-7xl md:text-[120px] font-black tracking-tighter leading-none mb-8 animate-scale-in bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-violet-500 to-amber-400">
-              SOLVE & EARN.
-            </h1>
-            <p className="text-xl md:text-2xl text-slate-400 max-w-4xl mx-auto mt-4 mb-12 font-medium leading-relaxed">
-              <span className="text-blue-400 font-bold">MyBestPurpose</span>
-              {" is an "}
-              <span className="text-white font-bold">AI-guided Engine</span>
-              {" where you "}
-              <span className="text-emerald-400 font-bold">evolve</span>
-              {" from a passive student into a "}
-              <span className="text-amber-400 font-bold">Verified Contributor</span>.
-            </p>
-            <div className="flex flex-wrap justify-center gap-6 mb-24">
-              <button onClick={() => setAppState("ONBOARDING")} className="px-12 py-6 bg-white text-black font-black text-xl rounded-2xl hover:bg-emerald-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
-                🚀 START YOUR ENGINE
-              </button>
+            {/* HERO: Split Layout — Text + Neural Graph */}
+            <div className="flex flex-col lg:flex-row items-center gap-12 mb-20">
 
+              {/* LEFT: Hero Copy */}
+              <div className="flex-1 text-center lg:text-left">
+                <h1 className="text-6xl md:text-7xl lg:text-[96px] font-black tracking-tighter leading-[0.9] mb-8 animate-mbp-fadeInUp bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-violet-500 to-amber-400">
+                  SOLVE &<br />EARN.
+                </h1>
+                <p className="text-lg md:text-xl text-slate-400 max-w-xl mt-4 mb-8 font-medium leading-relaxed animate-mbp-fadeInUp-delay-1">
+                  <span className="text-blue-400 font-bold">MyBestPurpose</span>
+                  {" is an "}
+                  <span className="text-white font-bold">AI-guided Engine</span>
+                  {" where you "}
+                  <span className="text-emerald-400 font-bold">evolve</span>
+                  {" from a passive student into a "}
+                  <span className="text-amber-400 font-bold">Verified Contributor</span>.
+                </p>
 
+                {/* CTA Row */}
+                <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-8 animate-mbp-fadeInUp-delay-2">
+                  <button
+                    onClick={() => setAppState("ONBOARDING")}
+                    className="px-10 py-5 bg-white text-black font-black text-lg rounded-2xl hover:bg-emerald-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)] relative overflow-hidden group"
+                  >
+                    <span className="relative z-10">🚀 START YOUR ENGINE</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                  <button
+                    onClick={() => setAppState("IMPACT_ENGINE")}
+                    className="px-8 py-5 border border-white/10 text-zinc-400 font-bold text-lg rounded-2xl hover:border-cyan-500/30 hover:text-white transition-all hover:bg-white/5"
+                  >
+                    Explore Missions →
+                  </button>
+                </div>
+
+                {/* Live Stats */}
+                <div className="flex flex-wrap gap-3 justify-center lg:justify-start animate-mbp-fadeInUp-delay-3">
+                  <div className="mbp-stat-pill">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-zinc-400">4 Engines Active</span>
+                  </div>
+                  <div className="mbp-stat-pill">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                    <span className="text-zinc-400">AI-Powered Learning</span>
+                  </div>
+                  <div className="mbp-stat-pill">
+                    <span className="w-2 h-2 rounded-full bg-purple-400" />
+                    <span className="text-zinc-400">Real Payments</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT: Neural Graph Visualization */}
+              <div className="flex-1 w-full lg:w-auto min-h-[400px] animate-mbp-fadeInUp-delay-2">
+                <div className="mbp-card-elevated p-4 h-[420px] relative">
+                  <div className="absolute top-4 left-5 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Neural Skill Map • Live</span>
+                  </div>
+                  <NeuralGraph
+                    nodes={SEED_GRAPH.getAllNodes().map((n): SkillNode => ({
+                      id: n.id,
+                      label: n.title,
+                      domain: n.domain as SkillNode['domain'],
+                      mastery: learnerProfile.masteryMap.get(n.id)?.masteryScore ?? 0,
+                      gradeLevel: n.gradeLevel,
+                      unlocked: n.prerequisites.length === 0 || n.prerequisites.some((p: string) => learnerProfile.masteryMap.has(p)),
+                    }))}
+                    edges={SEED_GRAPH.getAllNodes().flatMap((n): SkillEdge[] =>
+                      n.prerequisites.map((p: string) => ({ source: p, target: n.id }))
+                    )}
+                    onNodeClick={(node) => {
+                      console.log('[NeuralGraph] Node selected:', node);
+                      // Future: Jump to mission for this skill
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
-            <EnginesGrid
-              onSolveClick={() => setAppState("IMPACT_ENGINE")}
-              onLearnClick={() => {
-                // LOGIC: Check if calibrated. For now, we assume uncalibrated to force the flow as requested in Scenario A.
-                // In a real scenario, check userProfile.completedMissions or similar.
-                setAppState("ONBOARDING");
-              }}
-            />
+            {/* ENGINES GRID — Below Hero */}
+            <div className="animate-mbp-fadeInUp-delay-3">
+              <EnginesGrid
+                onSolveClick={() => setAppState("IMPACT_ENGINE")}
+                onLearnClick={() => {
+                  setAppState("ONBOARDING");
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
