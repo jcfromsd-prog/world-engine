@@ -1090,7 +1090,18 @@ const App: React.FC = () => {
                     )}
                     onNodeClick={(node) => {
                       console.log('[NeuralGraph] Node selected:', node);
-                      // Future: Jump to mission for this skill
+                      if (!node.unlocked) {
+                        alert(`🔒 NODE LOCKED: "${node.label}"\n\nComplete prerequisite skills to unlock this path.`);
+                        return;
+                      }
+                      // Route based on domain — learning domains go to IntakeFlow, action domains go to Impact Engine
+                      const LEARNING_DOMAINS = ['literacy', 'numeracy', 'science', 'social', 'sel'];
+                      if (LEARNING_DOMAINS.includes(node.domain)) {
+                        setAppState("ASSESSMENT");
+                      } else {
+                        // coding, career, creative → Impact missions
+                        setAppState("IMPACT_ENGINE");
+                      }
                     }}
                   />
                 </div>
