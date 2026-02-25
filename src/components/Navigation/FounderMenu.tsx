@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FounderBadge } from '../dashboard/FounderCommandPanel';
-import { supabase } from '../../lib/supabase';
 
 interface FounderMenuProps {
     systemHealth: number;
