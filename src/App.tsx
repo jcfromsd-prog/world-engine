@@ -41,7 +41,8 @@ import BlueprintCanvas from "./architect/components/BlueprintCanvas";
 import BlueprintErrorBoundary from "./architect/components/BlueprintErrorBoundary";
 import { useAuth } from './hooks/useAuth';
 import { NeuralGraph } from './components/NeuralGraph';
-import type { SkillNode, SkillEdge } from './components/NeuralGraph';
+import type { SkillEdge } from './components/NeuralGraph';
+import { useGraphData } from './hooks/useGraphData';
 
 // --- MOCK PROFILE FOR APP-LEVEL ENGINE ---
 const APP_LEARNER_PROFILE: LearnerProfile = {
@@ -810,6 +811,9 @@ const App: React.FC = () => {
   const [gapGraph, setGapGraph] = useState<StandardsGapGraph | null>(null);
   const [sagePrepContent, setSagePrepContent] = useState<RecommendationResult | null>(null);
 
+  // Phase 4: Live graph data from Supabase
+  const { nodes: graphNodes, stats: platformStats } = useGraphData(learnerProfile);
+
   const availableMissions = React.useMemo(() => {
     // 1. Filter by grade level
     const grade = learnerProfile.currentGrade || 10;
@@ -1056,15 +1060,15 @@ const App: React.FC = () => {
                 <div className="flex flex-wrap gap-3 justify-center lg:justify-start animate-mbp-fadeInUp-delay-3">
                   <div className="mbp-stat-pill">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-zinc-400">4 Engines Active</span>
+                    <span className="text-zinc-400">{platformStats.totalNodes} Skill Nodes</span>
                   </div>
                   <div className="mbp-stat-pill">
                     <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                    <span className="text-zinc-400">AI-Powered Learning</span>
+                    <span className="text-zinc-400">{platformStats.totalUsers || '—'} Active Learner{platformStats.totalUsers !== 1 ? 's' : ''}</span>
                   </div>
                   <div className="mbp-stat-pill">
                     <span className="w-2 h-2 rounded-full bg-purple-400" />
-                    <span className="text-zinc-400">Real Payments</span>
+                    <span className="text-zinc-400">{platformStats.totalReputationAwarded} RP Earned</span>
                   </div>
                 </div>
               </div>
@@ -1077,14 +1081,7 @@ const App: React.FC = () => {
                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Neural Skill Map • Live</span>
                   </div>
                   <NeuralGraph
-                    nodes={SEED_GRAPH.getAllNodes().map((n): SkillNode => ({
-                      id: n.id,
-                      label: n.title,
-                      domain: n.domain as SkillNode['domain'],
-                      mastery: learnerProfile.masteryMap.get(n.id)?.masteryScore ?? 0,
-                      gradeLevel: n.gradeLevel,
-                      unlocked: n.prerequisites.length === 0 || n.prerequisites.some((p: string) => learnerProfile.masteryMap.has(p)),
-                    }))}
+                    nodes={graphNodes}
                     edges={SEED_GRAPH.getAllNodes().flatMap((n): SkillEdge[] =>
                       n.prerequisites.map((p: string) => ({ source: p, target: n.id }))
                     )}

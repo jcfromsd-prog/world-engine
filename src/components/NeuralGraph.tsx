@@ -222,6 +222,33 @@ export const NeuralGraph: React.FC<NeuralGraphProps> = ({
             }
         });
 
+        // ✅ GREEN COMPLETION RING — Phase 4
+        // Full emerald ring for mastered nodes (mastery >= 0.9)
+        node.each(function (d) {
+            if (d.mastery >= 0.9 && d.unlocked) {
+                const completionArc = d3.arc<unknown>()
+                    .innerRadius(d.radius + 5)
+                    .outerRadius(d.radius + 7)
+                    .startAngle(0)
+                    .endAngle(Math.PI * 2);
+
+                d3.select(this).append('path')
+                    .attr('d', completionArc as any)
+                    .attr('fill', '#10b981') // emerald-500
+                    .attr('opacity', 0.8)
+                    .attr('filter', 'url(#neural-glow)');
+
+                // Checkmark icon
+                d3.select(this).append('text')
+                    .text('✓')
+                    .attr('text-anchor', 'middle')
+                    .attr('dy', 4)
+                    .attr('fill', '#10b981')
+                    .attr('font-size', `${Math.max(10, d.radius * 0.8)}px`)
+                    .attr('font-weight', '900');
+            }
+        });
+
         // Label
         node.append('text')
             .text(d => d.label.length > 10 ? d.label.slice(0, 9) + '…' : d.label)
