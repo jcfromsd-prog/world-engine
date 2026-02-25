@@ -1030,15 +1030,15 @@ const App: React.FC = () => {
                   SOLVE & EARN.
                 </h1>
                 <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl mt-4 mb-10 font-medium leading-relaxed animate-mbp-fadeInUp-delay-1">
-                  <span className="text-cyan-400 font-bold">MyBestPurpose</span>
+                  <span className="text-orange-400 font-bold">MyBestPurpose</span>
                   {" is an "}
-                  <span className="text-violet-400 font-bold">AI-guided Engine</span>
+                  <span className="text-emerald-400 font-bold">AI-guided Engine</span>
                   {" where you "}
-                  <span className="mbp-text-shimmer">evolve</span>
+                  <span className="text-fuchsia-400 font-bold">evolve</span>
                   {" from a passive "}
-                  <span className="text-rose-400 font-bold italic underline decoration-rose-500/30 underline-offset-4">student</span>
+                  <span className="text-rose-400 font-bold italic">student</span>
                   {" into a "}
-                  <span className="mbp-text-shimmer">Verified Contributor</span>.
+                  <span className="text-cyan-400 font-bold">Verified Contributor</span>.
                 </p>
 
                 {/* CTA Row with Step 1 Guidance */}
