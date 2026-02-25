@@ -1026,28 +1026,35 @@ const App: React.FC = () => {
 
               {/* LEFT: Hero Copy */}
               <div className="flex-1 text-center lg:text-left">
-                <h1 className="text-6xl md:text-7xl lg:text-[96px] font-black tracking-tighter leading-[0.9] mb-8 animate-mbp-fadeInUp bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-violet-500 to-amber-400">
-                  SOLVE &<br />EARN.
+                <h1 className="text-5xl md:text-7xl lg:text-[88px] font-black tracking-tighter leading-[1.1] mb-8 animate-mbp-fadeInUp bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-emerald-400 via-violet-500 to-amber-500">
+                  SOLVE & EARN.
                 </h1>
-                <p className="text-lg md:text-xl text-slate-400 max-w-xl mt-4 mb-8 font-medium leading-relaxed animate-mbp-fadeInUp-delay-1">
-                  <span className="text-blue-400 font-bold">MyBestPurpose</span>
+                <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl mt-4 mb-10 font-medium leading-relaxed animate-mbp-fadeInUp-delay-1">
+                  <span className="text-cyan-400 font-bold">MyBestPurpose</span>
                   {" is an "}
-                  <span className="text-white font-bold">AI-guided Engine</span>
+                  <span className="text-violet-400 font-bold">AI-guided Engine</span>
                   {" where you "}
-                  <span className="text-emerald-400 font-bold">evolve</span>
-                  {" from a passive student into a "}
-                  <span className="text-amber-400 font-bold">Verified Contributor</span>.
+                  <span className="mbp-text-shimmer">evolve</span>
+                  {" from a passive "}
+                  <span className="text-rose-400 font-bold italic underline decoration-rose-500/30 underline-offset-4">student</span>
+                  {" into a "}
+                  <span className="mbp-text-shimmer">Verified Contributor</span>.
                 </p>
 
-                {/* CTA Row */}
+                {/* CTA Row with Step 1 Guidance */}
                 <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-8 animate-mbp-fadeInUp-delay-2">
-                  <button
-                    onClick={() => setAppState("ONBOARDING")}
-                    className="px-10 py-5 bg-white text-black font-black text-lg rounded-2xl hover:bg-emerald-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)] relative overflow-hidden group"
-                  >
-                    <span className="relative z-10">🚀 START YOUR ENGINE</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
+                  <div className="relative">
+                    <div className="absolute -top-3 -left-3 px-2 py-0.5 bg-emerald-500 text-[10px] font-black italic rounded flex items-center gap-1 shadow-lg z-20 animate-bounce">
+                      <span>STEP 1</span>
+                    </div>
+                    <button
+                      onClick={() => setAppState("ONBOARDING")}
+                      className="px-10 py-5 bg-white text-black font-black text-lg rounded-2xl hover:bg-emerald-400 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)] relative overflow-hidden group mbp-pulse-glow"
+                    >
+                      <span className="relative z-10 font-black">🚀 START YOUR ENGINE</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  </div>
                   <button
                     onClick={() => setAppState("IMPACT_ENGINE")}
                     className="px-8 py-5 border border-white/10 text-zinc-400 font-bold text-lg rounded-2xl hover:border-cyan-500/30 hover:text-white transition-all hover:bg-white/5"
@@ -1073,21 +1080,32 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* RIGHT: Neural Graph Visualization */}
+              {/* RIGHT: Neural Graph — Preview for new visitors, Interactive for logged-in */}
               <div className="flex-1 w-full lg:w-auto min-h-[400px] animate-mbp-fadeInUp-delay-2">
-                <div className="mbp-card-elevated p-4 h-[420px] relative overflow-hidden">
-                  {/* Header — student-friendly label */}
+                <div
+                  className="mbp-card-elevated p-4 h-[420px] relative overflow-hidden cursor-pointer group"
+                  onClick={() => {
+                    if (!supabaseUser) setAppState("ONBOARDING");
+                  }}
+                >
+                  {/* Header */}
                   <div className="absolute top-4 left-5 right-5 flex items-center justify-between z-10">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="text-sm font-bold text-white tracking-wide">Your Learning Map</span>
+                      <span className="text-sm font-bold text-white tracking-wide">
+                        {supabaseUser ? 'Your Learning Map' : 'Preview: Your Skill Map'}
+                      </span>
                     </div>
                     <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider hidden sm:block">Live</span>
                   </div>
 
-                  {/* Subtitle / CTA hint */}
+                  {/* Subtitle — different for logged-in vs anonymous */}
                   <div className="absolute top-10 left-5 z-10">
-                    <p className="text-[11px] text-zinc-400 mt-1">Tap a glowing skill to begin ✨</p>
+                    <p className="text-[11px] text-zinc-400 mt-1">
+                      {supabaseUser
+                        ? 'Tap a skill to begin learning ✨'
+                        : 'Start your engine to unlock 🚀'}
+                    </p>
                   </div>
 
                   <NeuralGraph
@@ -1096,7 +1114,12 @@ const App: React.FC = () => {
                       n.prerequisites.map((p: string) => ({ source: p, target: n.id }))
                     )}
                     onNodeClick={(node) => {
-                      console.log('[NeuralGraph] Node selected:', node);
+                      if (!supabaseUser) {
+                        // Not logged in — funnel to onboarding (same as START YOUR ENGINE)
+                        setAppState("ONBOARDING");
+                        return;
+                      }
+                      // Logged in — full interactive routing
                       if (!node.unlocked) {
                         alert(`🔒 NODE LOCKED: "${node.label}"\n\nComplete prerequisite skills to unlock this path.`);
                         return;
@@ -1110,10 +1133,16 @@ const App: React.FC = () => {
                     }}
                   />
 
-                  {/* Bottom contextual hint */}
+                  {/* Bottom hint */}
                   <div className="absolute bottom-3 left-5 right-5 flex items-center justify-between z-10">
-                    <p className="text-[10px] text-zinc-600">Each circle is a skill. Lines show how they connect.</p>
-                    <span className="text-[10px] text-emerald-500/60 font-bold uppercase tracking-wider">Interactive</span>
+                    <p className="text-[10px] text-zinc-600">
+                      {supabaseUser
+                        ? 'Each circle is a skill you can master.'
+                        : 'This is what your journey looks like.'}
+                    </p>
+                    <span className="text-[10px] text-emerald-500/60 font-bold uppercase tracking-wider">
+                      {supabaseUser ? 'Interactive' : 'Preview'}
+                    </span>
                   </div>
                 </div>
               </div>

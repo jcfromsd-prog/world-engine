@@ -63,12 +63,14 @@ h4 {
 }
 
 /* Typography Utilities */
-.text-gradient {
-  background: var(--impact-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.mbp-text-shimmer {
+  background: linear-gradient(90deg, #10b981, #fbbf24, #f59e0b, #10b981);
+  background-size: 200% auto;
   color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: mbp-shimmer 3s linear infinite;
+  font-weight: 800;
 }
 
 .text-neon {
@@ -464,9 +466,12 @@ h4 {
 
 /* --- Keyframe: Float (Gentle vertical hover) --- */
 @keyframes mbp-float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-12px);
   }
@@ -482,6 +487,7 @@ h4 {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -509,14 +515,17 @@ h4 {
 
 /* --- Keyframe: Orbit Pulse (Neural node breathing) --- */
 @keyframes mbp-orbitPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 8px var(--color, var(--mbp-neural-cyan)),
-                0 0 24px color-mix(in srgb, var(--color, var(--mbp-neural-cyan)) 40%, transparent);
+      0 0 24px color-mix(in srgb, var(--color, var(--mbp-neural-cyan)) 40%, transparent);
     transform: scale(1);
   }
+
   50% {
     box-shadow: 0 0 16px var(--color, var(--mbp-neural-cyan)),
-                0 0 48px color-mix(in srgb, var(--color, var(--mbp-neural-cyan)) 60%, transparent);
+      0 0 48px color-mix(in srgb, var(--color, var(--mbp-neural-cyan)) 60%, transparent);
     transform: scale(1.08);
   }
 }
@@ -527,9 +536,12 @@ h4 {
 
 /* --- Keyframe: Neural Node Glow (SVG circles) --- */
 @keyframes mbp-nodeGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 12px currentColor);
   }
+
   50% {
     filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 24px currentColor);
   }
@@ -544,6 +556,7 @@ h4 {
   from {
     stroke-dashoffset: var(--path-length, 300);
   }
+
   to {
     stroke-dashoffset: 0;
   }
@@ -575,7 +588,7 @@ h4 {
 .mbp-card-elevated:hover {
   border-color: rgba(255, 255, 255, 0.12);
   box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.6),
-              0 0 0 1px rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(255, 255, 255, 0.05);
   transform: translateY(-4px);
 }
 
@@ -651,10 +664,38 @@ h4 {
   background-size: 64px 64px;
 }
 
-/* --- Responsive Overrides --- */
 @media (max-width: 768px) {
   .mbp-ambient-glow {
     --mbp-glow-radius: 300px;
     filter: blur(80px);
   }
+}
+
+/* --- MBPT Animations --- */
+@keyframes mbp-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes mbp-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 15px rgba(16, 185, 129, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.mbp-pulse-glow {
+  animation: mbp-pulse 2s infinite;
 }
