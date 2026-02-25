@@ -74,13 +74,14 @@ export class IntakeEngine {
                         console.error("SUPABASE SUBMISSIONS ERROR:", subRes.error.message, subRes.error.details, subRes.error.hint);
                     }
 
-                    const repRes = await supabase.from('reputation_ledger').insert({
-                        user_id: userId,
-                        delta: 10,
-                        reason: 'validation_earned'
+                    const repRes = await supabase.rpc('award_reputation_delta', {
+                        p_user_id: userId,
+                        p_delta: 10,
+                        p_reason: 'validation_earned',
+                        p_submission_id: null
                     });
                     if (repRes.error) {
-                        console.error("SUPABASE REPUTATION ERROR:", repRes.error.message, repRes.error.details, repRes.error.hint);
+                        console.error("SUPABASE REPUTATION RPC ERROR:", repRes.error.message, repRes.error.details, repRes.error.hint);
                     }
                 } catch (error) {
                     console.error("VISION COMPLIANCE ERROR: Failure to etch Artifact of Knowledge.", error);

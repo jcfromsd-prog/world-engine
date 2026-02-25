@@ -115,10 +115,11 @@ export class SquadOrchestrator {
                         passed: true
                     }).then();
 
-                    supabase.from('reputation_ledger').insert({
-                        user_id: user.id,
-                        delta_gp: 10,
-                        reason: `Standard mastery: ${standardId}`
+                    supabase.rpc('award_reputation_delta', {
+                        p_user_id: user.id,
+                        p_delta: 10,
+                        p_reason: 'validation_earned',
+                        p_submission_id: null
                     }).then();
                 }
             });

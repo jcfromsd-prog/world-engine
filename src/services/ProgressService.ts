@@ -26,14 +26,15 @@ export class ProgressService {
      */
     public static async updateReputation(userId: string, delta: number, reason: string): Promise<void> {
         try {
-            const { error } = await supabase.from('reputation_ledger').insert({
-                user_id: userId,
-                delta: delta,
-                reason: reason
+            const { error } = await supabase.rpc('award_reputation_delta', {
+                p_user_id: userId,
+                p_delta: delta,
+                p_reason: reason,
+                p_submission_id: null
             });
 
             if (error) {
-                console.error("[ProgressService] Error updating reputation:", error);
+                console.error("[ProgressService] Error updating reputation via RPC:", error);
             }
         } catch (err) {
             console.error("[ProgressService] Exception updating reputation:", err);
