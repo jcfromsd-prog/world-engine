@@ -1075,11 +1075,21 @@ const App: React.FC = () => {
 
               {/* RIGHT: Neural Graph Visualization */}
               <div className="flex-1 w-full lg:w-auto min-h-[400px] animate-mbp-fadeInUp-delay-2">
-                <div className="mbp-card-elevated p-4 h-[420px] relative">
-                  <div className="absolute top-4 left-5 flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Neural Skill Map • Live</span>
+                <div className="mbp-card-elevated p-4 h-[420px] relative overflow-hidden">
+                  {/* Header — student-friendly label */}
+                  <div className="absolute top-4 left-5 right-5 flex items-center justify-between z-10">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-sm font-bold text-white tracking-wide">Your Learning Map</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider hidden sm:block">Live</span>
                   </div>
+
+                  {/* Subtitle / CTA hint */}
+                  <div className="absolute top-10 left-5 z-10">
+                    <p className="text-[11px] text-zinc-400 mt-1">Tap a glowing skill to begin ✨</p>
+                  </div>
+
                   <NeuralGraph
                     nodes={graphNodes}
                     edges={SEED_GRAPH.getAllNodes().flatMap((n): SkillEdge[] =>
@@ -1091,16 +1101,20 @@ const App: React.FC = () => {
                         alert(`🔒 NODE LOCKED: "${node.label}"\n\nComplete prerequisite skills to unlock this path.`);
                         return;
                       }
-                      // Route based on domain — learning domains go to IntakeFlow, action domains go to Impact Engine
                       const LEARNING_DOMAINS = ['literacy', 'numeracy', 'science', 'social', 'sel'];
                       if (LEARNING_DOMAINS.includes(node.domain)) {
                         setAppState("ASSESSMENT");
                       } else {
-                        // coding, career, creative → Impact missions
                         setAppState("IMPACT_ENGINE");
                       }
                     }}
                   />
+
+                  {/* Bottom contextual hint */}
+                  <div className="absolute bottom-3 left-5 right-5 flex items-center justify-between z-10">
+                    <p className="text-[10px] text-zinc-600">Each circle is a skill. Lines show how they connect.</p>
+                    <span className="text-[10px] text-emerald-500/60 font-bold uppercase tracking-wider">Interactive</span>
+                  </div>
                 </div>
               </div>
             </div>
