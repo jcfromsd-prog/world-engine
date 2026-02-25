@@ -39,19 +39,26 @@ export function useGraphData(learnerProfile: LearnerProfile) {
 
         async function fetchData() {
             try {
-                // 1. Fetch platform stats in parallel
-                const [usersRes, , subsRes] = await Promise.all([
-                    supabase.from('users').select('user_id, reputation_tokens', { count: 'exact', head: false }),
-                    supabase.from('reputation_ledger').select('delta', { count: 'exact', head: true }),
-                    supabase.from('submissions').select('submission_id', { count: 'exact', head: true }),
-                ]);
+                // 1. Fetch platform stats independently (RLS may block some for anon users)
+                let userCount = 0;
+                let totalRep = 0;
+                let submissionCount = 0;
+
+                try {
+                    const usersRes = await supabase.from('users').select('user_id, reputation_tokens');
+                    if (usersRes.data) {
+                        userCount = usersRes.data.length;
+                        totalRep = usersRes.data.reduce((sum: number, u: any) =>
+                            sum + (parseFloat(u.reputation_tokens) || 0), 0);
+                    }
+                } catch { /* RLS may block */ }
+
+                try {
+                    const subsRes = await supabase.from('submissions').select('submission_id', { count: 'exact', head: true });
+                    submissionCount = subsRes.count ?? 0;
+                } catch { /* RLS may block */ }
 
                 if (!cancelled) {
-                    const userCount = usersRes.data?.length ?? 0;
-                    const totalRep = usersRes.data?.reduce((sum: number, u: any) =>
-                        sum + (parseFloat(u.reputation_tokens) || 0), 0) ?? 0;
-                    const submissionCount = subsRes.count ?? 0;
-
                     setStats({
                         totalNodes: SEED_GRAPH.getAllNodes().length,
                         totalUsers: userCount,
