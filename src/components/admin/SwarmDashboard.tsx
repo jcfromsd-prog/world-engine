@@ -4,31 +4,35 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Activity, Inbox, History, CheckCircle2, ChevronRight, XCircle, Clock, Loader2 } from 'lucide-react';
 
 interface UserProfile {
-    user_id: string; // Ground truth field
-    current_tier: number | null; // Ground truth field
-    reputation_tokens: number; // Ground truth field
-    cognitive_tier: number; // Ground truth field
+    user_id: string;
+    current_tier: number | null;
+    reputation_tokens: number;
+    cognitive_tier: number;
     swarm_validator_level: number;
 }
 
+interface SubmissionNode {
+    skill_domain: string | null;
+    tier: number | null;
+}
+
 interface Submission {
-    id: string;
+    submission_id: string;
     user_id: string;
     node_id: string;
     stake_tokens: number;
-    status: 'pending' | 'in_swarm' | 'approved' | 'rejected'; // Ground truth field 'in_swarm'
+    status: 'pending' | 'in_swarm' | 'validated' | 'failed' | 'escalated';
     consensus_score: number;
-    created_at: string;
-    updated_at: string;
-    nodes?: { skill_domain: string | null };
+    submitted_at: string;
+    nodes?: SubmissionNode;
 }
 
 interface LedgerEntry {
-    id: string;
+    ledger_id: string;
     delta: number;
     reason: string;
-    related_submission: string | null;
-    created_at: string;
+    related_id: string | null;
+    logged_at: string;
 }
 
 export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
@@ -45,16 +49,16 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
     const [isSubmittingVote, setIsSubmittingVote] = useState(false);
 
     useEffect(() => {
-        loadDashboardData();
+        loadSwarmData();
 
         const subSubmissions = supabase
             .channel('submissions_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, loadDashboardData)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, loadSwarmData)
             .subscribe();
 
         const subLedger = supabase
             .channel('ledger_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'reputation_ledger' }, loadDashboardData)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'reputation_ledger' }, loadSwarmData)
             .subscribe();
 
         return () => {
@@ -63,7 +67,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
         };
     }, []);
 
-    const loadDashboardData = async () => {
+    const loadSwarmData = async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -74,14 +78,14 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
             }
             const uid = authData.user.id;
 
-            // Profile - Uses user_id and EXACT fields
+            // Profile — uses user_id and EXACT fields from Schema Ground Truth
             const { data: userProfile, error: profileErr } = await supabase
                 .from('users')
                 .select('user_id, current_tier, reputation_tokens, cognitive_tier, swarm_validator_level')
                 .eq('user_id', uid)
                 .single();
 
-            // 42P01 is relation does not exist; 42703 is column does not exist
+            // 42P01 = relation does not exist; 42703 = column does not exist; PGRST116 = no rows
             if (profileErr && profileErr.code !== 'PGRST116' && profileErr.code !== '42703' && profileErr.code !== '42P01') {
                 throw profileErr;
             }
@@ -90,35 +94,53 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                 setProfile(userProfile);
             }
 
-            // My Submissions
+            // My Submissions — select with node join for domain + tier
             const { data: subs } = await supabase
                 .from('submissions')
-                .select('*, nodes(skill_domain)')
+                .select('*, nodes(skill_domain, tier)')
                 .eq('user_id', uid)
-                .order('created_at', { ascending: false });
+                .order('submitted_at', { ascending: false });
             if (subs) setMySubmissions(subs as unknown as Submission[]);
 
-            // Ledger
+            // Ledger — uses Schema Ground Truth columns
             const { data: ledgerEntries } = await supabase
                 .from('reputation_ledger')
-                .select('*')
+                .select('ledger_id, user_id, delta, reason, related_id, logged_at')
                 .eq('user_id', uid)
-                .order('created_at', { ascending: false })
+                .order('logged_at', { ascending: false })
                 .limit(10);
             if (ledgerEntries) setLedger(ledgerEntries as unknown as LedgerEntry[]);
 
-            // Inbox (validator only) - uses IN_SWARM status
+            // ELIGIBILITY GATE: Inbox (validator only)
+            // Directive Section 8: swarm_validator_level >= 1 to access Inbox Queue
+            // Directive Section 14: filter by current_tier >= submission node tier
+            // Validator cannot vote on own submissions (.neq('user_id', uid))
+            // Inbox query: .eq('status', 'in_swarm')
             if (userProfile && userProfile.swarm_validator_level >= 1) {
                 const { data: inboxSubs } = await supabase
                     .from('submissions')
-                    .select('*, nodes(skill_domain)')
+                    .select('*, nodes(skill_domain, tier)')
                     .eq('status', 'in_swarm')
                     .neq('user_id', uid)
-                    .order('created_at', { ascending: false });
-                if (inboxSubs) setInbox(inboxSubs as unknown as Submission[]);
+                    .order('submitted_at', { ascending: false });
+
+                if (inboxSubs) {
+                    // CLIENT-SIDE ELIGIBILITY GATE:
+                    // A validator should only see submissions where the
+                    // node's tier is LESS THAN OR EQUAL TO the validator's own current_tier.
+                    // This prevents a Tier 1 user from validating Tier 5 work.
+                    const validatorTier = userProfile.current_tier || 1;
+                    const filtered = (inboxSubs as unknown as Submission[]).filter(sub => {
+                        const nodeTier = sub.nodes?.tier;
+                        // If node tier is unknown (null), allow it (conservative — don't block)
+                        if (nodeTier == null) return true;
+                        return nodeTier <= validatorTier;
+                    });
+                    setInbox(filtered);
+                }
             }
         } catch (err: any) {
-            console.error('Dashboard Load Error:', err);
+            console.error('Swarm Load Error:', err);
             setError(err?.message || 'Unexpected error loading Swarm data.');
         } finally {
             setIsLoading(false);
@@ -129,9 +151,10 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
         if (!selectedSubmission || !profile || isSubmittingVote) return;
         setIsSubmittingVote(true);
         try {
-            // Updated to use confidence_weight instead of weight_applied based on schema audit
+            // Insert vote via swarm_votes table — Schema Ground Truth:
+            // submission_id, validator_id, score (int4), confidence_weight (numeric)
             const { error: voteError } = await supabase.from('swarm_votes').insert({
-                submission_id: selectedSubmission.id,
+                submission_id: selectedSubmission.submission_id,
                 validator_id: profile.user_id,
                 score: voteScore,
                 confidence_weight: profile.reputation_tokens > 0 ? profile.reputation_tokens : 1,
@@ -144,12 +167,12 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                     alert(`Vote failed: ${voteError.message}`);
                 }
             } else {
-                // SUCCESS: Award the validator reputation for casting the vote
+                // Award the validator reputation for casting the vote
                 const { error: rpcError } = await supabase.rpc('award_reputation_delta', {
                     p_user_id: profile.user_id,
                     p_delta: 10,
                     p_reason: 'validation_earned',
-                    p_submission_id: selectedSubmission.id
+                    p_submission_id: selectedSubmission.submission_id
                 });
 
                 if (rpcError) {
@@ -159,7 +182,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                 setVoteModalOpen(false);
                 setSelectedSubmission(null);
                 setVoteScore(0.5);
-                await loadDashboardData();
+                await loadSwarmData();
             }
         } catch (err) {
             console.error(err);
@@ -170,9 +193,10 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
 
     const getStatusStyle = (status: string) => {
         switch (status) {
-            case 'approved': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-            case 'rejected': return 'bg-red-500/10 text-red-400 border-red-500/20';
+            case 'validated': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            case 'failed': return 'bg-red-500/10 text-red-400 border-red-500/20';
             case 'in_swarm': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            case 'escalated': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
             default: return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
         }
     };
@@ -194,7 +218,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                 <div className="text-center">
                     <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                     <p className="text-red-400 text-sm">{error}</p>
-                    <button onClick={loadDashboardData} className="mt-4 px-6 py-2 bg-slate-800 text-slate-300 rounded-lg text-sm hover:bg-slate-700 transition-colors">
+                    <button onClick={loadSwarmData} className="mt-4 px-6 py-2 bg-slate-800 text-slate-300 rounded-lg text-sm hover:bg-slate-700 transition-colors">
                         Retry Connection
                     </button>
                 </div>
@@ -208,7 +232,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-2xl font-black text-white tracking-widest uppercase flex items-center gap-3">
                         <Shield className="w-8 h-8 text-emerald-400" />
-                        Intelligence Swarm Dashboard
+                        Intelligence Swarm
                     </h1>
                     {onClose && (
                         <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors font-mono text-sm">
@@ -259,11 +283,11 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                                 </div>
                             )}
                             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Validator Protocol</span>
-                            <div className="text-3xl font-black text-white">Lvl. {profile.swarm_validator_level}</div>
+                            <div className="text-3xl font-black text-white">Tier {profile.swarm_validator_level}</div>
                             {profile.swarm_validator_level >= 1 ? (
                                 <span className="text-xs font-mono text-blue-400 mt-2 font-bold tracking-tight">Active Consensus Node</span>
                             ) : (
-                                <span className="text-xs font-mono text-slate-500 mt-2 tracking-tight">Reach Level 1 to validate</span>
+                                <span className="text-xs font-mono text-slate-500 mt-2 tracking-tight">Earn reputation to validate</span>
                             )}
                         </div>
                     </div>
@@ -289,16 +313,18 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                                 </div>
                             ) : (
                                 mySubmissions.map(sub => (
-                                    <div key={sub.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                    <div key={sub.submission_id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                                         <div>
                                             <div className="flex items-center gap-3 mb-1">
                                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${getStatusStyle(sub.status)}`}>
                                                     {sub.status.replace('_', ' ')}
                                                 </span>
-                                                <span className="text-xs text-slate-500 font-mono">{new Date(sub.created_at).toLocaleDateString()}</span>
+                                                <span className="text-xs text-slate-500 font-mono">{new Date(sub.submitted_at).toLocaleDateString()}</span>
                                             </div>
                                             <h3 className="text-white font-bold">{sub.nodes?.skill_domain || 'Unknown Node Domain'}</h3>
-                                            <p className="text-slate-500 text-xs mt-1 font-mono">Stake: {sub.stake_tokens} GP</p>
+                                            {sub.nodes?.tier != null && (
+                                                <p className="text-slate-500 text-xs mt-1 font-mono">Node Tier: {sub.nodes.tier}</p>
+                                            )}
                                         </div>
                                         <div className="w-full md:w-64">
                                             <div className="flex justify-between items-center mb-1">
@@ -327,15 +353,22 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                                 </div>
                             ) : (
                                 inbox.map(item => (
-                                    <div key={item.id} className="bg-slate-900 border border-blue-500/20 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-[0_0_15px_rgba(59,130,246,0.05)] hover:shadow-[0_0_20px_rgba(59,130,246,0.1)] transition-all">
+                                    <div key={item.submission_id} className="bg-slate-900 border border-blue-500/20 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-[0_0_15px_rgba(59,130,246,0.05)] hover:shadow-[0_0_20px_rgba(59,130,246,0.1)] transition-all">
                                         <div>
                                             <div className="flex items-center gap-3 mb-1">
                                                 <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                                <span className="text-xs font-mono text-blue-400 font-bold uppercase tracking-widest">Active Vote</span>
-                                                <span className="text-xs text-slate-500 font-mono">{new Date(item.created_at).toLocaleTimeString()}</span>
+                                                <span className="text-xs font-mono text-blue-400 font-bold uppercase tracking-widest">Awaiting Evaluation</span>
+                                                <span className="text-xs text-slate-500 font-mono">{new Date(item.submitted_at).toLocaleTimeString()}</span>
                                             </div>
                                             <h3 className="text-white font-bold text-lg mb-1">{item.nodes?.skill_domain || 'Node Evaluation'}</h3>
-                                            <p className="text-slate-400 text-xs">Submission ID: {item.id.slice(0, 8)}...</p>
+                                            <div className="flex items-center gap-3">
+                                                <p className="text-slate-400 text-xs">Submission: {item.submission_id.slice(0, 8)}...</p>
+                                                {item.nodes?.tier != null && (
+                                                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                                                        Tier {item.nodes.tier}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                         <button
                                             onClick={() => { setSelectedSubmission(item); setVoteModalOpen(true); }}
@@ -358,7 +391,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                                 </div>
                             ) : (
                                 ledger.map(entry => (
-                                    <div key={entry.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-900 border border-slate-800/50 rounded-lg hover:bg-slate-800/50 transition-colors">
+                                    <div key={entry.ledger_id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-900 border border-slate-800/50 rounded-lg hover:bg-slate-800/50 transition-colors">
                                         <div className="flex items-start sm:items-center gap-4">
                                             <span className={`px-3 py-1 rounded text-xs font-bold font-mono ${entry.delta >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                                                 {entry.delta > 0 ? '+' : ''}{entry.delta} REP
@@ -366,7 +399,7 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                                             <span className="text-sm text-slate-300 font-medium">{entry.reason}</span>
                                         </div>
                                         <div className="text-[10px] text-slate-500 font-mono mt-2 sm:mt-0 tracking-widest uppercase">
-                                            {new Date(entry.created_at).toLocaleString()}
+                                            {new Date(entry.logged_at).toLocaleString()}
                                         </div>
                                     </div>
                                 ))
@@ -400,6 +433,12 @@ export const SwarmDashboard: React.FC<{ onClose?: () => void }> = ({ onClose }) 
                                     <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Domain</span>
                                     <span className="text-sm text-white font-bold">{selectedSubmission.nodes?.skill_domain}</span>
                                 </div>
+                                {selectedSubmission.nodes?.tier != null && (
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Node Tier</span>
+                                        <span className="text-sm text-white font-bold">{selectedSubmission.nodes.tier}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between items-center">
                                     <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Current Consensus</span>
                                     <span className="text-sm text-yellow-400 font-mono">{(selectedSubmission.consensus_score * 100).toFixed(0)}%</span>
