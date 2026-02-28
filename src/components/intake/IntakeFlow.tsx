@@ -107,19 +107,28 @@ export const IntakeFlow: React.FC<IntakeFlowProps> = ({ onComplete, onCancel, us
             }
         });
 
-        // Supabase: Upsert Age Tier into the valid users record
+        // Supabase: Sync Tier into the verified Longitudinal Identity Profile
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
         if (isUUID) {
             try {
+                // We target 'profiles' table which holds the platform metadata
                 const { error } = await supabase
-                    .from('users')
-                    .update({ age_tier: ageTier })
-                    .eq('id', userId);
+                    .from('profiles')
+                    .upsert({
+                        id: userId,
+                        age_tier: ageTier,
+                        updated_at: new Date().toISOString()
+                    });
 
-                if (error) console.error("TIER SYNC ERROR:", error.message);
-                else console.log(`[Eligibility Gate] User ${userId} locked to Tier ${ageTier}`);
+                if (error) {
+                    console.warn("TIER SYNC WARNING (Profiles):", error.message);
+                    // Fallback attempt to 'users' if profiles missing/protected differently
+                    await supabase.from('users').update({ age_tier: ageTier }).eq('id', userId);
+                } else {
+                    console.log(`[Eligibility Gate] Identity ${userId} locked to Tier ${ageTier}`);
+                }
             } catch (err) {
-                console.error("TIER SYNC ERROR - FATAL", err);
+                console.error("TIER SYNC FATAL:", err);
             }
         }
 
@@ -168,35 +177,26 @@ export const IntakeFlow: React.FC<IntakeFlowProps> = ({ onComplete, onCancel, us
                         {copy.report}
                     </p>
 
-                    <div className="grid grid-cols-3 gap-4 mb-10">
-                        {Object.entries(finalMasteryMap.zpd).map(([subject, level]) => (
-                            <div key={subject} className="bg-slate-950 border border-slate-800 rounded-xl p-6 text-center shadow-inner">
-                                <div className="text-xs font-mono text-slate-500 mb-2 uppercase tracking-widest">{subject}</div>
-                                <div className="text-4xl font-black text-emerald-400">Lvl {level}</div>
-                            </div>
-                        ))}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                        {Object.entries(finalMasteryMap.zpd).map(([subject, level]) => {
+                            const title = subject === 'math' ? 'Computational Architect' :
+                                subject === 'ela' ? 'Strategic Communicator' : 'Systems Analyst';
+                            return (
+                                <div key={subject} className="bg-slate-950 border border-slate-800 rounded-2xl p-6 text-center shadow-inner group hover:border-emerald-500/30 transition-all">
+                                    <div className="text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest">{title}</div>
+                                    <div className="text-3xl font-black text-emerald-400">Level {level}</div>
+                                    <div className="text-[9px] text-slate-600 mt-2 font-mono uppercase tracking-tighter">Verified Competence</div>
+                                </div>
+                            );
+                        })}
                     </div>
-
-                    {finalMasteryMap.gaps.length > 0 && (
-                        <div className="mb-10 px-6 py-4 bg-red-950/20 border border-red-900/30 rounded-xl">
-                            <h3 className="text-xs font-black text-red-500 uppercase tracking-widest mb-3">Identified Growth Edges</h3>
-                            <ul className="text-sm text-slate-400 space-y-2">
-                                {finalMasteryMap.gaps.slice(0, 3).map((gap, i) => (
-                                    <li key={i} className="flex gap-2">
-                                        <span className="text-red-500/60">•</span>
-                                        {gap.description}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
 
                     <button
                         onClick={handleFinalize}
                         disabled={isProcessing}
-                        className="w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-xl tracking-widest uppercase rounded-xl transition-all shadow-lg shadow-blue-500/20"
+                        className="w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-xl tracking-widest uppercase rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95"
                     >
-                        {isProcessing ? "PROCESSING SECURE LOG..." : "[ENTER IMPACT ENGINE]"}
+                        {isProcessing ? "SECURING IDENTITY..." : "[ENTER IMPACT ENGINE]"}
                     </button>
                 </div>
             </div>
@@ -239,16 +239,26 @@ export const IntakeFlow: React.FC<IntakeFlowProps> = ({ onComplete, onCancel, us
                     {currentQuestion.text}
                 </h1>
 
-                <div className="grid gap-4">
+                <div className="grid gap-4 relative">
+                    {/* ADAPTIVE FEEDBACK OVERLAY */}
+                    {isProcessing && (
+                        <div className="absolute -top-12 left-0 w-full flex justify-center animate-mbp-fadeInUp">
+                            <div className="bg-indigo-500/10 border border-indigo-500/30 px-4 py-1.5 rounded-full flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Adapting Difficulty...</span>
+                            </div>
+                        </div>
+                    )}
+
                     {currentQuestion.options.map((option, idx) => (
                         <button
                             key={idx}
                             onClick={() => handleAnswer(idx)}
                             disabled={isProcessing}
-                            className="group flex justify-between items-center p-6 bg-slate-900 border border-slate-800 rounded-xl hover:border-emerald-500/50 hover:bg-slate-800/80 transition-all text-left"
+                            className="group flex justify-between items-center p-6 bg-slate-900 border border-slate-800 rounded-xl hover:border-emerald-500/50 hover:bg-slate-800/80 transition-all text-left disabled:opacity-40"
                         >
-                            <span className="text-lg text-slate-300 group-hover:text-white transition-colors">{option}</span>
-                            <div className="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500/10 transition-all">
+                            <span className="text-lg text-slate-300 group-hover:text-white transition-colors pointer-events-none">{option}</span>
+                            <div className="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center group-hover:border-emerald-500 group-hover:bg-emerald-500/10 transition-all pointer-events-none">
                                 <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400" />
                             </div>
                         </button>

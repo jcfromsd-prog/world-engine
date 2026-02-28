@@ -38,6 +38,7 @@ export interface Profile {
     cognitive_tier?: number;
     avatar_url?: string | null;
     archetype?: string | null;
+    age_tier?: number;
     future_self?: string | null;
     future_self_updated_at?: string | null;
     updated_at?: string | null;
