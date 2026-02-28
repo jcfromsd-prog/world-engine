@@ -12,17 +12,20 @@ import type {
 } from './IntakeRegistry';
 
 export class IntakeEngine {
-    private subjectLevels: Record<Subject, number> = { math: 5, ela: 5, logic: 5 }; // Start at grade 5
+    private subjectLevels: Record<Subject, number>;
     private results: { questionId: string, correct: boolean }[] = [];
 
     constructor(initialGrade?: number) {
-        let startingDifficulty = 5; // Default fallback
+        let startingDifficulty: number;
 
         if (initialGrade !== undefined) {
-            if (initialGrade >= 1 && initialGrade <= 3) startingDifficulty = 2; // Sprouts
-            else if (initialGrade >= 4 && initialGrade <= 5) startingDifficulty = 4; // Explorers
-            else if (initialGrade >= 6 && initialGrade <= 8) startingDifficulty = 7; // Trailblazers
-            else if (initialGrade >= 9 && initialGrade <= 12) startingDifficulty = 10; // Pioneers
+            if (initialGrade >= 1 && initialGrade <= 3) startingDifficulty = 2; // Tier 1: Sprouts
+            else if (initialGrade >= 4 && initialGrade <= 6) startingDifficulty = 5; // Tier 2: Explorers
+            else if (initialGrade >= 7 && initialGrade <= 8) startingDifficulty = 7; // Tier 3: Builders / Trailblazers
+            else if (initialGrade >= 9 && initialGrade <= 10) startingDifficulty = 9; // Tier 4: Architects
+            else startingDifficulty = 11; // Tier 5: Voyagers
+        } else {
+            startingDifficulty = 5; // System fallback if grade missing
         }
 
         this.subjectLevels = { math: startingDifficulty, ela: startingDifficulty, logic: startingDifficulty };
