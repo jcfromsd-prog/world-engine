@@ -1,16 +1,17 @@
 # SYSTEM STATE
 
-Last verified: 2026-02-28 (13:14 PT)
+Last verified: 2026-02-28 (13:22 PT)
 Live Vercel URL: <https://world-engine-ga2dcpehh-james-projects-6aa7c06b.vercel.app>  (Status: Deployment in progress)
-Live commit: 1d4eda78b277ee3d937077977a41940984852077
+Live commit: 0db9a3e4b1d24cfc86a64c7db8e4a689
 
 CONFIRMED WORKING:
 ✅ Onboarding → ASSESSMENT routing
 ✅ Graph bypass closed
 ✅ Briefing → Assessment → Mirror flow
-✅ Grade-based difficulty initialization (Sprouts=2, Trailblazers=7, etc.) mapped correctly
-✅ Intake Registry expanded: 2 questions per grade band per subject (30 Total)
-✅ Item Response Theory (IRT) variation enabled via registry depth
+✅ Grade-based difficulty initialization (Sprouts=2, Trailblazers=7, etc.) verified & correctly passed from App.tsx
+✅ Intake Registry expanded: 30 rigorously aligned questions (Math, ELA, Logic)
+✅ IRT variation enabled via registry depth
+✅ ENUMS ALIGNED: status='validated', reason='validation_earned' (Zero Drift)
 ✅ Submissions and Reputation Ledger writes verified
 
 KNOWN OPEN ISSUES:
