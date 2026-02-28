@@ -80,7 +80,7 @@ export class IntakeEngine {
                 const subRes = await supabase.from('submissions').insert({
                     user_id: finalId,
                     node_id: '00000000-0000-0000-0000-000000000000', // Placeholder UUID
-                    status: 'approved',
+                    status: 'validated',
                     consensus_score: isCorrect ? 1 : 0
                 });
 
@@ -89,12 +89,10 @@ export class IntakeEngine {
                 }
 
                 // Synthesis Protocol: Upsert Longitudinal Identity Profile safely
-                // Note: The reason must be a string, and we won't pass current_profile as it lacks a DB column
-                // Using standard insert instead of upsert if user_id lacks unique constraint in ledger
                 const repRes = await supabase.from('reputation_ledger').insert({
                     user_id: finalId,
                     delta: isCorrect ? 10 : 0,
-                    reason: 'diagnostic_mastery'
+                    reason: 'validation_earned'
                 });
 
                 if (repRes.error) {

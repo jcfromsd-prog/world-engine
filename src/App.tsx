@@ -1218,6 +1218,7 @@ const App: React.FC = () => {
       {appState === "ASSESSMENT" && (
         <IntakeFlow
           userId={supabaseUser?.id || userProfile?.id || "temp-explorer"}
+          grade={userProfile?.grade || "5"}
           onCancel={() => setAppState("LANDING")}
           onComplete={(map) => {
             setMasteryMap(map);
@@ -1225,10 +1226,11 @@ const App: React.FC = () => {
             // Auto-complete onboarding with determined grade
             const avgGrade = Math.round(Object.values(map.zpd).reduce((a, b) => a + b, 0) / 3);
             completeOnboarding({
-              name: "Authenticated Explorer",
+              name: userProfile?.name || "Authenticated Explorer",
               grade: avgGrade.toString(),
-              passion: "TECH",
-              squad: "Alpha Squad"
+              passion: userProfile?.passion || "TECH",
+              squad: userProfile?.squad || "Alpha Squad",
+              id: userProfile?.id
             });
           }}
         />
