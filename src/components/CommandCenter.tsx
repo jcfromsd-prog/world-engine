@@ -45,9 +45,9 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
     }, [user, isOpen]);
 
     // Derived Display Values
-    const displayRank = profile ? `#${9999 - (profile.reputation_points || 0)}` : `#${defaultRank}`;
-    const displayEarnings = profile ? `$${(profile.reputation_points * 10).toLocaleString()}` : defaultEarnings;
-    const displayVelocity = profile ? `${(1 + (profile.reputation_points / 100)).toFixed(1)}x` : defaultVelocity;
+    const displayRank = profile ? `#${9999 - (profile.reputation_tokens || 0)}` : `#${defaultRank}`;
+    const displayEarnings = profile ? `$${((profile.reputation_tokens || 0) * 10).toLocaleString()}` : defaultEarnings;
+    const displayVelocity = profile ? `${(1 + ((profile.reputation_tokens || 0) / 100)).toFixed(1)}x` : defaultVelocity;
     const displayArchetype = profile?.archetype || "Recruit";
 
 

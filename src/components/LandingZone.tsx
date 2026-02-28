@@ -122,7 +122,7 @@ const LandingZone = ({
                             <MorningAlignment
                                 userName={profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || "Sovereign"}
                                 userGoal={profile?.goal || "Master your craft"}
-                                userLevel={profile ? Math.floor((profile.reputation_points || 0) / 100) + 1 : 1}
+                                userLevel={profile ? Math.floor((profile.reputation_tokens || 0) / 100) + 1 : 1}
                             />
                         </div>
                     )}
