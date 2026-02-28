@@ -1,0 +1,78 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e5]:
+    - generic [ref=e7]:
+      - link "MYBESTPURPOSE WORLD ENGINE" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e9]: MYBESTPURPOSE
+        - generic [ref=e10]: WORLD ENGINE
+      - generic "Initialize Neural Link" [ref=e11] [cursor=pointer]
+    - generic [ref=e15]:
+      - button "SOLVER" [ref=e16] [cursor=pointer]
+      - button "CLIENT" [ref=e17] [cursor=pointer]
+    - button [ref=e20] [cursor=pointer]:
+      - img [ref=e21]
+  - generic [ref=e25]:
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - heading "SOLVE & EARN." [level=1] [ref=e28]
+        - paragraph [ref=e29]: MyBestPurpose is an AI-guided Engine where you evolve from a passive student into a Verified Contributor.
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e33]: STEP 1
+            - button "🚀 START YOUR ENGINE" [ref=e34] [cursor=pointer]: 🚀 START YOUR ENGINE
+          - button "Explore Missions →" [ref=e36] [cursor=pointer]
+        - generic [ref=e37]:
+          - generic [ref=e40]: 4 Skill Nodes
+          - generic [ref=e43]: — Active Learners
+          - generic [ref=e46]: 0 RP Earned
+      - generic [ref=e48] [cursor=pointer]:
+        - generic [ref=e52]: "Preview: Your Skill Map"
+        - paragraph [ref=e54]: Start your engine to unlock 🚀
+        - img [ref=e56]:
+          - generic [ref=e60]:
+            - generic [ref=e64]: Counting …
+            - generic [ref=e68]: Simple Ad…
+            - generic [ref=e72]: Short Vow…
+            - generic [ref=e76]: Reading C…
+        - generic [ref=e77]:
+          - paragraph [ref=e78]: This is what your journey looks like.
+          - generic [ref=e79]: Preview
+    - generic [ref=e81]:
+      - generic [ref=e82]:
+        - generic [ref=e83]: 🟢
+        - heading "CONNECT" [level=3] [ref=e84]
+        - paragraph [ref=e85]:
+          - text: The
+          - strong [ref=e86]: Squad Engine
+          - text: . Stop learning alone. Find your tribe and validate your belonging.
+      - generic [ref=e87] [cursor=pointer]:
+        - generic [ref=e88]: 🟣
+        - heading "LEARN" [level=3] [ref=e89]
+        - paragraph [ref=e90]:
+          - text: The
+          - strong [ref=e91]: Acceleration Engine
+          - text: . AI speed. Download skills and reach flow state instantly.
+        - generic [ref=e92]: Initialize →
+      - generic [ref=e93] [cursor=pointer]:
+        - generic [ref=e95]: 🔵
+        - heading "SOLVE" [level=3] [ref=e96]
+        - paragraph [ref=e97]:
+          - text: The
+          - strong [ref=e98]: Impact Engine
+          - text: . No tests. Just real-world missions that build your portfolio.
+        - generic [ref=e99]: Boot Up →
+      - generic [ref=e100]:
+        - generic [ref=e101]: 🟡
+        - heading "EARN" [level=3] [ref=e102]
+        - paragraph [ref=e103]:
+          - text: The
+          - strong [ref=e104]: Legend Engine
+          - text: . Real value, real reward. Verify your impact and build wealth.
+  - button "🛠️ DEV CONSOLE 🟢 ▶" [ref=e107] [cursor=pointer]:
+    - generic [ref=e108]: 🛠️
+    - generic [ref=e109]: DEV CONSOLE 🟢
+    - generic [ref=e110]: ▶
+```

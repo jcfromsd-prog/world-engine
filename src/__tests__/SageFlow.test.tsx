@@ -1,19 +1,44 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import App from '../App';
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
+import { AuthProvider } from '../context/AuthProvider';
 
 // Mock window.scrollTo
 window.scrollTo = vi.fn();
+
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+    observe() { }
+    unobserve() { }
+    disconnect() { }
+};
+
+// Mock speechSynthesis
+Object.defineProperty(window, 'speechSynthesis', {
+    value: {
+        getVoices: () => [],
+        speak: vi.fn(),
+        cancel: vi.fn()
+    }
+});
+
+// Mock SpeechSynthesisUtterance
+global.SpeechSynthesisUtterance = class SpeechSynthesisUtterance {
+    constructor() { }
+};
 
 describe('SageFlow User Journey', () => {
     it('should guide user from Landing to Calibration successfully', async () => {
         // 1. Render App inside Router
         render(
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
+            <AuthProvider>
+                <BrowserRouter>
+                    <App />
+                </BrowserRouter>
+            </AuthProvider>
         );
 
         // 2. Verify Landing Page Button

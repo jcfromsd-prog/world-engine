@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import EditProfileModal from './EditProfileModal';
+import FutureSelfEditor from './identity/FutureSelfEditor';
 
 const Profile: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'overview' | 'portfolio' | 'badges'>('overview');
@@ -88,6 +89,11 @@ const Profile: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Future Self Identity Anchor */}
+            <div className="max-w-4xl mx-auto px-6 mb-8">
+                <FutureSelfEditor />
             </div>
 
             {/* Stats Grid */}

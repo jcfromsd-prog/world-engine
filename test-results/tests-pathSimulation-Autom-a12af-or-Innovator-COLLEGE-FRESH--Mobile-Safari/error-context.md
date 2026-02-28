@@ -1,0 +1,44 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e5]:
+    - generic [ref=e7]:
+      - link "MYBESTPURPOSE WORLD ENGINE" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e9]: MYBESTPURPOSE
+        - generic [ref=e10]: WORLD ENGINE
+      - generic "Initialize Neural Link" [ref=e11] [cursor=pointer]
+    - generic [ref=e15]:
+      - button "SOLVER" [ref=e16] [cursor=pointer]
+      - button "CLIENT" [ref=e17] [cursor=pointer]
+    - button [ref=e20] [cursor=pointer]:
+      - img [ref=e21]
+  - generic [ref=e23]:
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - img [ref=e28]
+          - generic [ref=e30]:
+            - heading "Intelligent Diagnostic Phase 1" [level=3] [ref=e31]:
+              - text: Intelligent Diagnostic
+              - generic [ref=e32]: Phase 1
+            - paragraph [ref=e33]: Adaptive Conversation
+        - generic [ref=e35]: IRT Engine Active
+      - generic [ref=e37]:
+        - generic [ref=e39]:
+          - img [ref=e41]
+          - paragraph [ref=e45]: Welcome to the Intelligent Diagnostic. I'm going to present a real-world scenario to understand how you think. Ready?
+        - generic [ref=e47]:
+          - img [ref=e49]
+          - paragraph [ref=e53]: Welcome to the Intelligent Diagnostic. I'm going to present a real-world scenario to understand how you think. Ready?
+      - generic [ref=e55]:
+        - textbox "Type your response... (e.g. prioritize life support)" [active] [ref=e56]
+        - button [disabled] [ref=e57]:
+          - img [ref=e58]
+    - button "✕ CANCEL" [ref=e61] [cursor=pointer]
+  - button "🛠️ DEV CONSOLE 🟢 ▶" [ref=e64] [cursor=pointer]:
+    - generic [ref=e65]: 🛠️
+    - generic [ref=e66]: DEV CONSOLE 🟢
+    - generic [ref=e67]: ▶
+```

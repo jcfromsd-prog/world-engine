@@ -27,14 +27,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Type definitions for our database tables
 export interface Profile {
-    id: string;
-    username: string | null;
-    full_name: string | null;
-    goal: string | null;
-    reputation_points: number;
-    avatar_url: string | null;
-    archetype: string | null;
-    updated_at: string | null;
+    id?: string;
+    user_id?: string;
+    username?: string | null;
+    full_name?: string | null;
+    goal?: string | null;
+    reputation_tokens?: number;
+    current_tier?: number;
+    swarm_validator_level?: number;
+    cognitive_tier?: number;
+    avatar_url?: string | null;
+    archetype?: string | null;
+    future_self?: string | null;
+    future_self_updated_at?: string | null;
+    updated_at?: string | null;
 }
 
 export interface GauntletEntry {

@@ -77,7 +77,7 @@ const APP_LEARNER_PROFILE: LearnerProfile = {
 
 
 // --- TYPES ---
-type AppState = "LANDING" | "ONBOARDING" | "SQUAD_BRIEFING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP" | "BLUEPRINT_MODE" | "SIMULATION_ENGINE" | "SWARM_DASHBOARD";
+type AppState = "LANDING" | "DIAGNOSTIC" | "ONBOARDING" | "SQUAD_BRIEFING" | "CHOICE_SELECTION" | "DASHBOARD" | "MISSION_WORKSPACE" | "MISSION_ACTIVE" | "MISSION_COMPLETE" | "IMPACT_ENGINE" | "MISSION_ACTIVE_NEURAL" | "SAGE_PREP" | "WORLD_ENGINE_DEV" | "ASSESSMENT" | "LEARNER_MAP" | "BLUEPRINT_MODE" | "SIMULATION_ENGINE" | "SWARM_DASHBOARD";
 
 
 export interface UserProfile {
@@ -262,7 +262,11 @@ function loadOnboardingDraft(): OnboardingDraft | null {
       localStorage.removeItem(ONBOARDING_STORAGE_KEY);
       return null;
     }
-    if (parsed.step && parsed.name !== undefined) return parsed as OnboardingDraft;
+    if (parsed.step && parsed.name !== undefined) {
+      // SQUAD_REVEAL is now skipped — redirect stale drafts to AUTH
+      if (parsed.step === 'SQUAD_REVEAL') parsed.step = 'AUTH';
+      return parsed as OnboardingDraft;
+    }
     return null;
   } catch {
     return null;
@@ -375,7 +379,7 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
       setTimeout(() => setMatchStatus("FOUND 1 HUMAN MATCH..."), 1000);
       setTimeout(() => setMatchStatus("RECRUITING AI AGENTS TO FILL SQUAD..."), 2000);
       setTimeout(() => {
-        transitionTo("SQUAD_REVEAL");
+        transitionTo("AUTH"); // Skip Squad Reveal — go straight to Auth
       }, 3500);
     }
   };
@@ -386,13 +390,21 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
 
     try {
       setMatchStatus("SECURING VAULT CONNECTION...");
-      setAuthError(""); // Clear previous errors
+      setAuthError("");
+
+      // Wrap auth in a 10-second timeout to prevent infinite hang
+      const authWithTimeout = <T,>(promise: Promise<T>): Promise<T> =>
+        Promise.race([
+          promise,
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Connection timed out. Use DEV BYPASS below to continue.")), 10000)
+          )
+        ]);
 
       // 1. Try Log In First
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const { data: loginData, error: loginError } = await authWithTimeout(
+        supabase.auth.signInWithPassword({ email, password })
+      );
 
       if (!loginError && loginData.user) {
         onComplete({ name, grade, passion, squad, id: loginData.user.id });
@@ -400,23 +412,23 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
         return;
       }
 
-      // If login error is standard "Invalid login credentials", try signing up.
-      // E.g. User doesn't exist yet.
+      // If login error is "Invalid login credentials", try signing up.
       if (loginError && loginError.message.includes("Invalid login credentials")) {
-        // 2. Try Sign Up
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: name,
-              grade: grade,
-              passion: passion,
-              squad: squad,
-              is_child_account: true
+        const { data: signUpData, error: signUpError } = await authWithTimeout(
+          supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: name,
+                grade: grade,
+                passion: passion,
+                squad: squad,
+                is_child_account: true
+              }
             }
-          }
-        });
+          })
+        );
 
         if (signUpError) throw signUpError;
         onComplete({ name, grade, passion, squad, id: signUpData.user?.id });
@@ -424,12 +436,12 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
         return;
       }
 
-      // If it wasn't a standard 'invalid credentials' error, surface the real error
       throw loginError;
 
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setAuthError(errorMessage || "Connection Failed. Try again.");
+      setMatchStatus("");
     }
   };
 
@@ -528,7 +540,7 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in p-6 font-sans">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in p-6 font-sans overflow-y-auto">
       <div className="mb-8">
         <BreadcrumbHeader name={name} grade={grade} passion={passion} step={step} />
       </div>
@@ -744,12 +756,13 @@ const OnboardingWizard: React.FC<{ onComplete: (profile: Partial<UserProfile>) =
 
           <button
             onClick={() => {
-              onComplete({ name: name || "Test Pilot", grade: grade || "8", passion: passion || "CODING", squad: "ALPHA-1", id: "temp-test-id-" + Date.now() });
+              // Use the real Supabase test user UID for realistic testing
+              onComplete({ name: name || "Test Pilot", grade: grade || "8", passion: passion || "CODING", squad: "ALPHA-1", id: "f08ead7f-7253-4e5b-a84e-46f337542362" });
               clearOnboardingDraft();
             }}
-            className="mt-4 text-xs text-zinc-600 underline hover:text-red-400"
+            className="mt-6 w-full py-3 bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-400 font-bold text-sm rounded-xl transition-all"
           >
-            [DEV: BYPASS AUTH]
+            🚀 DEV: BYPASS AUTH (Local Testing)
           </button>
         </div>
       )}
@@ -904,7 +917,7 @@ const App: React.FC = () => {
       calibrationScore: 0,
       id: profile.id // Capture the Real Vault ID
     });
-    setAppState("SQUAD_BRIEFING");
+    setAppState("ASSESSMENT");
   };
 
   const handleMissionSelect = (mission: LiveMission | string) => {
@@ -1007,7 +1020,7 @@ const App: React.FC = () => {
       )}
 
       {/* ADMIN OVERLAYS */}
-      {showSwarm && <SwarmDashboard onClose={() => setShowSwarm(false)} />}
+      {showSwarm && <SwarmDashboard onClose={() => setShowSwarm(false)} fallbackUserId={userProfile?.id} />}
       {showMasterTeacher && <MasterTeacherDashboard onClose={() => setShowMasterTeacher(false)} />}
 
       {/* 🚀 LANDING PAGE */}
@@ -1093,18 +1106,16 @@ const App: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                       <span className="text-sm font-bold text-white tracking-wide">
-                        {supabaseUser ? 'Your Learning Map' : 'Preview: Your Skill Map'}
+                        The Capability Graph
                       </span>
                     </div>
                     <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider hidden sm:block">Live</span>
                   </div>
 
-                  {/* Subtitle — different for logged-in vs anonymous */}
+                  {/* Subtitle — Aspirational Framing */}
                   <div className="absolute top-10 left-5 z-10">
                     <p className="text-[11px] text-zinc-400 mt-1">
-                      {supabaseUser
-                        ? 'Tap a skill to begin learning ✨'
-                        : 'Start your engine to unlock 🚀'}
+                      Complete calibration to generate your unique neural map.
                     </p>
                   </div>
 
@@ -1114,34 +1125,19 @@ const App: React.FC = () => {
                       n.prerequisites.map((p: string) => ({ source: p, target: n.id }))
                     )}
                     onNodeClick={(node) => {
-                      if (!supabaseUser) {
-                        // Not logged in — funnel to onboarding (same as START YOUR ENGINE)
-                        setAppState("ONBOARDING");
-                        return;
-                      }
-                      // Logged in — full interactive routing
-                      if (!node.unlocked) {
-                        alert(`🔒 NODE LOCKED: "${node.label}"\n\nComplete prerequisite skills to unlock this path.`);
-                        return;
-                      }
-                      const LEARNING_DOMAINS = ['literacy', 'numeracy', 'science', 'social', 'sel'];
-                      if (LEARNING_DOMAINS.includes(node.domain)) {
-                        setAppState("ASSESSMENT");
-                      } else {
-                        setAppState("IMPACT_ENGINE");
-                      }
+                      // Bypasses Calibration if they click a node! (REMOVED)
+                      // The graph on the landing page must be a view-only teaser.
+                      console.log("Interactive capability graph restricted prior to calibration.", node.id);
                     }}
                   />
 
                   {/* Bottom hint */}
                   <div className="absolute bottom-3 left-5 right-5 flex items-center justify-between z-10">
                     <p className="text-[10px] text-zinc-600">
-                      {supabaseUser
-                        ? 'Each circle is a skill you can master.'
-                        : 'This is what your journey looks like.'}
+                      Every node represents a verifiable skill waiting to be unlocked.
                     </p>
                     <span className="text-[10px] text-emerald-500/60 font-bold uppercase tracking-wider">
-                      {supabaseUser ? 'Interactive' : 'Preview'}
+                      Preview
                     </span>
                   </div>
                 </div>
@@ -1203,6 +1199,8 @@ const App: React.FC = () => {
         />
       )}
 
+
+
       {/* 🧬 ONBOARDING */}
       {appState === "ONBOARDING" && <OnboardingWizard onComplete={completeOnboarding} onCancel={() => setAppState("LANDING")} />}
 
@@ -1238,36 +1236,36 @@ const App: React.FC = () => {
 
       {/* 🚁 SQUAD BRIEFING (The Hangar) */}
       {appState === "SQUAD_BRIEFING" && (
-        <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col items-center justify-center p-6 animate-fade-in">
+        <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col items-center justify-start pt-28 p-4 animate-fade-in overflow-y-auto">
           {/* BACKGROUND FX */}
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614728853913-1e32005e307a?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10 pointer-events-none mix-blend-screen"></div>
 
           <div className="relative z-10 max-w-4xl w-full text-center">
-            <div className="mb-12">
-              <h1 className="text-5xl md:text-7xl font-black text-white mb-4 tracking-tighter">SQUAD <span className="text-emerald-500">ASSEMBLED</span></h1>
+            <div className="mb-4">
+              <h1 className="text-4xl md:text-5xl font-black text-white mb-2 tracking-tighter">SQUAD <span className="text-emerald-500">ASSEMBLED</span></h1>
               <p className="text-xl text-zinc-400 max-w-2xl mx-auto">Your team is online. The network is waiting. Verify your skills to unlock the global feed.</p>
             </div>
 
             {/* SQUAD GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {/* USER */}
-              <div className="p-8 bg-zinc-900/80 border border-blue-500/30 rounded-3xl backdrop-blur-md relative overflow-hidden group">
+              <div className="p-5 bg-zinc-900/80 border border-blue-500/30 rounded-2xl backdrop-blur-md relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">👤</div>
+                <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">👤</div>
                 <h3 className="text-xl font-black text-white uppercase">{userProfile?.name}</h3>
                 <p className="text-xs text-blue-400 font-bold uppercase tracking-widest mt-1">SQUAD LEADER</p>
               </div>
               {/* SAGE */}
-              <div className="p-8 bg-zinc-900/60 border border-white/5 rounded-3xl backdrop-blur-md relative overflow-hidden group">
+              <div className="p-5 bg-zinc-900/60 border border-white/5 rounded-2xl backdrop-blur-md relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
-                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🤖</div>
+                <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">🤖</div>
                 <h3 className="text-xl font-black text-white">SAGE</h3>
                 <p className="text-xs text-purple-400 font-bold uppercase tracking-widest mt-1">AI ARCHITECT</p>
               </div>
               {/* ORACLE */}
-              <div className="p-8 bg-zinc-900/60 border border-white/5 rounded-3xl backdrop-blur-md relative overflow-hidden group">
+              <div className="p-5 bg-zinc-900/60 border border-white/5 rounded-2xl backdrop-blur-md relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
-                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🧠</div>
+                <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">🧠</div>
                 <h3 className="text-xl font-black text-white">ORACLE</h3>
                 <p className="text-xs text-amber-400 font-bold uppercase tracking-widest mt-1">STRATEGIC COMMS</p>
               </div>
@@ -1300,6 +1298,14 @@ const App: React.FC = () => {
               <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> GENESIS FEED: OFFLINE</span>
               <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> SQUAD COMMS: SECURE</span>
             </div>
+
+            {/* DEV: Quick access to Swarm */}
+            <button
+              onClick={() => setAppState("SWARM_DASHBOARD")}
+              className="mt-6 px-6 py-3 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/30 text-amber-400 font-bold text-sm rounded-xl transition-all"
+            >
+              🐝 Open Swarm Dashboard (Dev)
+            </button>
           </div>
         </div>
       )}
@@ -1451,7 +1457,7 @@ const App: React.FC = () => {
 
       {/* 🐝 SWARM DASHBOARD (Validation UI) */}
       {appState === "SWARM_DASHBOARD" && (
-        <SwarmDashboard onClose={() => setAppState("LANDING")} />
+        <SwarmDashboard onClose={() => setAppState("LANDING")} fallbackUserId={userProfile?.id} />
       )}
 
       <ElevationMoment />

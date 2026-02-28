@@ -58,9 +58,9 @@ export const CA_STANDARDS_REGISTRY: Record<string, { description: string, subjec
     'CCSS.ELA.7.W.1': { description: 'Write arguments to support claims.', subject: 'ela', grade: 7 },
     'CCSS.ELA.HS.RL.9-10.1': { description: 'Cite strong textual evidence.', subject: 'ela', grade: 11 },
 
-    // HS MANDATES
-    'CA.HS.ETHNIC_STUDIES': { description: 'Critical analysis of diverse histories.', subject: 'logic', grade: 9 },
-    'CA.HS.PERSONAL_FINANCE': { description: 'Financial literacy and credit management.', subject: 'logic', grade: 11 }
+    // STEM & ADVANCED LOGIC
+    'HS.GOV.C.2': { description: 'Analyze the US Constitution and rule of law.', subject: 'logic', grade: 9 },
+    'HS.ECON.PF.1': { description: 'Calculate compound interest and analyze macro-economic impacts on credit.', subject: 'logic', grade: 11 }
 };
 
 export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
@@ -79,9 +79,9 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     { id: 'q_e7', subject: 'ela', difficulty: 7, text: 'Identify the thesis statement in an essay.', options: ['The main point', 'The ending', 'A random detail'], correctIndex: 0, standardId: 'CCSS.ELA.7.W.1' },
     { id: 'q_e10', subject: 'ela', difficulty: 10, text: 'What is an allegory?', options: ['A story with a hidden meaning', 'A type of poem', 'A character name'], correctIndex: 0, standardId: 'CCSS.ELA.HS.RL.9-10.1' },
 
-    // LOGIC / HS MANDATES
-    { id: 'q_pf11', subject: 'logic', difficulty: 11, text: 'Benefit of a high credit score?', options: ['Higher rates', 'Lower rates', 'No impact'], correctIndex: 1, standardId: 'CA.HS.PERSONAL_FINANCE' },
-    { id: 'q_es9', subject: 'logic', difficulty: 9, text: 'What is the focus of Ethnic Studies?', options: ['Diverse histories', 'Chemistry', 'Calculus'], correctIndex: 0, standardId: 'CA.HS.ETHNIC_STUDIES' },
+    // LOGIC / AP-LEVEL MANDATES
+    { id: 'q_pf11', subject: 'logic', difficulty: 11, text: 'If inflation averages 4% annually, what is the real return on a savings account yielding 2%?', options: ['+2%', '-2%', '0%'], correctIndex: 1, standardId: 'HS.ECON.PF.1' },
+    { id: 'q_gov9', subject: 'logic', difficulty: 9, text: 'Which principle ensures no single branch of government becomes too powerful?', options: ['Checks and Balances', 'Federalism', 'Executive Privilege'], correctIndex: 0, standardId: 'HS.GOV.C.2' },
     { id: 'q_l1', subject: 'logic', difficulty: 1, text: 'Finish the pattern: Red, Blue, Red, ...', options: ['Red', 'Blue', 'Green'], correctIndex: 1, standardId: 'logic.pattern' },
     { id: 'q_l4', subject: 'logic', difficulty: 4, text: 'If All A are B, and X is A, then...', options: ['X is B', 'X is not B', 'B is A'], correctIndex: 0, standardId: 'logic.syllogism' },
     { id: 'q_l7', subject: 'logic', difficulty: 7, text: 'Which is a logical fallacy?', options: ['Ad Hominem', 'Logic Gate', 'Equation'], correctIndex: 0, standardId: 'logic.fallacy' },

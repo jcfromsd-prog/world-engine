@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { SquadOrchestrator } from '../../engines/intake/SquadOrchestrator';
+import { SageAITutor } from '../../services/SageAITutor';
 
 interface MissionWorkspaceProps {
     mission: any;
@@ -14,6 +15,30 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [squadMessage, setSquadMessage] = useState<{ sender: string, text: string } | null>(null);
     const idleTimer = useRef<NodeJS.Timeout | null>(null);
+
+    // Tutor metrics tracking
+    const [attempts, setAttempts] = useState(0);
+    const [startTime] = useState(() => Date.now());
+    const [hintsGiven, setHintsGiven] = useState<string[]>([]);
+
+    const handleHintRequest = () => {
+        const timeSpentSeconds = Math.floor((Date.now() - startTime) / 1000);
+        const hint = SageAITutor.generateHint({
+            contentId: mission.id || 'default_mission',
+            subject: mission.category || 'general',
+            bloomLevel: 'APPLY', // Defaulting to application since this is a mission
+            gradeLevel: 8, // Placeholder, normally from profile
+            currentAttempt: attempts,
+            timeSpentSeconds,
+            previousHintsGiven: hintsGiven
+        });
+
+        setHintsGiven(prev => [...prev, hint.message]);
+        setSquadMessage({
+            sender: 'SAGE-7 (TUTOR)',
+            text: `${hint.encouragement} ${hint.message} Next step: ${hint.nextSteps[0]}`
+        });
+    };
 
     // TRIGGER 1: Mission Start (Sage-7)
     useEffect(() => {
@@ -74,11 +99,12 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
         setTimeout(() => {
             const { passed, score, feedback } = SquadOrchestrator.evaluateSubmission(mission.standardId || mission.standard || 'DEFAULT', content);
             setIsSubmitting(false);
+            setAttempts(prev => prev + 1);
 
             if (!passed) {
                 setSquadMessage({
                     sender: 'ORACLE-3',
-                    text: feedback
+                    text: `${feedback} (Click 'Ask Sage' for a technical lifeline if you are stuck).`
                 });
             } else {
                 setSquadMessage({
@@ -259,7 +285,10 @@ export const MissionWorkspace: React.FC<MissionWorkspaceProps> = ({ mission, onC
                                         </div>
                                         <span className={`text-xs font-mono ${scoreInfo.textColor} min-w-[80px] text-right`}>{scoreInfo.label}</span>
                                     </div>
-                                    <div className="flex justify-end">
+                                    <div className="flex justify-between items-center mt-2">
+                                        <button onClick={handleHintRequest} className="text-purple-400 hover:text-purple-300 font-mono text-xs border border-purple-500/30 px-3 py-1.5 rounded bg-purple-900/20 transition-colors">
+                                            Need a Lifeline? Ask Sage
+                                        </button>
                                         <button onClick={handleSubmit} disabled={isSubmitting || !content.trim()} className={`px-8 py-3 rounded-xl font-bold uppercase tracking-widest transition-all ${content.trim() ? "bg-emerald-500 text-black hover:bg-emerald-400" : "bg-zinc-800 text-zinc-500"}`}>
                                             {isSubmitting ? "Validing..." : "Commit Artifact"}
                                         </button>
