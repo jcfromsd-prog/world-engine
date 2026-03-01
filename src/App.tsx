@@ -1418,23 +1418,25 @@ const App: React.FC = () => {
 
       {/* GHOST CLASS SWARM (Visual Layer) - Removed as per polish step */}
 
-      {/* FOUNDER MENU (Replaces Static Badge) */}
-      <div className="fixed bottom-6 right-6 z-[500]">
-        <FounderMenu
-          systemHealth={Math.round(systemBalance / 50000 * 100)}
-          onOpenCommand={() => setShowFounderModal(true)}
-          onOpenDiscovery={() => setShowCalibration(true)}
-          onOpenSwarmMenu={() => setAppState("SWARM_DASHBOARD")}
-          onReset={async () => {
-            if (typeof window !== "undefined") {
-              localStorage.clear();
-              // Make sure to also nuke the Supabase session token if imported!
-              await supabase.auth.signOut();
-              window.location.reload();
-            }
-          }}
-        />
-      </div>
+      {/* FOUNDER MENU (Replaces Static Badge) - SECURED VIA RBAC */}
+      {supabaseUser?.email === 'jcfromsd@gmail.com' && (
+        <div className="fixed bottom-6 right-6 z-[500]">
+          <FounderMenu
+            systemHealth={Math.round(systemBalance / 50000 * 100)}
+            onOpenCommand={() => setShowFounderModal(true)}
+            onOpenDiscovery={() => setShowCalibration(true)}
+            onOpenSwarmMenu={() => setAppState("SWARM_DASHBOARD")}
+            onReset={async () => {
+              if (typeof window !== "undefined") {
+                localStorage.clear();
+                // Make sure to also nuke the Supabase session token if imported!
+                await supabase.auth.signOut();
+                window.location.reload();
+              }
+            }}
+          />
+        </div>
+      )}
 
       {/* 🛠️ WORLD ENGINE DEV CONSOLE */}
       {appState === "WORLD_ENGINE_DEV" && (
