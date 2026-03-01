@@ -18,14 +18,14 @@ export class IntakeEngine {
     constructor(initialGrade?: number) {
         let startingDifficulty: number;
 
-        if (initialGrade !== undefined) {
-            if (initialGrade >= 1 && initialGrade <= 3) startingDifficulty = 2; // Tier 1: Sprouts
-            else if (initialGrade >= 4 && initialGrade <= 6) startingDifficulty = 5; // Tier 2: Explorers
-            else if (initialGrade >= 7 && initialGrade <= 8) startingDifficulty = 7; // Tier 3: Builders / Trailblazers
-            else if (initialGrade >= 9 && initialGrade <= 10) startingDifficulty = 9; // Tier 4: Architects
-            else startingDifficulty = 11; // Tier 5: Voyagers
+        if (initialGrade !== undefined && !isNaN(initialGrade)) {
+            if (initialGrade <= 2) startingDifficulty = 2; // Tier 1: Sprouts
+            else if (initialGrade <= 5) startingDifficulty = 5; // Tier 2: Builders
+            else if (initialGrade <= 8) startingDifficulty = 7; // Tier 3: Trailblazers
+            else if (initialGrade <= 17) startingDifficulty = 10; // Tier 4: Explorers
+            else startingDifficulty = 12; // Tier 5: Voyagers
         } else {
-            startingDifficulty = 5; // System fallback if grade missing
+            startingDifficulty = 2; // System fallback mapping replaced '5'
         }
 
         this.subjectLevels = { math: startingDifficulty, ela: startingDifficulty, logic: startingDifficulty };
