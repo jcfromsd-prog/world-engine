@@ -88,12 +88,24 @@ export class IntakeEngine {
                     console.error("SUPABASE SUBMISSIONS ERROR:", subRes.error.message);
                 }
 
-                // Synthesis Protocol: Upsert Reputation Ledger safely
-                const repRes = await supabase.from('reputation_ledger').upsert({
+                // Synthesis Protocol: Accumulate current_profile dynamically and append to ledger
+                const { data: lastLedger } = await supabase
+                    .from('reputation_ledger')
+                    .select('current_profile')
+                    .eq('user_id', finalId)
+                    .order('logged_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                const priorProfile = lastLedger?.current_profile || {};
+                const mergedProfile = { ...priorProfile, [question.subject]: this.subjectLevels[question.subject] };
+
+                const repRes = await supabase.from('reputation_ledger').insert({
                     user_id: finalId,
                     delta: isCorrect ? 10 : 0,
-                    reason: 'validation_earned'
-                }, { onConflict: 'user_id' });
+                    reason: isCorrect ? 'diagnostic_mastery' : 'diagnostic_attempt',
+                    current_profile: mergedProfile
+                });
 
                 if (repRes.error) {
                     console.error("SUPABASE REPUTATION LEDGER ERROR:", repRes.error.message);
