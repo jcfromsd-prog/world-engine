@@ -76,24 +76,24 @@ export class IntakeEngine {
             if (user?.id) {
                 const finalId = user.id === userId ? user.id : userId;
 
-                // Synthesis Protocol: Record completion answer to established schema
+                // Synthesis Protocol: Record EVERY answer to established schema
                 const subRes = await supabase.from('submissions').insert({
                     user_id: finalId,
                     node_id: '00000000-0000-0000-0000-000000000000', // Placeholder UUID
                     status: 'validated',
-                    consensus_score: isCorrect ? 1 : 0
+                    consensus_score: isCorrect ? 1.0 : 0.0
                 });
 
                 if (subRes.error) {
                     console.error("SUPABASE SUBMISSIONS ERROR:", subRes.error.message);
                 }
 
-                // Synthesis Protocol: Upsert Longitudinal Identity Profile safely
-                const repRes = await supabase.from('reputation_ledger').insert({
+                // Synthesis Protocol: Upsert Reputation Ledger safely
+                const repRes = await supabase.from('reputation_ledger').upsert({
                     user_id: finalId,
                     delta: isCorrect ? 10 : 0,
                     reason: 'validation_earned'
-                });
+                }, { onConflict: 'user_id' });
 
                 if (repRes.error) {
                     console.error("SUPABASE REPUTATION LEDGER ERROR:", repRes.error.message);
