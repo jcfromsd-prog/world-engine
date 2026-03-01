@@ -100,6 +100,13 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     { id: 'q_m_v1', subject: 'math', difficulty: 11, text: 'If the variance of a dataset is 16, what is the standard deviation?', options: ['4', '8', '256'], correctIndex: 0, standardId: 'AP.STATS.1' },
     { id: 'q_m_v2', subject: 'math', difficulty: 12, text: 'What is the limit of (1/x) as x approaches infinity?', options: ['1', '0', 'Infinity'], correctIndex: 1, standardId: 'AP.CALC.1' },
 
+    // --- EXPANDED MATH (IRT VARIANCE) ---
+    { id: 'q_m_irt_1', subject: 'math', difficulty: 3, text: 'What is 8 x 7?', options: ['54', '56', '48'], correctIndex: 1, standardId: 'CCSS.MATH.4.NBT.A.1' },
+    { id: 'q_m_irt_2', subject: 'math', difficulty: 4, text: 'Which number is a multiple of 6?', options: ['18', '20', '21'], correctIndex: 0, standardId: 'CCSS.MATH.4.NBT.A.1' },
+    { id: 'q_m_irt_3', subject: 'math', difficulty: 5, text: 'What is 1/2 of 1/2?', options: ['1', '1/4', '1/8'], correctIndex: 1, standardId: 'CCSS.MATH.5.NF.A.1' },
+    { id: 'q_m_irt_4', subject: 'math', difficulty: 7, text: 'If a map scale uses 1 inch = 10 miles, how far is 5 inches?', options: ['2 miles', '15 miles', '50 miles'], correctIndex: 2, standardId: 'CCSS.MATH.7.RP.A.1' },
+    { id: 'q_m_irt_5', subject: 'math', difficulty: 8, text: 'What is the sum of interior angles in a triangle?', options: ['90 degrees', '180 degrees', '360 degrees'], correctIndex: 1, standardId: 'CCSS.MATH.8.G.B.7' },
+
     // --- ELA ---
     // Sprouts (1-3)
     { id: 'q_e_s1', subject: 'ela', difficulty: 1, text: 'Which word is an action word (verb)?', options: ['Apple', 'Run', 'Happy'], correctIndex: 1, standardId: 'CCSS.ELA.1.L.1.e' },
@@ -117,6 +124,13 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     { id: 'q_e_v1', subject: 'ela', difficulty: 11, text: 'Analyze the sentiment: "Calculated indifference is the sharpest blade."', options: ['Apathy', 'Hostility', 'Optimism'], correctIndex: 1, standardId: 'AP.ENGLISH.TONE' },
     { id: 'q_e_v2', subject: 'ela', difficulty: 12, text: 'Which best defines a "Syllogism"?', options: ['A logical argument with two premises', 'A type of metaphor', 'A grammatical error'], correctIndex: 0, standardId: 'SAT.READING.RHETORIC' },
 
+    // --- EXPANDED ELA (IRT VARIANCE) ---
+    { id: 'q_e_irt_1', subject: 'ela', difficulty: 3, text: 'Which word is the subject in: "The clever fox jumped over the log"?', options: ['clever', 'fox', 'jumped'], correctIndex: 1, standardId: 'CCSS.ELA.4.L.1.f' },
+    { id: 'q_e_irt_2', subject: 'ela', difficulty: 4, text: 'What is the root of the word "impossible"?', options: ['im-', 'possible', 'possi-'], correctIndex: 1, standardId: 'CCSS.ELA.5.L.4.b' },
+    { id: 'q_e_irt_3', subject: 'ela', difficulty: 6, text: 'Choose the best transition word: "It was raining outside, ______ we stayed indoors."', options: ['however', 'therefore', 'although'], correctIndex: 1, standardId: 'CCSS.ELA.7.W.1' },
+    { id: 'q_e_irt_4', subject: 'ela', difficulty: 7, text: 'Which sentence states a clear argumentative claim?', options: ['I like ice cream.', 'The city needs more parks to improve public health.', 'There are many trees in the forest.'], correctIndex: 1, standardId: 'CCSS.ELA.7.W.1' },
+    { id: 'q_e_irt_5', subject: 'ela', difficulty: 8, text: '"The moon is a harsh mistress" is an example of what literary device?', options: ['Metaphor', 'Simile', 'Allegory'], correctIndex: 0, standardId: 'AP.ENGLISH.TONE' },
+
     // --- LOGIC ---
     // Sprouts (1-3)
     { id: 'q_l_s1', subject: 'logic', difficulty: 2, text: 'If a sequence is 2, 4, 6, 8... what is the next number?', options: ['9', '10', '12'], correctIndex: 1, standardId: 'LOGIC.SEQUENCE.1' },
@@ -132,5 +146,12 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
     { id: 'q_l_a2', subject: 'logic', difficulty: 10, text: 'If X=Y and Y=Z, then X=Z. This is known as what property?', options: ['Reflexive', 'Transitive', 'Symmetric'], correctIndex: 1, standardId: 'LOGIC.SYSTEMS.TRANSITIVE' },
     // Voyagers (11-12)
     { id: 'q_l_v1', subject: 'logic', difficulty: 11, text: 'If a currency loses 10% of its value, how much has the price of a fixed good effectively increased?', options: ['10%', '11.1%', '9%'], correctIndex: 1, standardId: 'HS.ECON.PF.1' },
-    { id: 'q_l_v2', subject: 'logic', difficulty: 12, text: 'In a Zero-Sum game, if Player A wins 50 points, how many points does Player B lose?', options: ['0', '25', '50'], correctIndex: 2, standardId: 'logic.deduction' }
+    { id: 'q_l_v2', subject: 'logic', difficulty: 12, text: 'In a Zero-Sum game, if Player A wins 50 points, how many points does Player B lose?', options: ['0', '25', '50'], correctIndex: 2, standardId: 'logic.deduction' },
+
+    // --- EXPANDED LOGIC (IRT VARIANCE) ---
+    { id: 'q_l_irt_1', subject: 'logic', difficulty: 3, text: 'If A > B and B > C, which is the smallest?', options: ['A', 'B', 'C'], correctIndex: 2, standardId: 'LOGIC.SEQUENCE.1' },
+    { id: 'q_l_irt_2', subject: 'logic', difficulty: 4, text: 'If it always rains on Tuesdays, and today is Tuesday, what must be true?', options: ['It will rain tomorrow', 'It is raining', 'It was sunny yesterday'], correctIndex: 1, standardId: 'logic.deduction' },
+    { id: 'q_l_irt_3', subject: 'logic', difficulty: 5, text: 'In a sequential process (A -> B -> C), can Step C start if Step A fails?', options: ['Yes', 'No', 'Maybe'], correctIndex: 1, standardId: 'LOGIC.DEDUCTION.1' },
+    { id: 'q_l_irt_4', subject: 'logic', difficulty: 7, text: 'If an AND logic gate has inputs 1 and 0, what is the output?', options: ['1', '0', 'Undefined'], correctIndex: 1, standardId: 'LOGIC.GATE.OR' },
+    { id: 'q_l_irt_5', subject: 'logic', difficulty: 8, text: 'If a feedback loop reinforces its own behavior over time, what type of loop is it?', options: ['Negative', 'Positive', 'Neutral'], correctIndex: 1, standardId: 'LOGIC.SYSTEMS.TRANSITIVE' }
 ];
